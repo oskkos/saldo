@@ -1,10 +1,19 @@
 /** @type {import('tailwindcss').Config} */
-module.exports = {
+
+import konstaConfig from 'konsta/config';
+
+module.exports = konstaConfig({
+  konsta: {
+    colors: {
+      // "primary" is the main app color, if not specified will be default to '#007aff'
+      primary: '#0b9b2f',
+    },
+  },
   content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'media',
   theme: {
     extend: {
       backgroundImage: {
@@ -14,5 +23,8 @@ module.exports = {
       },
     },
   },
+  variants: {
+    extend: {},
+  },
   plugins: [],
-}
+});
