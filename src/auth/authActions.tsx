@@ -1,18 +1,31 @@
 'use client';
 
+import { AuthUser } from '@/types/user';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import Image from 'next/image';
+import { useEffect } from 'react';
 import { MdAccountCircle, MdLogin, MdLogout } from 'react-icons/md';
 
-export default function AuthActions() {
+export default function AuthActions({
+  onAfterSignIn,
+}: {
+  onAfterSignIn: (user: AuthUser) => Promise<void>;
+}) {
   const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (status === 'authenticated' && session.user?.email) {
+      void onAfterSignIn({
+        email: session.user.email,
+        name: session.user.name ?? '',
+      });
+    }
+  }, [session, status, onAfterSignIn]);
 
   if (status === 'loading') {
     return null;
   }
   if (status === 'authenticated') {
-    if (session.user) {
-    }
     return (
       <div className="flex items-center">
         {session.user?.image ? (
