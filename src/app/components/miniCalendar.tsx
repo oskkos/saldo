@@ -9,7 +9,7 @@ dayjs.extend(isoWeek);
 dayjs.extend(advancedFormat);
 
 const calendarItemClass = 'w-10 h-10 flex justify-center items-center';
-const calendarIconClass = 'w-6 h-6';
+const calendarIconClass = 'w-6 h-6 cursor-pointer';
 
 const daysForCalendarBuilder = (d: Dayjs) => {
   const beginOfMonth = d.startOf('month');
@@ -58,7 +58,10 @@ const daysForCalendarBuilder = (d: Dayjs) => {
 };
 const weekItem = (date: Dayjs) => {
   return (
-    <div className={`${calendarItemClass} text-slate-300`}>
+    <div
+      className={`${calendarItemClass} text-slate-300`}
+      key={date.format('YYYY-W')}
+    >
       {date.format('W')}
     </div>
   );
@@ -66,6 +69,7 @@ const weekItem = (date: Dayjs) => {
 const dayItem = (date: Dayjs, status: string) => {
   return (
     <div
+      key={date.format('YYYY-MM-DD')}
       className={
         date.isSame(dayjs(), 'day')
           ? `rounded-full border-2 border-solid ${calendarItemClass}`
