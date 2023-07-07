@@ -28,7 +28,7 @@ export default function AuthActions() {
           <MdAccountCircle className="mr-2 rounded-full h-8 w-8" />
         )}
         <MdLogout
-          className="h-6 w-6"
+          className="h-6 w-6 cursor-pointer"
           onClick={() => {
             void signOut();
           }}
@@ -38,13 +38,12 @@ export default function AuthActions() {
     );
   }
   return (
-    <button
-      className="btn btn-sm"
+    <MdLogin
+      className="h-6 w-6 cursor-pointer"
       onClick={() => {
         void signIn('google');
       }}
-    >
-      <MdLogin />
-    </button>
+      title="Sign in"
+    />
   );
 }
