@@ -4,11 +4,13 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { useState } from 'react';
 import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
+import Link from 'next/link';
 
 dayjs.extend(isoWeek);
 dayjs.extend(advancedFormat);
 
 const calendarItemClass = 'w-10 h-10 flex justify-center items-center';
+const calendarDayItemClass = `${calendarItemClass} cursor-pointer`;
 const calendarIconClass = 'w-6 h-6 cursor-pointer';
 
 const daysForCalendarBuilder = (d: Dayjs) => {
@@ -68,18 +70,19 @@ const weekItem = (date: Dayjs) => {
 };
 const dayItem = (date: Dayjs, status: string) => {
   return (
-    <div
+    <Link
+      href={`/worklog-entry?day=${date.format('YYYY-MM-DD')}`}
       key={date.format('YYYY-MM-DD')}
       className={
         date.isSame(dayjs(), 'day')
-          ? `rounded-full border-2 border-solid ${calendarItemClass}`
+          ? `rounded-full border-2 border-solid ${calendarDayItemClass}`
           : status === 'current'
-          ? calendarItemClass
-          : `text-slate-200 ${calendarItemClass}`
+          ? calendarDayItemClass
+          : `text-slate-200 ${calendarDayItemClass}`
       }
     >
       {date.format('D')}
-    </div>
+    </Link>
   );
 };
 export default function MiniCalendar({ date }: { date?: Date }) {

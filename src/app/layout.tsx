@@ -5,6 +5,7 @@ import AuthActions from '@/auth/authActions';
 import { AuthProvider } from '@/auth/authProvider';
 import { AuthUser } from '@/types/user';
 import { upsertUser } from '@/repository/userRepository';
+import Link from 'next/link';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -29,7 +30,9 @@ export default function RootLayout({
         <AuthProvider>
           <div className="flex flex-col h-screen">
             <header className="flex justify-between items-center p-2 h-12 text-sky-200 bg-sky-900">
-              <h1 className="text-2xl">saldo</h1>
+              <Link href="/" className="text-2xl">
+                saldo
+              </Link>
               <AuthActions onAfterSignIn={onAfterSignin} />
             </header>
             <AuthenticatedContent className="flex-grow">

@@ -12,3 +12,10 @@ export async function upsertUser({ email, name }: AuthUser) {
   });
   console.log(user);
 }
+
+export async function getUser(email: string) {
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { email },
+  });
+  return user;
+}
