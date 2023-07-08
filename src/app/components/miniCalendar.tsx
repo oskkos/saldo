@@ -1,46 +1,53 @@
 'use client';
-import dayjs, { Dayjs } from 'dayjs';
-import isoWeek from 'dayjs/plugin/isoWeek';
-import advancedFormat from 'dayjs/plugin/advancedFormat';
 import { useState } from 'react';
 import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
 import Link from 'next/link';
-
-dayjs.extend(isoWeek);
-dayjs.extend(advancedFormat);
+import {
+  add,
+  daysInMonth,
+  endOfMonth,
+  sameDay,
+  startOfMonth,
+  subtract,
+} from '@/util/date';
+import {
+  toDay,
+  toISODay,
+  toMonthAndYear,
+  toWeek,
+  toWeekday,
+  toYearAndWeek,
+} from '@/util/dateFormatter';
 
 const calendarItemClass = 'w-10 h-10 flex justify-center items-center';
 const calendarDayItemClass = `${calendarItemClass} cursor-pointer`;
 const calendarIconClass = 'w-6 h-6 cursor-pointer';
 
-const daysForCalendarBuilder = (d: Dayjs) => {
-  const beginOfMonth = d.startOf('month');
+const daysForCalendarBuilder = (d: Date) => {
+  const startOfMonthDate = startOfMonth(d);
   const prevMonthDateAmount =
-    parseInt(beginOfMonth.format('d')) === 0
-      ? 6
-      : parseInt(beginOfMonth.format('d')) - 1;
+    toWeekday(startOfMonthDate) === 0 ? 6 : toWeekday(startOfMonthDate) - 1;
   const prevMonthDates = Array(prevMonthDateAmount)
     .fill(null)
     .map((_, i) => {
-      const prevD = beginOfMonth.subtract(prevMonthDateAmount - i, 'days');
+      const prevD = subtract(startOfMonthDate, prevMonthDateAmount - i, 'days');
       return {
         date: prevD,
         status: 'prev',
       };
     });
 
-  const daysInMonth = d.daysInMonth();
-  const currentMonthDates = Array(daysInMonth)
+  const currentMonthDates = Array(daysInMonth(d))
     .fill(null)
     .map((_, i) => {
-      const currentD = beginOfMonth.add(i, 'days');
+      const currentD = add(startOfMonthDate, i, 'days');
       return {
         date: currentD,
         status: 'current',
       };
     });
 
-  const endOfMonth = d.endOf('month');
+  const endOfMonthDate = endOfMonth(d);
   const nextMonthDateAmount =
     7 - ((prevMonthDates.length + currentMonthDates.length) % 7);
   const nextMonthDates =
@@ -49,7 +56,7 @@ const daysForCalendarBuilder = (d: Dayjs) => {
       : Array(nextMonthDateAmount)
           .fill(null)
           .map((_, i) => {
-            const nextD = endOfMonth.add(i + 1, 'days');
+            const nextD = add(endOfMonthDate, i + 1, 'days');
             return {
               date: nextD,
               status: 'next',
@@ -58,35 +65,35 @@ const daysForCalendarBuilder = (d: Dayjs) => {
 
   return [...prevMonthDates, ...currentMonthDates, ...nextMonthDates];
 };
-const weekItem = (date: Dayjs) => {
+const weekItem = (date: Date) => {
   return (
     <div
       className={`${calendarItemClass} text-base-300`}
-      key={date.format('YYYY-W')}
+      key={toYearAndWeek(date)}
     >
-      {date.format('W')}
+      {toWeek(date)}
     </div>
   );
 };
-const dayItem = (date: Dayjs, status: string) => {
+const dayItem = (date: Date, status: string) => {
   return (
     <Link
-      href={`/worklog-entry?day=${date.format('YYYY-MM-DD')}`}
-      key={date.format('YYYY-MM-DD')}
+      href={`/worklog-entry?day=${toISODay(date)}`}
+      key={toISODay(date)}
       className={
-        date.isSame(dayjs(), 'day')
+        sameDay(date, new Date())
           ? `rounded-full border-2 border-solid ${calendarDayItemClass}`
           : status === 'current'
           ? calendarDayItemClass
           : `text-base-300 ${calendarDayItemClass}`
       }
     >
-      {date.format('D')}
+      {toDay(date)}
     </Link>
   );
 };
-export default function MiniCalendar({ date }: { date?: Date }) {
-  const [d, setD] = useState(dayjs(date));
+export default function MiniCalendar({ date }: { date: Date }) {
+  const [d, setD] = useState(date);
 
   const daysForCalendar = daysForCalendarBuilder(d);
   return (
@@ -96,19 +103,19 @@ export default function MiniCalendar({ date }: { date?: Date }) {
           title="Previous month"
           className={calendarIconClass}
           onClick={() => {
-            setD(d.subtract(1, 'month'));
+            setD(subtract(d, 1, 'month'));
           }}
         />
       </div>
       <div className="col-span-5 flex justify-center items-center text-xl">
-        {d.format('MMMM YYYY')}
+        {toMonthAndYear(d)}
       </div>
       <div className={calendarItemClass}>
         <MdToday
           title="today"
           className={calendarIconClass}
           onClick={() => {
-            setD(dayjs());
+            setD(new Date());
           }}
         />
       </div>{' '}
@@ -117,7 +124,7 @@ export default function MiniCalendar({ date }: { date?: Date }) {
           title="Next month"
           className={calendarIconClass}
           onClick={() => {
-            setD(d.add(1, 'month'));
+            setD(add(d, 1, 'month'));
           }}
         />
       </div>

@@ -3,16 +3,10 @@ import { Inter } from 'next/font/google';
 import AuthenticatedContent from '@/auth/authenticatedContent';
 import AuthActions from '@/auth/authActions';
 import { AuthProvider } from '@/auth/authProvider';
-import { AuthUser } from '@/types';
-import { upsertUser } from '@/repository/userRepository';
 import Link from 'next/link';
+import { onAfterSignin } from '@/actions';
 
 const inter = Inter({ subsets: ['latin'] });
-
-const onAfterSignin = async (user: AuthUser) => {
-  'use server';
-  await upsertUser(user);
-};
 
 export const metadata = {
   title: 'saldo',

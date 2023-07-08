@@ -1,10 +1,11 @@
 'use client';
 import { WorklogFormData } from '@/types';
-import dayjs from 'dayjs';
+import { toDate } from '@/util/date';
+import { toDayMonthYear } from '@/util/dateFormatter';
 import { useState } from 'react';
 
 const toString = (day: string, time: string) => {
-  return day && time ? dayjs(`${day} ${time}`).toISOString() : '';
+  return day && time ? toDate(`${day} ${time}`).toISOString() : '';
 };
 export default function WorklogForm({
   day,
@@ -21,7 +22,7 @@ export default function WorklogForm({
   return (
     <>
       <h2 className="text-xl text-center sm:text-right m-3 w-64">
-        Worklog for {dayjs(day).format('D.M.YYYY')}
+        Worklog for {toDayMonthYear(day)}
       </h2>
 
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
