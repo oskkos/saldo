@@ -13,7 +13,7 @@ export function daysInMonth(date: Date) {
   return dayjs(date).daysInMonth();
 }
 
-export function endOfDay(date: Date) {
+export function endOfDay(date: string | number | Date) {
   return dayjs(date).endOf('day').toDate();
 }
 
@@ -25,7 +25,7 @@ export function sameDay(date1: Date, date2: Date) {
   return dayjs(date1).isSame(dayjs(date2), 'day');
 }
 
-export function startOfDay(date: Date) {
+export function startOfDay(date: string | number | Date) {
   return dayjs(date).startOf('day').toDate();
 }
 
