@@ -26,10 +26,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
+      <body className={`${inter.className} bg-base-100 text-base-content`}>
         <AuthProvider>
           <div className="flex flex-col h-screen">
-            <header className="flex justify-between items-center p-2 h-12 text-sky-200 bg-sky-900">
+            <header className="flex justify-between items-center p-2 h-12 text-primary-content bg-primary">
               <Link href="/" className="text-2xl">
                 saldo
               </Link>
@@ -38,7 +38,6 @@ export default function RootLayout({
             <AuthenticatedContent className="flex-grow">
               {children}
             </AuthenticatedContent>
-            <footer className="h-12 bg-stone-300">footer</footer>
           </div>
         </AuthProvider>
       </body>
