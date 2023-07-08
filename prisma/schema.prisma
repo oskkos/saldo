@@ -23,6 +23,7 @@ model Worklog {
   user       User     @relation(fields: [user_id], references: [id])
   from       DateTime
   to         DateTime
+  comment    String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

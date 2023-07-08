@@ -1,4 +1,4 @@
-import { AuthUser } from '@/types/user';
+import { AuthUser } from '@/types';
 import { prisma } from './prisma';
 
 export async function upsertUser({ email, name }: AuthUser) {

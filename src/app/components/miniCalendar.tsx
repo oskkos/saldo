@@ -61,7 +61,7 @@ const daysForCalendarBuilder = (d: Dayjs) => {
 const weekItem = (date: Dayjs) => {
   return (
     <div
-      className={`${calendarItemClass} text-base-content`}
+      className={`${calendarItemClass} text-base-300`}
       key={date.format('YYYY-W')}
     >
       {date.format('W')}

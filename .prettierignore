@@ -1,3 +1,4 @@
 .next
 .prettierignore
 .husky
+prisma/migrations

@@ -3,7 +3,7 @@ import { Inter } from 'next/font/google';
 import AuthenticatedContent from '@/auth/authenticatedContent';
 import AuthActions from '@/auth/authActions';
 import { AuthProvider } from '@/auth/authProvider';
-import { AuthUser } from '@/types/user';
+import { AuthUser } from '@/types';
 import { upsertUser } from '@/repository/userRepository';
 import Link from 'next/link';
 
@@ -28,16 +28,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-base-100 text-base-content`}>
         <AuthProvider>
-          <div className="flex flex-col h-screen">
+          <div className="flex flex-col">
             <header className="flex justify-between items-center p-2 h-12 text-primary-content bg-primary">
               <Link href="/" className="text-2xl">
                 saldo
               </Link>
               <AuthActions onAfterSignIn={onAfterSignin} />
             </header>
-            <AuthenticatedContent className="flex-grow">
-              {children}
-            </AuthenticatedContent>
+            <AuthenticatedContent>{children}</AuthenticatedContent>
           </div>
         </AuthProvider>
       </body>

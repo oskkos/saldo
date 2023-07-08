@@ -1,8 +1,10 @@
 import dayjs from 'dayjs';
 import ExistingWorklogs from './existingWorklogs';
 import { getSession } from '../api/auth/[...nextauth]/route';
-import { getWorklogs } from '@/repository/worklogRepository';
+import { getWorklogs, insertWorklog } from '@/repository/worklogRepository';
 import { getUser } from '@/repository/userRepository';
+import WorklogForm from './worklogForm';
+import { WorklogFormData } from '@/types';
 
 export default async function WorklogEntry({
   searchParams,
@@ -17,32 +19,20 @@ export default async function WorklogEntry({
     date.startOf('day').toDate(),
     date.endOf('day').toDate(),
   );
+  const onSubmit = async (data: WorklogFormData) => {
+    'use server';
+
+    await insertWorklog(user.id, data);
+    console.log(data);
+  };
   return (
-    <div className="flex flex-wrap justify-center mt-3">
-      <h2 className="col-span-5 flex justify-center items-center text-xl">
-        Worklog for {date.format('D.M.YYYY')}
-      </h2>
-      <div className="flex flex-wrap justify-center items-center mt-3 w-80">
-        <input
-          type="time"
-          placeholder="From"
-          value={'08:00'}
-          className="input input-bordered w-[48%]"
-        />
-        -
-        <input
-          type="time"
-          placeholder="To"
-          value={'16:00'}
-          className="input input-bordered w-[48%]"
-        />
-        <textarea
-          className="textarea textarea-bordered mt-3 w-full"
-          placeholder="Comment"
-        ></textarea>
-        <button className="btn mt-3 w-full">Submit</button>
+    <>
+      <div className="flex flex-wrap justify-center items-top mt-3">
+        <WorklogForm day={searchParams.day} onSubmit={onSubmit} />
       </div>
-      <ExistingWorklogs worklogs={worklogs} />
-    </div>
+      <div className="flex flex-wrap justify-center items-top mt-3">
+        <ExistingWorklogs worklogs={worklogs} />
+      </div>
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import { Worklog } from '@prisma/client';
 import { prisma } from './prisma';
+import { WorklogFormData } from '@/types';
 
 export async function getWorklogs(
   userId: number,
@@ -11,6 +12,20 @@ export async function getWorklogs(
       user_id: userId,
       from: { gte: from },
       to: { lte: to },
+    },
+  });
+}
+
+export async function insertWorklog(
+  userId: number,
+  { from, to, comment }: WorklogFormData,
+) {
+  await prisma.worklog.create({
+    data: {
+      from,
+      to,
+      comment,
+      user_id: userId,
     },
   });
 }
