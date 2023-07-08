@@ -18,11 +18,30 @@ export default async function WorklogEntry({
     date.endOf('day').toDate(),
   );
   return (
-    <div>
+    <div className="flex flex-wrap justify-center mt-3">
       <h2 className="col-span-5 flex justify-center items-center text-xl">
         Worklog for {date.format('D.M.YYYY')}
       </h2>
-      <input type="time" /> - <input type="time" />
+      <div className="flex flex-wrap justify-center items-center mt-3 w-80">
+        <input
+          type="time"
+          placeholder="From"
+          value={'08:00'}
+          className="input input-bordered w-[48%]"
+        />
+        -
+        <input
+          type="time"
+          placeholder="To"
+          value={'16:00'}
+          className="input input-bordered w-[48%]"
+        />
+        <textarea
+          className="textarea textarea-bordered mt-3 w-full"
+          placeholder="Comment"
+        ></textarea>
+        <button className="btn mt-3 w-full">Submit</button>
+      </div>
       <ExistingWorklogs worklogs={worklogs} />
     </div>
   );
