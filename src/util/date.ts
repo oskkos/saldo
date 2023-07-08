@@ -13,6 +13,10 @@ export function daysInMonth(date: Date) {
   return dayjs(date).daysInMonth();
 }
 
+export function diffInHours(date1: Date, date2: Date) {
+  return dayjs(date1).diff(date2, 'h');
+}
+
 export function endOfDay(date: string | number | Date) {
   return dayjs(date).endOf('day').toDate();
 }
