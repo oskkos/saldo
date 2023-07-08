@@ -1,11 +1,14 @@
 import { Worklog } from '@prisma/client';
 import ExistingWorklog from './existingWorklog';
-import { diffInHours } from '@/util/date';
+import { diffInMinutes } from '@/util/date';
 
 function countSum(worklogs: Worklog[]) {
-  return worklogs.reduce((sum, worklog) => {
-    return sum + diffInHours(worklog.to, worklog.from);
+  const total = worklogs.reduce((sum, worklog) => {
+    return sum + diffInMinutes(worklog.to, worklog.from);
   }, 0);
+  const hours = Math.floor(total / 60);
+  const minutes = Math.floor(total % 60);
+  return (hours ? `${hours} h ` : '') + (minutes ? `${minutes} min` : '');
 }
 
 export default function ExistingWorklogs({
@@ -15,9 +18,15 @@ export default function ExistingWorklogs({
 }) {
   return worklogs.length ? (
     <>
-      <h2 className="text-xl text-center sm:text-right  m-3 w-64">
-        Worklogs for day ({countSum(worklogs)} h)
-      </h2>
+      <div className="indicator items-start">
+        <span className="indicator-item indicator-bottom indicator-center badge badge-accent">
+          {countSum(worklogs)}
+        </span>
+
+        <h2 className="text-xl text-center sm:text-right m-3 w-64">
+          Existing worklogs for day
+        </h2>
+      </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
           <ExistingWorklog key={x.id} worklog={x} />

@@ -27,7 +27,7 @@ export default function WorklogForm({
 
   return (
     <>
-      <div className="flex flex-wrap justify-center items-top mt-3">
+      <div className="flex flex-wrap justify-center items-start mt-3">
         <h2 className="text-xl text-center sm:text-right m-3 w-64">
           Worklog for {toDayMonthYear(day)}
         </h2>
@@ -75,7 +75,7 @@ export default function WorklogForm({
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap justify-center items-top mt-3">
+      <div className="flex flex-wrap justify-center items-start mt-3">
         <ExistingWorklogs worklogs={wl} />
       </div>
     </>
