@@ -1,37 +1,14 @@
 import { onAfterSignin } from '@/actions';
 import AuthActions from '@/auth/authActions';
 import AuthenticatedContent from '@/auth/authenticatedContent';
-import Link from 'next/link';
-import { MdHome, MdList, MdOutlineMenu, MdSettings } from 'react-icons/md';
+import { MdOutlineMenu } from 'react-icons/md';
 import { getSession } from '../api/auth/[...nextauth]/route';
+import NavbarItems from './navBarItems';
 
 async function items() {
   const session = await getSession();
 
-  return session
-    ? [
-        <>
-          <li>
-            <Link href="/">
-              <MdHome className="w-6 h-6" />
-              Home
-            </Link>
-          </li>
-          <li>
-            <Link href="/worklog-items">
-              <MdList className="w-6 h-6" />
-              Worklog items
-            </Link>
-          </li>
-          <li>
-            <Link href="/settings">
-              <MdSettings className="w-6 h-6" />
-              Settings
-            </Link>
-          </li>
-        </>,
-      ]
-    : [];
+  return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
 }
 
 export default function Navbar({ children }: { children: React.ReactNode }) {
@@ -46,11 +23,11 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
               <MdOutlineMenu className="w-6 h-6" />
             </label>
           </div>
-          <div className="flex-1 px-2 mx-2 text-2xl">saldo</div>
-          <div className="flex-none hidden lg:block">
+          <div className="px-2 mx-2 text-2xl">saldo</div>
+          <div className="grow hidden lg:block">
             <ul className="menu menu-horizontal">{items()}</ul>
           </div>
-          <div className="mr-4">
+          <div className="grow justify-end mr-4">
             <AuthActions onAfterSignIn={onAfterSignin} />
           </div>
         </div>
