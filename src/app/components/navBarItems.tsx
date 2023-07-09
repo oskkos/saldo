@@ -18,7 +18,7 @@ export default function NavbarItems({
     const Icon = li[1];
     const label = li[2];
     return (
-      <li key="href">
+      <li key={href}>
         <Link
           href={href}
           onClick={() => {
