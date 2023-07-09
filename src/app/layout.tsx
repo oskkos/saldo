@@ -5,6 +5,7 @@ import AuthActions from '@/auth/authActions';
 import { AuthProvider } from '@/auth/authProvider';
 import Link from 'next/link';
 import { onAfterSignin } from '@/actions';
+import Navbar from './components/navbar';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -22,15 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.className} bg-base-100 text-base-content`}>
         <AuthProvider>
-          <div className="flex flex-col h-screen">
-            <header className="flex justify-between items-center p-2 h-12 text-primary-content bg-primary">
-              <Link href="/" className="text-2xl">
-                saldo
-              </Link>
-              <AuthActions onAfterSignIn={onAfterSignin} />
-            </header>
-            <AuthenticatedContent>{children}</AuthenticatedContent>
-          </div>
+          <Navbar>{children}</Navbar>
         </AuthProvider>
       </body>
     </html>

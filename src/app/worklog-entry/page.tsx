@@ -11,6 +11,9 @@ export default async function WorklogEntry({
   searchParams: { day: string };
 }) {
   const session = await getSession();
+  if (!session) {
+    throw new Error('No session!');
+  }
   const user = await getUser(session.user?.email ?? '');
   const worklogs = await getWorklogs(
     user.id,

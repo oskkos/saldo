@@ -16,9 +16,6 @@ const opts: NextAuthOptions = {
 // TODO: Move to some util place
 export async function getSession() {
   const session = await getServerSession(opts);
-  if (!session) {
-    throw new Error('No session!');
-  }
   return session;
 }
 
