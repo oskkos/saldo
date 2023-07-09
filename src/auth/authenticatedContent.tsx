@@ -18,14 +18,7 @@ export default function AuthenticatedContent({
     );
   }
   if (status === 'authenticated') {
-    return (
-      <>
-        <div className="h-96 grow shrink overflow-auto">{children}</div>
-        <footer className="footer p-3 bg-neutral text-neutral-content">
-          Home | Config | Worklog list
-        </footer>
-      </>
-    );
+    return <div className="overflow-auto">{children}</div>;
   }
   return (
     <div className="flex justify-center items-center mt-5">

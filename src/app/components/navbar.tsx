@@ -37,12 +37,12 @@ async function items() {
 export default function Navbar({ children }: { children: React.ReactNode }) {
   return (
     <div className="drawer">
-      <input id="my-drawer-3" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content flex flex-col">
+      <input id="saldo-navbar" type="checkbox" className="drawer-toggle" />
+      <div className="drawer-content flex flex-col max-h-screen">
         {/* Navbar */}
         <div className="w-full navbar text-primary-content bg-primary p-0">
           <div className="flex-none lg:hidden">
-            <label htmlFor="my-drawer-3" className="btn btn-square btn-ghost">
+            <label htmlFor="saldo-navbar" className="btn btn-square btn-ghost">
               <MdOutlineMenu className="w-6 h-6" />
             </label>
           </div>
@@ -56,8 +56,8 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
         </div>
         <AuthenticatedContent>{children}</AuthenticatedContent>
       </div>
-      <div className="drawer-side">
-        <label htmlFor="my-drawer-3" className="drawer-overlay"></label>
+      <div className="drawer-side z-10">
+        <label htmlFor="saldo-navbar" className="drawer-overlay"></label>
         <ul className="menu p-4 w-80 h-full bg-base-200">{items()}</ul>
       </div>
     </div>
