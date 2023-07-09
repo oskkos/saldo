@@ -13,8 +13,10 @@ function countSum(worklogs: Worklog[]) {
 
 export default function ExistingWorklogs({
   worklogs,
+  onDelete,
 }: {
   worklogs: Worklog[];
+  onDelete: (id: number) => void;
 }) {
   return worklogs.length ? (
     <>
@@ -29,7 +31,7 @@ export default function ExistingWorklogs({
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
-          <ExistingWorklog key={x.id} worklog={x} />
+          <ExistingWorklog key={x.id} worklog={x} onDelete={onDelete} />
         ))}
       </div>
     </>

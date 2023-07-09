@@ -29,3 +29,9 @@ export async function insertWorklog(
     },
   });
 }
+
+export async function deleteWorklog(worklogId: number) {
+  await prisma.worklog.delete({
+    where: { id: worklogId },
+  });
+}

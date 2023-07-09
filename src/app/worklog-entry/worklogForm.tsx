@@ -13,10 +13,12 @@ export default function WorklogForm({
   day,
   worklogs,
   onSubmit,
+  onDelete,
 }: {
   day: string;
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog[]>;
+  onDelete: (deletedWorklogId: number) => Promise<void>;
 }) {
   const [value, setValue] = useState({
     from: '08:00',
@@ -76,7 +78,18 @@ export default function WorklogForm({
         </div>
       </div>
       <div className="flex flex-wrap justify-center items-start mt-3">
-        <ExistingWorklogs worklogs={wl} />
+        <ExistingWorklogs
+          worklogs={wl}
+          onDelete={(deletedWorklogId: number) => {
+            onDelete(deletedWorklogId)
+              .then(() => {
+                setWl(wl.filter((x) => x.id !== deletedWorklogId));
+              })
+              .catch(() => {
+                throw new Error('Failed to delete worklog');
+              });
+          }}
+        />
       </div>
     </>
   );
