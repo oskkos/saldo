@@ -15,11 +15,13 @@ export default function WorklogForm({
   worklogs,
   onSubmit,
   onDelete,
+  onEdit,
 }: {
   day: string;
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog[]>;
   onDelete: (deletedWorklogId: number) => Promise<void>;
+  onEdit: (worklogId: number, data: WorklogFormData) => Promise<Worklog>;
 }) {
   const [value, setValue] = useState({
     from: '08:00',
@@ -66,6 +68,21 @@ export default function WorklogForm({
               })
               .catch(() => {
                 throw new Error('Failed to delete worklog');
+              });
+          }}
+          onEdit={(worklogId: number, data: WorklogFormData) => {
+            const ret = {
+              ...data,
+              from: toString(day, data.from),
+              to: toString(day, data.to),
+            };
+
+            onEdit(worklogId, ret)
+              .then((editedWorklog) => {
+                setWl(wl.map((x) => (x.id !== worklogId ? x : editedWorklog)));
+              })
+              .catch(() => {
+                throw new Error('Failed to edit worklog');
               });
           }}
         />

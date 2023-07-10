@@ -1,6 +1,7 @@
 import { Worklog } from '@prisma/client';
 import ExistingWorklog from './existingWorklog';
 import { diffInMinutes } from '@/util/date';
+import { WorklogFormData } from '@/types';
 
 function countSum(worklogs: Worklog[]) {
   const total = worklogs.reduce((sum, worklog) => {
@@ -14,9 +15,11 @@ function countSum(worklogs: Worklog[]) {
 export default function ExistingWorklogs({
   worklogs,
   onDelete,
+  onEdit,
 }: {
   worklogs: Worklog[];
   onDelete: (id: number) => void;
+  onEdit: (worklogId: number, data: WorklogFormData) => void;
 }) {
   return worklogs.length ? (
     <>
@@ -31,7 +34,12 @@ export default function ExistingWorklogs({
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
-          <ExistingWorklog key={x.id} worklog={x} onDelete={onDelete} />
+          <ExistingWorklog
+            key={x.id}
+            worklog={x}
+            onDelete={onDelete}
+            onEdit={onEdit}
+          />
         ))}
       </div>
     </>

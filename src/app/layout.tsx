@@ -1,10 +1,6 @@
 import './globals.css';
 import { Inter } from 'next/font/google';
-import AuthenticatedContent from '@/auth/authenticatedContent';
-import AuthActions from '@/auth/authActions';
 import { AuthProvider } from '@/auth/authProvider';
-import Link from 'next/link';
-import { onAfterSignin } from '@/actions';
 import Navbar from './components/navbar';
 
 const inter = Inter({ subsets: ['latin'] });

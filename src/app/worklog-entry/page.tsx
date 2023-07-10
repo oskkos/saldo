@@ -2,7 +2,7 @@ import { getSession } from '../api/auth/[...nextauth]/route';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { getUser } from '@/repository/userRepository';
 import WorklogForm from './worklogForm';
-import { onWorklogSubmit, onWorklogDelete } from '@/actions';
+import { onWorklogSubmit, onWorklogDelete, onWorklogEdit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
 
 export default async function WorklogEntry({
@@ -26,6 +26,7 @@ export default async function WorklogEntry({
       worklogs={worklogs}
       onSubmit={onWorklogSubmit.bind(null, user.id)}
       onDelete={onWorklogDelete}
+      onEdit={onWorklogEdit}
     />
   );
 }

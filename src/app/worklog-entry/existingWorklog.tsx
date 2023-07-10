@@ -6,16 +6,21 @@ import WorklogDeleteConfirm, {
   showDeleteConfirmModal,
 } from '../components/worklogDeleteConfirm';
 import { useEffect, useState } from 'react';
+import WorklogEditModal, {
+  showWorklogEditModal,
+} from '../components/worklogEditModal';
+import { WorklogFormData } from '@/types';
 
 export default function ExistingWorklog({
   worklog,
   onDelete,
+  onEdit,
 }: {
   worklog: Worklog;
   onDelete: (id: number) => void;
+  onEdit: (worklogId: number, data: WorklogFormData) => void;
 }) {
   const confirmId = `worklog-delete-confirm-${worklog.id}`;
-
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   useEffect(() => {
     if (showDeleteConfirm) {
@@ -23,6 +28,15 @@ export default function ExistingWorklog({
       setShowDeleteConfirm(false);
     }
   }, [showDeleteConfirm, confirmId]);
+
+  const editModalId = `worklog-edit-modal-${worklog.id}`;
+  const [showEdit, setShowEdit] = useState(false);
+  useEffect(() => {
+    if (showEdit) {
+      showWorklogEditModal(editModalId);
+      setShowEdit(false);
+    }
+  }, [showEdit, editModalId]);
 
   return (
     <div className="card w-full bg-base-200 shadow-xl mt-4">
@@ -32,9 +46,7 @@ export default function ExistingWorklog({
           <div className="card-actions justify-end w-16">
             <MdModeEdit
               className="w-6 h-6 cursor-pointer"
-              onClick={() => {
-                console.log('xx');
-              }}
+              onClick={() => setShowEdit(true)}
             />
             <MdDelete
               className="w-6 h-6 cursor-pointer"
@@ -48,6 +60,11 @@ export default function ExistingWorklog({
         confirmId={confirmId}
         worklogId={worklog.id}
         onDelete={onDelete}
+      />
+      <WorklogEditModal
+        editModalId={editModalId}
+        worklog={worklog}
+        onEdit={onEdit}
       />
     </div>
   );

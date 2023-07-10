@@ -6,6 +6,7 @@ import {
   deleteWorklog,
   getWorklogs,
   insertWorklog,
+  updateWorklog,
 } from '@/repository/worklogRepository';
 import { endOfDay, startOfDay } from '@/util/date';
 
@@ -20,4 +21,9 @@ export async function onWorklogSubmit(userId: number, data: WorklogFormData) {
 
 export async function onWorklogDelete(worklogId: number) {
   await deleteWorklog(worklogId);
+}
+
+export async function onWorklogEdit(worklogId: number, data: WorklogFormData) {
+  const worklog = await updateWorklog(worklogId, data);
+  return worklog;
 }

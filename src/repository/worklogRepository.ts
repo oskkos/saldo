@@ -30,6 +30,21 @@ export async function insertWorklog(
   });
 }
 
+export async function updateWorklog(
+  worklogId: number,
+  { from, to, comment }: WorklogFormData,
+) {
+  const worklog = await prisma.worklog.update({
+    where: { id: worklogId },
+    data: {
+      from,
+      to,
+      comment,
+    },
+  });
+  return worklog;
+}
+
 export async function deleteWorklog(worklogId: number) {
   await prisma.worklog.delete({
     where: { id: worklogId },
