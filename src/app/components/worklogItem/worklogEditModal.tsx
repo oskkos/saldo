@@ -1,9 +1,15 @@
 'use client';
-import { useState } from 'react';
-import WorklogInputs from './worklogInputs';
-import { WorklogFormData } from '@/types';
+import { useState, useTransition } from 'react';
+import WorklogInputs from '../worklogInputs';
 import { Worklog } from '@prisma/client';
 import { toTime } from '@/util/dateFormatter';
+import { useRouter } from 'next/navigation';
+import { onWorklogEdit } from '@/actions';
+import { toDate } from '@/util/date';
+
+const toString = (day: string, time: string) => {
+  return day && time ? toDate(`${day} ${time}`).toISOString() : '';
+};
 
 export function showWorklogEditModal(editModalId: string) {
   (
@@ -17,13 +23,16 @@ export default function WorklogEditModal({
 }: {
   worklog: Worklog;
   editModalId: string;
-  onEdit: (worklogId: number, data: WorklogFormData) => void;
+  onEdit: (editedWorklog: Worklog) => void;
 }) {
+  const [, setTransition] = useTransition();
+  const router = useRouter();
   const [value, setValue] = useState({
     from: toTime(worklog.from),
     to: toTime(worklog.to),
     comment: (worklog.comment ?? '') as unknown as string,
   });
+  const day = worklog.from.toISOString().split('T')[0];
   return (
     <dialog id={editModalId} className="modal modal-bottom sm:modal-middle">
       <form method="dialog" className="modal-box">
@@ -36,7 +45,21 @@ export default function WorklogEditModal({
           <button
             className="btn btn-primary"
             onClick={() => {
-              onEdit(worklog.id, value);
+              const ret = {
+                ...value,
+                from: toString(day, value.from),
+                to: toString(day, value.to),
+              };
+              setTransition(() => {
+                onWorklogEdit(worklog.id, ret)
+                  .then((editedWorklog) => {
+                    onEdit(editedWorklog);
+                    router.refresh(); // https://github.com/vercel/next.js/issues/52350
+                  })
+                  .catch(() => {
+                    throw new Error('Failed to edit worklog');
+                  });
+              });
             }}
           >
             Edit

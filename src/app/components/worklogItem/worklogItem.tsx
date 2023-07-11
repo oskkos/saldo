@@ -1,24 +1,21 @@
 'use client';
 import { Worklog } from '@prisma/client';
 import { MdDelete, MdModeEdit } from 'react-icons/md';
-import WorklogTitle from './worklogTitle';
+import WorklogTitle from '../../worklog-entry/worklogTitle';
 import WorklogDeleteConfirm, {
   showDeleteConfirmModal,
-} from '../components/worklogDeleteConfirm';
+} from './worklogDeleteConfirm';
 import { useEffect, useState } from 'react';
-import WorklogEditModal, {
-  showWorklogEditModal,
-} from '../components/worklogEditModal';
-import { WorklogFormData } from '@/types';
+import WorklogEditModal, { showWorklogEditModal } from './worklogEditModal';
 
-export default function ExistingWorklog({
+export default function WorklogItem({
   worklog,
   onDelete,
   onEdit,
 }: {
   worklog: Worklog;
   onDelete: (id: number) => void;
-  onEdit: (worklogId: number, data: WorklogFormData) => void;
+  onEdit: (editedWorklog: Worklog) => void;
 }) {
   const confirmId = `worklog-delete-confirm-${worklog.id}`;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);

@@ -4,8 +4,8 @@ import { WorklogFormData } from '@/types';
 
 export async function getWorklogs(
   userId: number,
-  from: Date,
-  to: Date,
+  from?: Date,
+  to?: Date,
 ): Promise<Worklog[]> {
   return await prisma.worklog.findMany({
     where: {

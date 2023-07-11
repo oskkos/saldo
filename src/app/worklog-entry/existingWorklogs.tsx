@@ -1,5 +1,5 @@
 import { Worklog } from '@prisma/client';
-import ExistingWorklog from './existingWorklog';
+import WorklogItem from '../components/worklogItem/worklogItem';
 import { diffInMinutes } from '@/util/date';
 import { WorklogFormData } from '@/types';
 
@@ -19,7 +19,7 @@ export default function ExistingWorklogs({
 }: {
   worklogs: Worklog[];
   onDelete: (id: number) => void;
-  onEdit: (worklogId: number, data: WorklogFormData) => void;
+  onEdit: (editedWorklog: Worklog) => void;
 }) {
   return worklogs.length ? (
     <>
@@ -34,7 +34,7 @@ export default function ExistingWorklogs({
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
-          <ExistingWorklog
+          <WorklogItem
             key={x.id}
             worklog={x}
             onDelete={onDelete}

@@ -15,14 +15,10 @@ export default function WorklogForm({
   day,
   worklogs,
   onSubmit,
-  onDelete,
-  onEdit,
 }: {
   day: string;
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog[]>;
-  onDelete: (deletedWorklogId: number) => Promise<void>;
-  onEdit: (worklogId: number, data: WorklogFormData) => Promise<Worklog>;
 }) {
   const [value, setValue] = useState({
     from: '08:00',
@@ -70,35 +66,18 @@ export default function WorklogForm({
         <ExistingWorklogs
           worklogs={wl}
           onDelete={(deletedWorklogId: number) => {
-            setTransition(() => {
-              onDelete(deletedWorklogId)
-                .then(() => {
-                  setWl(wl.filter((x) => x.id !== deletedWorklogId));
-                  router.refresh(); // https://github.com/vercel/next.js/issues/52350
-                })
-                .catch(() => {
-                  throw new Error('Failed to delete worklog');
-                });
-            });
+            setWl(
+              wl
+                .filter((x) => x.id !== deletedWorklogId)
+                .sort((a, b) => b.from.getTime() - a.from.getTime()),
+            );
           }}
-          onEdit={(worklogId: number, data: WorklogFormData) => {
-            const ret = {
-              ...data,
-              from: toString(day, data.from),
-              to: toString(day, data.to),
-            };
-            setTransition(() => {
-              onEdit(worklogId, ret)
-                .then((editedWorklog) => {
-                  setWl(
-                    wl.map((x) => (x.id !== worklogId ? x : editedWorklog)),
-                  );
-                  router.refresh(); // https://github.com/vercel/next.js/issues/52350
-                })
-                .catch(() => {
-                  throw new Error('Failed to edit worklog');
-                });
-            });
+          onEdit={(editedWorklog: Worklog) => {
+            setWl(
+              wl
+                .map((x) => (x.id !== editedWorklog.id ? x : editedWorklog))
+                .sort((a, b) => b.from.getTime() - a.from.getTime()),
+            );
           }}
         />
       </div>
