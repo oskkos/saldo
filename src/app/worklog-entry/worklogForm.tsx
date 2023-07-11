@@ -2,10 +2,11 @@
 import { WorklogFormData } from '@/types';
 import { toDate } from '@/util/date';
 import { toDayMonthYear } from '@/util/dateFormatter';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
 import WorklogInputs from '../components/worklogInputs';
+import { useRouter } from 'next/navigation';
 
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
@@ -29,6 +30,8 @@ export default function WorklogForm({
     comment: '',
   });
   const [wl, setWl] = useState(worklogs);
+  const [, setTransition] = useTransition();
+  const router = useRouter();
 
   return (
     <>
@@ -47,11 +50,16 @@ export default function WorklogForm({
                 from: toString(day, value.from),
                 to: toString(day, value.to),
               };
-              onSubmit(ret)
-                .then(setWl)
-                .catch(() => {
-                  /* TODO */
-                });
+              setTransition(() => {
+                onSubmit(ret)
+                  .then((x) => {
+                    setWl(x);
+                    router.refresh(); // https://github.com/vercel/next.js/issues/52350
+                  })
+                  .catch(() => {
+                    throw new Error('Failed to add worklog');
+                  });
+              });
             }}
           >
             Submit
@@ -62,13 +70,16 @@ export default function WorklogForm({
         <ExistingWorklogs
           worklogs={wl}
           onDelete={(deletedWorklogId: number) => {
-            onDelete(deletedWorklogId)
-              .then(() => {
-                setWl(wl.filter((x) => x.id !== deletedWorklogId));
-              })
-              .catch(() => {
-                throw new Error('Failed to delete worklog');
-              });
+            setTransition(() => {
+              onDelete(deletedWorklogId)
+                .then(() => {
+                  setWl(wl.filter((x) => x.id !== deletedWorklogId));
+                  router.refresh(); // https://github.com/vercel/next.js/issues/52350
+                })
+                .catch(() => {
+                  throw new Error('Failed to delete worklog');
+                });
+            });
           }}
           onEdit={(worklogId: number, data: WorklogFormData) => {
             const ret = {
@@ -76,14 +87,18 @@ export default function WorklogForm({
               from: toString(day, data.from),
               to: toString(day, data.to),
             };
-
-            onEdit(worklogId, ret)
-              .then((editedWorklog) => {
-                setWl(wl.map((x) => (x.id !== worklogId ? x : editedWorklog)));
-              })
-              .catch(() => {
-                throw new Error('Failed to edit worklog');
-              });
+            setTransition(() => {
+              onEdit(worklogId, ret)
+                .then((editedWorklog) => {
+                  setWl(
+                    wl.map((x) => (x.id !== worklogId ? x : editedWorklog)),
+                  );
+                  router.refresh(); // https://github.com/vercel/next.js/issues/52350
+                })
+                .catch(() => {
+                  throw new Error('Failed to edit worklog');
+                });
+            });
           }}
         />
       </div>

@@ -2,7 +2,7 @@ import { AuthUser } from '@/types';
 import { prisma } from './prisma';
 
 export async function upsertUser({ email, name }: AuthUser) {
-  const user = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email },
     create: {
       email,
@@ -10,7 +10,6 @@ export async function upsertUser({ email, name }: AuthUser) {
     },
     update: { name },
   });
-  console.log(user);
 }
 
 export async function getUser(email: string) {
