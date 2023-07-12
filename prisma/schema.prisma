@@ -13,6 +13,7 @@ model User {
   email      String    @unique
   name       String?
   worklogs   Worklog[]
+  settings   Settings?
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
 }
@@ -26,4 +27,15 @@ model Worklog {
   comment    String?
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+model Settings {
+  id                    Int      @id @default(autoincrement())
+  user_id               Int      @unique
+  user                  User     @relation(fields: [user_id], references: [id])
+  begin_date            DateTime
+  initial_balance_hours Int
+  initial_balance_mins  Int
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
 }

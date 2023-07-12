@@ -10,7 +10,7 @@ export default function NavbarItems({
   return (
     [
       ['/', MdCalendarMonth, 'Calendar'],
-      ['/worklog-items', MdList, 'Worklog items'],
+      ['/worklog-items', MdList, 'All worklogs'],
       ['/settings', MdSettings, 'Settings'],
     ] as const
   ).map((li) => {

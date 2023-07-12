@@ -8,3 +8,9 @@ export interface WorklogFormData {
   to: string;
   comment: string;
 }
+
+export interface SettingsData {
+  beginDate: Date;
+  initialBalanceHours: number;
+  initialBalanceMins: number;
+}

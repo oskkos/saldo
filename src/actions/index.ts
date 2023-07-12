@@ -1,7 +1,12 @@
 'use server';
 
-import { AuthUser, WorklogFormData } from '@/types';
-import { upsertUser } from '@/repository/userRepository';
+import { AuthUser, SettingsData, WorklogFormData } from '@/types';
+import {
+  getSettings,
+  insertSettings,
+  upsertSettings,
+  upsertUser,
+} from '@/repository/userRepository';
 import {
   deleteWorklog,
   getWorklogs,
@@ -11,7 +16,11 @@ import {
 import { endOfDay, startOfDay } from '@/util/date';
 
 export async function onAfterSignin(user: AuthUser) {
-  await upsertUser(user);
+  const u = await upsertUser(user);
+  const settings = await getSettings(u.id);
+  if (!settings) {
+    await insertSettings(u.id, startOfDay(new Date()), 0, 0);
+  }
 }
 
 export async function onWorklogSubmit(userId: number, data: WorklogFormData) {
@@ -26,4 +35,9 @@ export async function onWorklogDelete(worklogId: number) {
 export async function onWorklogEdit(worklogId: number, data: WorklogFormData) {
   const worklog = await updateWorklog(worklogId, data);
   return worklog;
+}
+
+export async function onSettingsUpdate(userId: number, data: SettingsData) {
+  const settings = await upsertSettings(userId, data);
+  return settings;
 }
