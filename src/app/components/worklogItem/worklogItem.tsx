@@ -12,8 +12,10 @@ export default function WorklogItem({
   worklog,
   onDelete,
   onEdit,
+  ignored,
 }: {
   worklog: Worklog;
+  ignored?: boolean;
   onDelete: (id: number) => void;
   onEdit: (editedWorklog: Worklog) => void;
 }) {
@@ -36,8 +38,12 @@ export default function WorklogItem({
   }, [showEdit, editModalId]);
 
   return (
-    <div className="card w-full bg-base-200 shadow-xl mt-4">
-      <div className="card-body pr-4">
+    <div
+      className={`card w-full shadow-xl mt-4 ${
+        ignored ? 'bg-base-100' : 'bg-base-200'
+      }`}
+    >
+      <div className={`card-body pr-4 ${ignored ? 'text-base-300' : ''}`}>
         <div className="flex justify-between">
           <WorklogTitle worklog={worklog} />
           <div className="card-actions justify-end w-16">
