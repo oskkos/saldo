@@ -18,12 +18,17 @@ import {
   toWeekday,
   toYearAndWeek,
 } from '@/util/dateFormatter';
+import { Worklog } from '@prisma/client';
+import { calculateWorklogsSum } from '@/services';
 
 const calendarItemClass = 'w-10 h-10 flex justify-center items-center';
 const calendarDayItemClass = `${calendarItemClass} cursor-pointer`;
 const calendarIconClass = 'w-6 h-6 cursor-pointer';
 
-const daysForCalendarBuilder = (d: Date) => {
+const daysForCalendarBuilder = (
+  d: Date,
+  worklogsByDay: Record<string, Worklog[] | undefined>,
+) => {
   const startOfMonthDate = startOfMonth(d);
   const prevMonthDateAmount =
     toWeekday(startOfMonthDate) === 0 ? 6 : toWeekday(startOfMonthDate) - 1;
@@ -34,6 +39,7 @@ const daysForCalendarBuilder = (d: Date) => {
       return {
         date: prevD,
         status: 'prev',
+        saldo: calculateWorklogsSum(worklogsByDay[toISODay(prevD)] ?? []),
       };
     });
 
@@ -44,6 +50,7 @@ const daysForCalendarBuilder = (d: Date) => {
       return {
         date: currentD,
         status: 'current',
+        saldo: calculateWorklogsSum(worklogsByDay[toISODay(currentD)] ?? []),
       };
     });
 
@@ -60,6 +67,7 @@ const daysForCalendarBuilder = (d: Date) => {
             return {
               date: nextD,
               status: 'next',
+              saldo: calculateWorklogsSum(worklogsByDay[toISODay(nextD)] ?? []),
             };
           });
 
@@ -75,29 +83,83 @@ const weekItem = (date: Date) => {
     </div>
   );
 };
-const dayItem = (date: Date, status: string) => {
+const dayItem = (
+  {
+    date,
+    status,
+    saldo,
+  }: {
+    date: Date;
+    status: string;
+    saldo: { hours: number; minutes: number; toString: () => string };
+  },
+  beginDate: Date,
+) => {
+  const borderClass = () => {
+    if (status !== 'current') {
+      return '';
+    }
+    const minutes = saldo.hours * 60 + saldo.minutes;
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    const beforeBegin = date.getTime() < beginDate.getTime();
+    const inFuture = date.getTime() > new Date().getTime();
+    if (isWeekend) {
+      return minutes ? 'rounded-full border-2 border-solid border-info' : '';
+    }
+    if (minutes === 0 && inFuture) {
+      return '';
+    }
+    if (beforeBegin) {
+      return minutes !== 0
+        ? 'rounded-full border-2 border-solid border-base-300'
+        : '';
+    }
+    if (minutes < 120) {
+      return 'rounded-full border-2 border-solid border-error';
+    }
+    if (minutes < 450) {
+      return 'rounded-full border-2 border-solid border-warning';
+    }
+    return 'rounded-full border-2 border-solid border-success';
+  };
+  const sameDayClass = sameDay(date, new Date())
+    ? 'bg-neutral text-neutral-content'
+    : '';
+  const currentMonthClass = status !== 'current' ? 'text-base-300' : '';
+
   return (
     <Link
       href={`/worklog-entry?day=${toISODay(date)}`}
       key={toISODay(date)}
-      className={
-        sameDay(date, new Date())
-          ? `rounded-full border-2 border-solid ${calendarDayItemClass}`
-          : status === 'current'
-          ? calendarDayItemClass
-          : `text-base-300 ${calendarDayItemClass}`
-      }
+      className={`${calendarDayItemClass} ${borderClass()} ${sameDayClass} ${currentMonthClass}`}
     >
       {toDay(date)}
     </Link>
   );
 };
-export default function MiniCalendar({ date }: { date: Date }) {
+export default function MiniCalendar({
+  date,
+  beginDate,
+  worklogs,
+}: {
+  date: Date;
+  beginDate: Date;
+  worklogs: Worklog[];
+}) {
   const [d, setD] = useState(date);
 
-  const daysForCalendar = daysForCalendarBuilder(d);
+  const worklogsByDay = worklogs.reduce(
+    (acc: Record<string, Worklog[] | undefined>, x) => {
+      const day = toISODay(x.from);
+      acc[day] = [...(acc[day] ?? []), x];
+      return acc;
+    },
+    {},
+  );
+
+  const daysForCalendar = daysForCalendarBuilder(d, worklogsByDay);
   return (
-    <div className="grid grid-cols-8 justify-items-center">
+    <div className="grid gap-0.5 grid-cols-8 justify-items-center">
       <div className={calendarItemClass}>
         <MdArrowBack
           title="Previous month"
@@ -135,7 +197,7 @@ export default function MiniCalendar({ date }: { date: Date }) {
         if (index % 7 === 0) {
           acc.push(weekItem(day.date));
         }
-        acc.push(dayItem(day.date, day.status));
+        acc.push(dayItem(day, beginDate));
         return acc;
       }, [])}
     </div>

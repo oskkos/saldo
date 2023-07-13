@@ -62,7 +62,7 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
   return minutesToSaldoObject(saldoInMinutes);
 }
 
-export function calulateWorklogsSum(worklogs: Worklog[]) {
+export function calculateWorklogsSum(worklogs: Worklog[]) {
   const total = worklogs.reduce((sum, worklog) => {
     return sum + diffInMinutes(worklog.to, worklog.from);
   }, 0);

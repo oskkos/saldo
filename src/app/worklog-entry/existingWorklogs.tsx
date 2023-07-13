@@ -1,6 +1,6 @@
 import { Worklog } from '@prisma/client';
 import WorklogItem from '../components/worklogItem/worklogItem';
-import { calulateWorklogsSum } from '@/services';
+import { calculateWorklogsSum } from '@/services';
 
 export default function ExistingWorklogs({
   worklogs,
@@ -17,7 +17,7 @@ export default function ExistingWorklogs({
         <h2 className="text-xl text-center sm:text-right m-3 w-64">
           Existing worklogs for day
         </h2>
-        {calulateWorklogsSum(worklogs).toBadge()}
+        {calculateWorklogsSum(worklogs).toBadge()}
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
