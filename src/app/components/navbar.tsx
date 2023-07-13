@@ -8,20 +8,20 @@ import { Session } from 'next-auth';
 import { getSettings, getUser } from '@/repository/userRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { calculateCurrentSaldo } from '@/services';
+import QuickAdd from './quickAdd';
 
 function items(session: Session | null) {
   return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
 }
 
-async function getSaldoBadge(session: Session) {
-  const user = await getUser(session.user?.email ?? '');
-  const worklogs = await getWorklogs(user.id);
-  const settings = await getSettings(user.id);
+async function getSaldoBadge(userId: number) {
+  const worklogs = await getWorklogs(userId);
+  const settings = await getSettings(userId);
   if (!settings) {
     throw new Error('No settings!');
   }
   const saldo = calculateCurrentSaldo(settings, worklogs);
-  return <div className="text-xl mr-4">{saldo.toBadge('badge-lg')}</div>;
+  return saldo.toBadge('badge-lg mr-2');
 }
 export default async function Navbar({
   children,
@@ -29,6 +29,7 @@ export default async function Navbar({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  const user = session ? await getUser(session.user?.email ?? '') : null;
 
   return (
     <div className="drawer">
@@ -41,12 +42,17 @@ export default async function Navbar({
               <MdOutlineMenu className="w-6 h-6" />
             </label>
           </div>
-          <div className="px-2 mx-2 text-2xl">saldo</div>
+          <div className="px-2 mr-2 text-xl">saldo</div>
           <div className="grow hidden lg:block">
             <ul className="menu menu-horizontal">{items(session)}</ul>
           </div>
-          <div className="grow justify-end mr-4">
-            {session ? getSaldoBadge(session) : null}
+          <div className="grow justify-end mr-2">
+            {user
+              ? [
+                  getSaldoBadge(user.id),
+                  <QuickAdd key="quickAddWorklog" userId={user.id} />,
+                ]
+              : null}
             <AuthActions onAfterSignIn={onAfterSignin} />
           </div>
         </div>

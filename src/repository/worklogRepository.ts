@@ -20,7 +20,7 @@ export async function insertWorklog(
   userId: number,
   { from, to, comment }: WorklogFormData,
 ) {
-  await prisma.worklog.create({
+  const worklog = await prisma.worklog.create({
     data: {
       from,
       to,
@@ -28,6 +28,7 @@ export async function insertWorklog(
       user_id: userId,
     },
   });
+  return worklog;
 }
 
 export async function updateWorklog(

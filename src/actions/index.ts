@@ -24,8 +24,8 @@ export async function onAfterSignin(user: AuthUser) {
 }
 
 export async function onWorklogSubmit(userId: number, data: WorklogFormData) {
-  await insertWorklog(userId, data);
-  return getWorklogs(userId, startOfDay(data.from), endOfDay(data.from));
+  const worklog = await insertWorklog(userId, data);
+  return worklog;
 }
 
 export async function onWorklogDelete(worklogId: number) {

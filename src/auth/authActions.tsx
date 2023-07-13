@@ -23,7 +23,18 @@ export default function AuthActions({
   }, [session, status, onAfterSignIn]);
 
   if (status === 'loading') {
-    return null;
+    return (
+      <div className="flex items-center">
+        <MdAccountCircle className="mr-2 rounded-full h-8 w-8" />
+        <MdLogout
+          className="h-6 w-6 cursor-pointer"
+          onClick={() => {
+            void signOut();
+          }}
+          title="Sign out"
+        />
+      </div>
+    );
   }
   if (status === 'authenticated') {
     return (

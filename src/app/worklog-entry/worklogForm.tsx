@@ -20,7 +20,7 @@ export default function WorklogForm({
 }: {
   day: string;
   worklogs: Worklog[];
-  onSubmit: (value: WorklogFormData) => Promise<Worklog[]>;
+  onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
   const [value, setValue] = useState({
     from: '08:00',
@@ -71,7 +71,11 @@ export default function WorklogForm({
               setTransition(() => {
                 onSubmit(ret)
                   .then((x) => {
-                    setWl(x);
+                    setWl(
+                      [...wl, x].sort(
+                        (a, b) => b.from.getTime() - a.from.getTime(),
+                      ),
+                    );
                     router.refresh(); // https://github.com/vercel/next.js/issues/52350
                   })
                   .catch(() => {

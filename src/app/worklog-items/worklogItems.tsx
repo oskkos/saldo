@@ -5,19 +5,26 @@ import { useState } from 'react';
 import { toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import { startOfDay } from '@/util/date';
 
-function groupWorklogs(
+function groupWorklogs(worklogs: Worklog[]) {
+  return worklogs.reduce((acc: Record<string, Worklog[]>, x) => {
+    const loggingDay = toISODay(x.from);
+
+    if (!(acc[loggingDay] instanceof Array)) {
+      acc[loggingDay] = [];
+    }
+    acc[loggingDay] = [...acc[loggingDay], x];
+    return acc;
+  }, {});
+}
+function worklogsToElements(
   worklogs: Worklog[],
-  settings: Settings,
+  beginDate: Date,
   onWorklogDelete: (deletedWorklogId: number) => void,
   onWorklogEdit: (edited: Worklog) => void,
 ) {
-  let day = '';
-
-  return worklogs.reduce((acc: Record<string, JSX.Element[]>, x) => {
-    const ignored = settings.begin_date.getTime() > x.from.getTime();
-    const loggingDay = toISODay(x.from);
-
-    const elem = (
+  return worklogs.map((x) => {
+    const ignored = beginDate.getTime() > x.from.getTime();
+    return (
       <WorklogItem
         key={x.id}
         worklog={x}
@@ -26,19 +33,13 @@ function groupWorklogs(
         onEdit={onWorklogEdit}
       />
     );
-
-    if (day !== loggingDay) {
-      acc[loggingDay] = [];
-    }
-    acc[loggingDay] = [...acc[loggingDay], elem];
-    day = loggingDay;
-    return acc;
-  }, {});
+  });
 }
 function dayBadge(day: string, beginDate: Date) {
   const ignored = beginDate.getTime() > startOfDay(day).getTime();
   return (
     <div
+      key={`${day}-badge`}
       className={`badge ${
         ignored ? 'badge-base-100 text-base-300' : 'badge-neutral'
       } ${day !== '' ? 'mt-8' : ''}`}
@@ -57,7 +58,14 @@ export default function WorklogItems({
   settings: Settings;
   saldo: JSX.Element;
 }) {
-  const [wl, setWl] = useState(worklogs);
+  const [wl, setWl] = useState<Worklog[]>(worklogs);
+
+  if (worklogs.length !== wl.length) {
+    // Don't really understand why this is required but without this
+    // new worklog added with QuickAdd modal isn't shown without refresh
+    setWl(worklogs);
+  }
+
   const onWorklogDelete = (deletedWorklogId: number) => {
     setWl(
       wl
@@ -72,12 +80,7 @@ export default function WorklogItems({
         .sort((a, b) => b.from.getTime() - a.from.getTime()),
     );
   };
-  const groupedWorklogs = groupWorklogs(
-    wl,
-    settings,
-    onWorklogDelete,
-    onWorklogEdit,
-  );
+  const groupedWorklogs = groupWorklogs(wl);
 
   return (
     <div className="flex flex-col justify-center items-center mt-3">
@@ -88,8 +91,13 @@ export default function WorklogItems({
         {Object.keys(groupedWorklogs).reduce((acc: JSX.Element[], day) => {
           acc.push(dayBadge(day, settings.begin_date));
           acc.push(
-            <div className="flex flex-wrap justify-center">
-              {groupedWorklogs[day]}
+            <div key={`${day}-items`} className="flex flex-wrap justify-center">
+              {worklogsToElements(
+                groupedWorklogs[day],
+                settings.begin_date,
+                onWorklogDelete,
+                onWorklogEdit,
+              )}
             </div>,
           );
           return acc;
