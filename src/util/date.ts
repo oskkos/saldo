@@ -5,7 +5,11 @@ import advancedFormat from 'dayjs/plugin/advancedFormat';
 dayjs.extend(isoWeek);
 dayjs.extend(advancedFormat);
 
-export function add(date: Date, value: number, unit: dayjs.ManipulateType) {
+export function add(
+  date: string | number | Date,
+  value: number,
+  unit: dayjs.ManipulateType,
+) {
   return dayjs(date).add(value, unit).toDate();
 }
 
@@ -38,7 +42,7 @@ export function startOfMonth(date: Date) {
 }
 
 export function subtract(
-  date: Date,
+  date: string | number | Date,
   value: number,
   unit: dayjs.ManipulateType,
 ) {

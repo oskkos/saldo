@@ -1,12 +1,13 @@
 'use client';
 import { WorklogFormData } from '@/types';
-import { toDate } from '@/util/date';
-import { toDayMonthYear } from '@/util/dateFormatter';
+import { add, subtract, toDate } from '@/util/date';
+import { toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import { useState, useTransition } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
 import WorklogInputs from '../components/worklogInputs';
 import { useRouter } from 'next/navigation';
+import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
@@ -32,10 +33,30 @@ export default function WorklogForm({
   return (
     <>
       <div className="flex flex-wrap justify-center items-start mt-3">
-        <h2 className="text-xl text-center sm:text-right m-3 w-64">
-          Worklog for {toDayMonthYear(day)}
-        </h2>
+        <div className="flex justify-between items-center w-80">
+          <div>
+            {/* Should probably use Link, but data doesn't get reloaded*/}
+            <a href={`/worklog-entry?day=${toISODay(subtract(day, 1, 'day'))}`}>
+              <MdArrowBack
+                className="w-6 h-6 cursor-pointer"
+                title="Yesterday"
+              />
+            </a>
+          </div>
 
+          <h2 className="text-xl text-center m-3 w-64">
+            {toDayMonthYear(day)}
+          </h2>
+          <div>
+            {/* Should probably use Link, but data doesn't get reloaded*/}
+            <a href={`/worklog-entry?day=${toISODay(add(day, 1, 'day'))}`}>
+              <MdArrowForward
+                className="w-6 h-6 cursor-pointer"
+                title="Tomorrow"
+              />
+            </a>
+          </div>
+        </div>
         <div className="flex flex-wrap justify-between items-center m-3 w-80">
           <WorklogInputs value={value} setValue={setValue} />
           <button
@@ -62,7 +83,7 @@ export default function WorklogForm({
           </button>
         </div>
       </div>
-      <div className="flex flex-wrap justify-center items-start mt-3">
+      <div className="flex flex-wrap justify-center items-center mt-3">
         <ExistingWorklogs
           worklogs={wl}
           onDelete={(deletedWorklogId: number) => {

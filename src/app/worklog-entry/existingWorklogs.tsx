@@ -23,7 +23,7 @@ export default function ExistingWorklogs({
 }) {
   return worklogs.length ? (
     <>
-      <div className="indicator items-start">
+      <div className="indicator justify-center w-80">
         <span className="indicator-item indicator-bottom indicator-center badge badge-accent">
           {countSum(worklogs)}
         </span>
