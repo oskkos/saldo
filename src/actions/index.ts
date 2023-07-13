@@ -9,11 +9,10 @@ import {
 } from '@/repository/userRepository';
 import {
   deleteWorklog,
-  getWorklogs,
   insertWorklog,
   updateWorklog,
 } from '@/repository/worklogRepository';
-import { endOfDay, startOfDay } from '@/util/date';
+import { startOfDay } from '@/util/date';
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user);

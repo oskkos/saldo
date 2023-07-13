@@ -27,7 +27,7 @@ export default function AuthActions({
       <div className="flex items-center">
         <MdAccountCircle className="mr-2 rounded-full h-8 w-8" />
         <MdLogout
-          className="h-6 w-6 cursor-pointer"
+          className="h-6 w-6 cursor-pointer mr-2"
           onClick={() => {
             void signOut();
           }}
@@ -52,7 +52,7 @@ export default function AuthActions({
           <MdAccountCircle className="mr-2 rounded-full h-8 w-8" />
         )}
         <MdLogout
-          className="h-6 w-6 cursor-pointer"
+          className="h-6 w-6 cursor-pointer mr-2"
           onClick={() => {
             void signOut();
           }}
@@ -63,7 +63,7 @@ export default function AuthActions({
   }
   return (
     <MdLogin
-      className="h-6 w-6 cursor-pointer"
+      className="h-6 w-6 cursor-pointer mr-2"
       onClick={() => {
         void signIn('google');
       }}

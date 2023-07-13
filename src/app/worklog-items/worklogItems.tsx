@@ -52,11 +52,9 @@ function dayBadge(day: string, beginDate: Date) {
 export default function WorklogItems({
   worklogs,
   settings,
-  saldo,
 }: {
   worklogs: Worklog[];
   settings: Settings;
-  saldo: JSX.Element;
 }) {
   const [wl, setWl] = useState<Worklog[]>(worklogs);
 
@@ -85,7 +83,6 @@ export default function WorklogItems({
   return (
     <div className="flex flex-col justify-center items-center mt-3">
       <h2 className="text-xl mt-3">All worklogs</h2>
-      <h3 className="text-l mt-3">Current saldo: {saldo}</h3>
 
       <div className="flex flex-nowrap flex-col justify-center items-center m-3 sm:w-3/4">
         {Object.keys(groupedWorklogs).reduce((acc: JSX.Element[], day) => {
