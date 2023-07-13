@@ -39,7 +39,7 @@ export default function WorklogItem({
 
   return (
     <div
-      className={`card w-full shadow-xl mt-4 ${
+      className={`card w-72 shadow-xl mt-4 mx-2 ${
         ignored ? 'bg-base-100' : 'bg-base-200'
       }`}
     >

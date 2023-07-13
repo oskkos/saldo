@@ -20,7 +20,9 @@ export default function Settings({ settings }: { settings: Settings }) {
         <div>Initial balance</div>
         <div className="flex items-center">
           <div className="indicator">
-            <span className="indicator-item badge">Hours</span>
+            <span className="indicator-item indicator-top indicator-center badge">
+              Hours
+            </span>
 
             <input
               type="number"
@@ -37,7 +39,9 @@ export default function Settings({ settings }: { settings: Settings }) {
           </div>
           <span className="mx-3">:</span>
           <div className="indicator">
-            <span className="indicator-item badge">Minutes</span>
+            <span className="indicator-item indicator-top indicator-center badge">
+              Minutes
+            </span>
             <input
               type="number"
               className="input input-bordered w-20"
