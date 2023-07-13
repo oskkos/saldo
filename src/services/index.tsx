@@ -1,28 +1,11 @@
-import { add, startOfDay } from '@/util/date';
+import { add, diffInMinutes, startOfDay } from '@/util/date';
 import { Settings, Worklog } from '@prisma/client';
 
 const EXPECTED_HOURS_PER_DAY = 7.5;
 
-export function calculateCurrentSaldo(
-  settings: Settings,
-  worklogItems: Worklog[],
-) {
-  let sum = settings.initial_balance_hours * 60 + settings.initial_balance_mins;
-  const itemsSorted = [
-    ...worklogItems.sort((a, b) => b.from.getTime() - a.from.getTime()),
-  ];
-
-  for (const item of itemsSorted) {
-    if (item.from.getTime() < settings.begin_date.getTime()) {
-      continue;
-    }
-    const elapsedInMinutes = Math.round(
-      (item.to.getTime() - item.from.getTime()) / 1000 / 60,
-    );
-    sum = sum + elapsedInMinutes;
-  }
+function expectedMinutesUntilToday(beginDate: Date) {
   const today = startOfDay(new Date());
-  let d = settings.begin_date;
+  let d = beginDate;
   let workDays = 0;
   while (d.getTime() <= today.getTime()) {
     const weekDay = d.getDay();
@@ -32,8 +15,9 @@ export function calculateCurrentSaldo(
     }
     workDays++;
   }
-  const expectedInMinutes = workDays * 60 * EXPECTED_HOURS_PER_DAY;
-  const saldoInMinutes = sum - expectedInMinutes;
+  return workDays * 60 * EXPECTED_HOURS_PER_DAY;
+}
+function minutesToSaldoObject(saldoInMinutes: number) {
   if (saldoInMinutes < 0) {
     return {
       hours: Math.ceil(saldoInMinutes / 60),
@@ -52,4 +36,29 @@ export function calculateCurrentSaldo(
         saldoInMinutes % 60,
       )}min`,
   };
+}
+
+export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
+  const worklogsSorted = [
+    ...worklogs.sort((a, b) => b.from.getTime() - a.from.getTime()),
+  ];
+
+  const sum = worklogsSorted.reduce(
+    (acc, worklogItem) => {
+      return worklogItem.from.getTime() < settings.begin_date.getTime()
+        ? acc
+        : acc + diffInMinutes(worklogItem.to, worklogItem.from);
+    },
+    settings.initial_balance_hours * 60 + settings.initial_balance_mins,
+  );
+
+  const saldoInMinutes = sum - expectedMinutesUntilToday(settings.begin_date);
+  return minutesToSaldoObject(saldoInMinutes);
+}
+
+export function calulateWorklogsSum(worklogs: Worklog[]) {
+  const total = worklogs.reduce((sum, worklog) => {
+    return sum + diffInMinutes(worklog.to, worklog.from);
+  }, 0);
+  return minutesToSaldoObject(total);
 }
