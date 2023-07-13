@@ -21,7 +21,7 @@ export default async function WorklogItemsPage() {
     <WorklogItems
       worklogs={worklogs.sort((a, b) => b.from.getTime() - a.from.getTime())}
       settings={settings}
-      saldo={saldo.toString()}
+      saldo={saldo.toBadge()}
     />
   );
 }

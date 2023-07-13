@@ -21,7 +21,7 @@ export default async function Home() {
       <MiniCalendar date={new Date()} />
       <div className="flex flex-wrap flex-col justify-center items-center mt-4">
         <h2 className="text-xl">Current balance</h2>
-        <div className="badge badge-lg badge-primary">{`${saldo.toString()}`}</div>
+        {saldo.toBadge()}
       </div>
     </div>
   );

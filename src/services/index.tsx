@@ -19,22 +19,28 @@ function expectedMinutesUntilToday(beginDate: Date) {
 }
 function minutesToSaldoObject(saldoInMinutes: number) {
   if (saldoInMinutes < 0) {
+    const negativeStr = `-${Math.abs(
+      Math.ceil(saldoInMinutes / 60),
+    )}h ${Math.abs(Math.ceil(saldoInMinutes % 60))}min`;
     return {
       hours: Math.ceil(saldoInMinutes / 60),
       minutes: Math.ceil(saldoInMinutes % 60),
-      toString: () =>
-        `-${Math.abs(Math.ceil(saldoInMinutes / 60))}h ${Math.abs(
-          Math.ceil(saldoInMinutes % 60),
-        )}min`,
+      toString: () => negativeStr,
+      toBadge: (className = '') => (
+        <div className={`badge badge-error ${className}`}>{negativeStr}</div>
+      ),
     };
   }
+  const positiveStr = `${Math.floor(saldoInMinutes / 60)}h ${Math.floor(
+    saldoInMinutes % 60,
+  )}min`;
   return {
     hours: Math.floor(saldoInMinutes / 60),
     minutes: Math.floor(saldoInMinutes % 60),
-    toString: () =>
-      `${Math.floor(saldoInMinutes / 60)}h ${Math.floor(
-        saldoInMinutes % 60,
-      )}min`,
+    toString: () => positiveStr,
+    toBadge: (className = '') => (
+      <div className={`badge badge-success ${className}`}>{positiveStr}</div>
+    ),
   };
 }
 

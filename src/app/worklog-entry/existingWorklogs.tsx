@@ -13,14 +13,11 @@ export default function ExistingWorklogs({
 }) {
   return worklogs.length ? (
     <>
-      <div className="indicator justify-center w-80">
-        <span className="indicator-item indicator-bottom indicator-center badge badge-accent">
-          {calulateWorklogsSum(worklogs).toString()}
-        </span>
-
+      <div className="flex flex-col justify-center items-center w-80">
         <h2 className="text-xl text-center sm:text-right m-3 w-64">
           Existing worklogs for day
         </h2>
+        {calulateWorklogsSum(worklogs).toBadge()}
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
