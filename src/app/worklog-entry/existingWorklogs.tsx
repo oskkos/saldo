@@ -1,7 +1,6 @@
 import { Worklog } from '@prisma/client';
 import WorklogItem from '../components/worklogItem/worklogItem';
 import { diffInMinutes } from '@/util/date';
-import { WorklogFormData } from '@/types';
 
 function countSum(worklogs: Worklog[]) {
   const total = worklogs.reduce((sum, worklog) => {

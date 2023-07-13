@@ -22,6 +22,7 @@ export default async function WorklogEntry({
   );
   return (
     <WorklogForm
+      key={searchParams.day}
       day={searchParams.day}
       worklogs={worklogs}
       onSubmit={onWorklogSubmit.bind(null, user.id)}

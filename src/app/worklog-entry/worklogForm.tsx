@@ -8,6 +8,7 @@ import { Worklog } from '@prisma/client';
 import WorklogInputs from '../components/worklogInputs';
 import { useRouter } from 'next/navigation';
 import { MdArrowBack, MdArrowForward } from 'react-icons/md';
+import Link from 'next/link';
 
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
@@ -35,26 +36,26 @@ export default function WorklogForm({
       <div className="flex flex-wrap justify-center items-start mt-3">
         <div className="flex justify-between items-center w-80">
           <div>
-            {/* Should probably use Link, but data doesn't get reloaded*/}
-            <a href={`/worklog-entry?day=${toISODay(subtract(day, 1, 'day'))}`}>
+            <Link
+              href={`/worklog-entry?day=${toISODay(subtract(day, 1, 'day'))}`}
+            >
               <MdArrowBack
                 className="w-6 h-6 cursor-pointer"
                 title="Yesterday"
               />
-            </a>
+            </Link>
           </div>
 
           <h2 className="text-xl text-center m-3 w-64">
             {toDayMonthYear(day)}
           </h2>
           <div>
-            {/* Should probably use Link, but data doesn't get reloaded*/}
-            <a href={`/worklog-entry?day=${toISODay(add(day, 1, 'day'))}`}>
+            <Link href={`/worklog-entry?day=${toISODay(add(day, 1, 'day'))}`}>
               <MdArrowForward
                 className="w-6 h-6 cursor-pointer"
                 title="Tomorrow"
               />
-            </a>
+            </Link>
           </div>
         </div>
         <div className="flex flex-wrap justify-between items-center m-3 w-80">
