@@ -42,7 +42,7 @@ export default async function Navbar({
               <MdOutlineMenu className="w-6 h-6" />
             </label>
           </div>
-          <div className="pr-2 mr-2 text-xl">saldo</div>
+          <div className="pr-2 mr-2 sm:ml-4 text-xl">saldo</div>
           <div className="hidden md:block">
             <ul className="menu menu-horizontal">{items(session)}</ul>
           </div>

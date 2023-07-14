@@ -43,7 +43,7 @@ export default function QuickAddWorklogModal({
           <input
             type="date"
             placeholder="Date"
-            className="input input-bordered w-full"
+            className="input input-bordered w-full mb-3"
             value={value.day}
             onChange={(e) => {
               setValue({ ...value, day: e.target.value });

@@ -17,7 +17,10 @@ export function daysInMonth(date: Date) {
   return dayjs(date).daysInMonth();
 }
 
-export function diffInMinutes(date1: Date, date2: Date) {
+export function diffInMinutes(
+  date1: string | number | Date,
+  date2: string | number | Date,
+) {
   return dayjs(date1).diff(date2, 'm');
 }
 

@@ -33,3 +33,6 @@ export function toWeekday(date: string | number | Date) {
 export function toYearAndWeek(date: string | number | Date) {
   return dayjs(date).format('YYYY-W');
 }
+export function toYearAndMonth(date: string | number | Date) {
+  return dayjs(date).format('YYYY-MM');
+}
