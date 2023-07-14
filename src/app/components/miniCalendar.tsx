@@ -95,26 +95,25 @@ const dayItem = (
   },
   beginDate: Date,
 ) => {
+  const minutes = saldo.hours * 60 + saldo.minutes;
+  const hoursCompact = Math.round((minutes * 10) / 60) / 10;
   const borderClass = () => {
     if (status !== 'current') {
       return '';
     }
-    const minutes = saldo.hours * 60 + saldo.minutes;
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     const beforeBegin = date.getTime() < beginDate.getTime();
     const inFuture = date.getTime() > new Date().getTime();
-    if (isWeekend) {
-      return minutes ? 'rounded-full border-2 border-solid border-info' : '';
-    }
-    if (minutes === 0 && inFuture) {
-      return '';
-    }
-    if (beforeBegin) {
+    if (beforeBegin || inFuture) {
       return minutes !== 0
         ? 'rounded-full border-2 border-solid border-base-300'
         : '';
     }
-    if (minutes < 120) {
+
+    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+    if (isWeekend) {
+      return minutes ? 'rounded-full border-2 border-solid border-info' : '';
+    }
+    if (minutes === 0) {
       return 'rounded-full border-2 border-solid border-error';
     }
     if (minutes < 450) {
@@ -133,7 +132,12 @@ const dayItem = (
       key={toISODay(date)}
       className={`${calendarDayItemClass} ${borderClass()} ${sameDayClass} ${currentMonthClass}`}
     >
-      {toDay(date)}
+      <div className="flex flex-col justify-center items-center">
+        <div>{toDay(date)}</div>
+        <div className="text-[10px]/[0.75rem]">
+          {status === 'current' && hoursCompact ? hoursCompact : '\u00A0'}
+        </div>
+      </div>
     </Link>
   );
 };
