@@ -25,6 +25,22 @@ export default function WorklogInputs({
         className="input input-bordered w-[45%]"
         onChange={(e) => setValue({ ...value, to: e.target.value })}
       />
+      <div className="form-control ml-2 mt-3 w-full">
+        <label className="label cursor-pointer">
+          <span className="label-text">Subtract lunch break automatically</span>
+          <input
+            type="checkbox"
+            className="toggle toggle-primary"
+            checked={value.subtractLunchBreak}
+            onChange={(e) => {
+              setValue({
+                ...value,
+                subtractLunchBreak: e.target.checked,
+              });
+            }}
+          />
+        </label>
+      </div>
       <textarea
         className="textarea textarea-bordered mt-3 w-full"
         placeholder="Comment"

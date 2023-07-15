@@ -19,14 +19,15 @@ model User {
 }
 
 model Worklog {
-  id         Int      @id @default(autoincrement())
-  user_id    Int
-  user       User     @relation(fields: [user_id], references: [id])
-  from       DateTime
-  to         DateTime
-  comment    String?
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id                   Int      @id @default(autoincrement())
+  user_id              Int
+  user                 User     @relation(fields: [user_id], references: [id])
+  from                 DateTime
+  to                   DateTime
+  comment              String?
+  subtract_lunch_break Boolean  @default(false)
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
 }
 
 model Settings {

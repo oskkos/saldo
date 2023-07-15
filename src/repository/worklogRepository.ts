@@ -18,7 +18,7 @@ export async function getWorklogs(
 
 export async function insertWorklog(
   userId: number,
-  { from, to, comment }: WorklogFormData,
+  { from, to, comment, subtractLunchBreak }: WorklogFormData,
 ) {
   const worklog = await prisma.worklog.create({
     data: {
@@ -26,6 +26,7 @@ export async function insertWorklog(
       to,
       comment,
       user_id: userId,
+      subtract_lunch_break: subtractLunchBreak,
     },
   });
   return worklog;
@@ -33,7 +34,7 @@ export async function insertWorklog(
 
 export async function updateWorklog(
   worklogId: number,
-  { from, to, comment }: WorklogFormData,
+  { from, to, comment, subtractLunchBreak }: WorklogFormData,
 ) {
   const worklog = await prisma.worklog.update({
     where: { id: worklogId },
@@ -41,6 +42,7 @@ export async function updateWorklog(
       from,
       to,
       comment,
+      subtract_lunch_break: subtractLunchBreak,
     },
   });
   return worklog;

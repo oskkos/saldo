@@ -26,6 +26,7 @@ export default function WorklogForm({
     from: '08:00',
     to: '16:00',
     comment: '',
+    subtractLunchBreak: true,
   });
   const [wl, setWl] = useState(worklogs);
   const [, setTransition] = useTransition();

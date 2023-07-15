@@ -7,6 +7,7 @@ export interface WorklogFormData {
   from: string;
   to: string;
   comment: string;
+  subtractLunchBreak: boolean;
 }
 
 export interface SettingsData {

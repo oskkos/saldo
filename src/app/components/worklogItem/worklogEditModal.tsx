@@ -31,6 +31,7 @@ export default function WorklogEditModal({
     from: toTime(worklog.from),
     to: toTime(worklog.to),
     comment: (worklog.comment ?? '') as unknown as string,
+    subtractLunchBreak: true,
   });
   const day = worklog.from.toISOString().split('T')[0];
   return (

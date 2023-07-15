@@ -33,6 +33,7 @@ export default function QuickAddWorklogModal({
     comment: '',
     from: '08:00',
     to: '16:00',
+    subtractLunchBreak: true,
   });
   return (
     <dialog id={modalId} className="modal modal-bottom sm:modal-middle">
