@@ -7,6 +7,7 @@ import {
   daysInMonth,
   endOfMonth,
   sameDay,
+  startOfDay,
   startOfMonth,
   subtract,
 } from '@/util/date';
@@ -21,7 +22,8 @@ import {
 import { Worklog } from '@prisma/client';
 import { calculateWorklogsSum } from '@/services';
 
-const calendarItemClass = 'w-10 h-10 flex justify-center items-center';
+const calendarItemClass =
+  'w-10 sm:w-12 h-12 sm:h-14 sm:text-lg flex justify-center items-center rounded-full';
 const calendarDayItemClass = `${calendarItemClass} cursor-pointer`;
 const calendarIconClass = 'w-6 h-6 cursor-pointer';
 
@@ -76,7 +78,7 @@ const daysForCalendarBuilder = (
 const weekItem = (date: Date) => {
   return (
     <div
-      className={`${calendarItemClass} text-base-300`}
+      className={`${calendarItemClass} text-base-300 sm:text-lg`}
       key={toYearAndWeek(date)}
     >
       {toWeek(date)}
@@ -101,25 +103,26 @@ const dayItem = (
     if (status !== 'current') {
       return '';
     }
-    const beforeBegin = date.getTime() < beginDate.getTime();
-    const inFuture = date.getTime() > new Date().getTime();
+    const beforeBegin =
+      startOfDay(date.getTime()) < startOfDay(beginDate.getTime());
+    const inFuture =
+      startOfDay(date.getTime()) > startOfDay(new Date().getTime());
+    console.log(date.toISOString(), beforeBegin, inFuture);
     if (beforeBegin || inFuture) {
-      return minutes !== 0
-        ? 'rounded-full border-2 border-solid border-base-300'
-        : '';
+      return minutes !== 0 ? 'border-2 border-solid border-base-300' : '';
     }
 
     const isWeekend = date.getDay() === 0 || date.getDay() === 6;
     if (isWeekend) {
-      return minutes ? 'rounded-full border-2 border-solid border-info' : '';
+      return minutes ? 'border-2 border-solid border-info' : '';
     }
     if (minutes === 0) {
-      return 'rounded-full border-2 border-solid border-error';
+      return 'border-2 border-solid border-error';
     }
     if (minutes < 450) {
-      return 'rounded-full border-2 border-solid border-warning';
+      return 'border-2 border-solid border-warning';
     }
-    return 'rounded-full border-2 border-solid border-success';
+    return 'border-2 border-solid border-success';
   };
   const sameDayClass = sameDay(date, new Date())
     ? 'bg-neutral text-neutral-content'
@@ -134,8 +137,8 @@ const dayItem = (
     >
       <div className="flex flex-col justify-center items-center">
         <div>{toDay(date)}</div>
-        <div className="text-[10px]/[0.75rem]">
-          {status === 'current' && hoursCompact ? hoursCompact : '\u00A0'}
+        <div className="text-[10px]/[0.75rem] sm:text-sm">
+          {status === 'current' && hoursCompact ? `${hoursCompact}h` : '\u00A0'}
         </div>
       </div>
     </Link>
