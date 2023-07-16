@@ -2,8 +2,13 @@ import MiniCalendar from '@/app/components/miniCalendar';
 import { getSettings, getUser } from '@/repository/userRepository';
 import { getSession } from './api/auth/[...nextauth]/route';
 import { getWorklogs } from '@/repository/worklogRepository';
+import { startOfMonth } from '@/util/date';
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: { month: string };
+}) {
   const session = await getSession();
   if (!session) {
     throw new Error('No session');
@@ -18,7 +23,11 @@ export default async function Home() {
   return (
     <div className="flex flex-wrap justify-center mt-4">
       <MiniCalendar
-        date={new Date()}
+        date={
+          searchParams.month
+            ? startOfMonth(searchParams.month)
+            : startOfMonth(new Date())
+        }
         beginDate={settings.begin_date}
         worklogs={worklogs}
       />

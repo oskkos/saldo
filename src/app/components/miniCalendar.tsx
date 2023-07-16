@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { RefObject, useRef, useState } from 'react';
 import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
 import Link from 'next/link';
 import {
@@ -17,10 +17,16 @@ import {
   toMonthAndYear,
   toWeek,
   toWeekday,
+  toYearAndMonth,
   toYearAndWeek,
 } from '@/util/dateFormatter';
 import { Worklog } from '@prisma/client';
 import { calculateWorklogsSum } from '@/services';
+import useSwipeEvents, {
+  SwipeEventState,
+} from 'beautiful-react-hooks/useSwipeEvents';
+import { SomeCallback } from 'beautiful-react-hooks/shared/types';
+import { useRouter } from 'next/navigation';
 
 const calendarItemClass =
   'w-10 sm:w-12 h-12 sm:h-14 sm:text-lg flex justify-center items-center rounded-full';
@@ -152,7 +158,37 @@ export default function MiniCalendar({
   beginDate: Date;
   worklogs: Worklog[];
 }) {
-  const [d, setD] = useState(date);
+  const router = useRouter();
+  const ref = useRef<HTMLDivElement>(null);
+  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, { threshold: 50 });
+  const [lastSwipeInfo, setLastSwipeInfo] = useState<SwipeEventState | null>(
+    null,
+  );
+  onSwipeLeft(setLastSwipeInfo as unknown as SomeCallback<SwipeEventState>);
+  onSwipeRight(setLastSwipeInfo as unknown as SomeCallback<SwipeEventState>);
+
+  const toCurrentMonth = () => {
+    router.push('/');
+  };
+  const toPrevMonth = () => {
+    router.push(
+      '/?month=' + toYearAndMonth(startOfMonth(subtract(date, 1, 'month'))),
+    );
+  };
+  const toNextMonth = () => {
+    router.push(
+      '/?month=' + toYearAndMonth(startOfMonth(add(date, 1, 'month'))),
+    );
+  };
+
+  if (lastSwipeInfo?.direction === 'right') {
+    setLastSwipeInfo(null);
+    toPrevMonth();
+  }
+  if (lastSwipeInfo?.direction === 'left') {
+    setLastSwipeInfo(null);
+    toNextMonth();
+  }
 
   const worklogsByDay = worklogs.reduce(
     (acc: Record<string, Worklog[] | undefined>, x) => {
@@ -163,37 +199,31 @@ export default function MiniCalendar({
     {},
   );
 
-  const daysForCalendar = daysForCalendarBuilder(d, worklogsByDay);
+  const daysForCalendar = daysForCalendarBuilder(date, worklogsByDay);
   return (
-    <div className="grid gap-0.5 grid-cols-8 justify-items-center">
+    <div className="grid gap-0.5 grid-cols-8 justify-items-center" ref={ref}>
       <div className={calendarItemClass}>
         <MdArrowBack
           title="Previous month"
           className={calendarIconClass}
-          onClick={() => {
-            setD(subtract(d, 1, 'month'));
-          }}
+          onClick={toPrevMonth}
         />
       </div>
       <div className="col-span-5 flex justify-center items-center text-xl">
-        {toMonthAndYear(d)}
+        {toMonthAndYear(date)}
       </div>
       <div className={calendarItemClass}>
         <MdToday
-          title="today"
+          title="This month"
           className={calendarIconClass}
-          onClick={() => {
-            setD(new Date());
-          }}
+          onClick={toCurrentMonth}
         />
       </div>{' '}
       <div className={calendarItemClass}>
         <MdArrowForward
           title="Next month"
           className={calendarIconClass}
-          onClick={() => {
-            setD(add(d, 1, 'month'));
-          }}
+          onClick={toNextMonth}
         />
       </div>
       {['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((x, i) => (

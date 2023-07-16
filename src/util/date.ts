@@ -40,7 +40,7 @@ export function startOfDay(date: string | number | Date) {
   return dayjs(date).startOf('day').toDate();
 }
 
-export function startOfMonth(date: Date) {
+export function startOfMonth(date: string | number | Date) {
   return dayjs(date).startOf('month').toDate();
 }
 
