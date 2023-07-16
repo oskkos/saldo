@@ -30,8 +30,8 @@ export default function WorklogEditModal({
   const [value, setValue] = useState({
     from: toTime(worklog.from),
     to: toTime(worklog.to),
-    comment: (worklog.comment ?? '') as unknown as string,
-    subtractLunchBreak: true,
+    comment: worklog.comment ?? '',
+    subtractLunchBreak: worklog.subtract_lunch_break,
   });
   const day = worklog.from.toISOString().split('T')[0];
   return (

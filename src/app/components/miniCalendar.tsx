@@ -107,7 +107,6 @@ const dayItem = (
       startOfDay(date.getTime()) < startOfDay(beginDate.getTime());
     const inFuture =
       startOfDay(date.getTime()) > startOfDay(new Date().getTime());
-    console.log(date.toISOString(), beforeBegin, inFuture);
     if (beforeBegin || inFuture) {
       return minutes !== 0 ? 'border-2 border-solid border-base-300' : '';
     }
