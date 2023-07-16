@@ -2,13 +2,14 @@
 import { WorklogFormData } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
 import { toDayMonthYear, toISODay } from '@/util/dateFormatter';
-import { useState, useTransition } from 'react';
+import { useRef, useState, useTransition } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
 import WorklogInputs from '../components/worklogInputs';
 import { useRouter } from 'next/navigation';
 import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 import Link from 'next/link';
+import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
 
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
@@ -32,9 +33,21 @@ export default function WorklogForm({
   const [, setTransition] = useTransition();
   const router = useRouter();
 
+  const ref = useRef<HTMLDivElement>(null);
+  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, {
+    threshold: 80,
+    preventDefault: false,
+  });
+  onSwipeLeft(() => {
+    router.push(`/worklog-entry?day=${toISODay(add(day, 1, 'day'))}`);
+  });
+  onSwipeRight(() => {
+    router.push(`/worklog-entry?day=${toISODay(subtract(day, 1, 'day'))}`);
+  });
+
   return (
     <>
-      <div className="flex flex-wrap justify-center items-start mt-3">
+      <div className="flex flex-wrap justify-center items-start mt-3" ref={ref}>
         <div className="flex justify-between items-center w-80">
           <div>
             <Link
