@@ -1,5 +1,5 @@
 'use client';
-import { RefObject, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
 import Link from 'next/link';
 import {
@@ -22,10 +22,7 @@ import {
 } from '@/util/dateFormatter';
 import { Worklog } from '@prisma/client';
 import { calculateWorklogsSum } from '@/services';
-import useSwipeEvents, {
-  SwipeEventState,
-} from 'beautiful-react-hooks/useSwipeEvents';
-import { SomeCallback } from 'beautiful-react-hooks/shared/types';
+import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
 import { useRouter } from 'next/navigation';
 
 const calendarItemClass =
@@ -149,6 +146,11 @@ const dayItem = (
     </Link>
   );
 };
+const nextMonthStr = (date: Date) =>
+  toYearAndMonth(startOfMonth(add(date, 1, 'month')));
+const prevMonthStr = (date: Date) =>
+  toYearAndMonth(startOfMonth(subtract(date, 1, 'month')));
+
 export default function MiniCalendar({
   date,
   beginDate,
@@ -159,36 +161,27 @@ export default function MiniCalendar({
   worklogs: Worklog[];
 }) {
   const router = useRouter();
-  const ref = useRef<HTMLDivElement>(null);
-  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, { threshold: 50 });
-  const [lastSwipeInfo, setLastSwipeInfo] = useState<SwipeEventState | null>(
-    null,
-  );
-  onSwipeLeft(setLastSwipeInfo as unknown as SomeCallback<SwipeEventState>);
-  onSwipeRight(setLastSwipeInfo as unknown as SomeCallback<SwipeEventState>);
-
   const toCurrentMonth = () => {
     router.push('/');
   };
   const toPrevMonth = () => {
-    router.push(
-      '/?month=' + toYearAndMonth(startOfMonth(subtract(date, 1, 'month'))),
-    );
+    router.push(`/?month=${prevMonthStr(date)}`);
   };
   const toNextMonth = () => {
-    router.push(
-      '/?month=' + toYearAndMonth(startOfMonth(add(date, 1, 'month'))),
-    );
+    router.push(`/?month=${nextMonthStr(date)}`);
   };
 
-  if (lastSwipeInfo?.direction === 'right') {
-    setLastSwipeInfo(null);
-    toPrevMonth();
-  }
-  if (lastSwipeInfo?.direction === 'left') {
-    setLastSwipeInfo(null);
+  const ref = useRef<HTMLDivElement>(null);
+  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, {
+    threshold: 80,
+    preventDefault: false,
+  });
+  onSwipeLeft(() => {
     toNextMonth();
-  }
+  });
+  onSwipeRight(() => {
+    toPrevMonth();
+  });
 
   const worklogsByDay = worklogs.reduce(
     (acc: Record<string, Worklog[] | undefined>, x) => {
