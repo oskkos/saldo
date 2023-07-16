@@ -2,6 +2,7 @@ import { getWorklogs } from '@/repository/worklogRepository';
 import { getSession } from '../api/auth/[...nextauth]/route';
 import { getSettings, getUser } from '@/repository/userRepository';
 import WorklogItems from './worklogItems';
+import { sortWorklogs } from '@/services';
 
 export default async function WorklogItemsPage() {
   const session = await getSession();
@@ -15,10 +16,5 @@ export default async function WorklogItemsPage() {
     throw new Error('No settings!');
   }
 
-  return (
-    <WorklogItems
-      worklogs={worklogs.sort((a, b) => b.from.getTime() - a.from.getTime())}
-      settings={settings}
-    />
-  );
+  return <WorklogItems worklogs={sortWorklogs(worklogs)} settings={settings} />;
 }

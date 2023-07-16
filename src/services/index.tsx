@@ -1,8 +1,9 @@
+import {
+  EXPECTED_HOURS_PER_DAY,
+  EXPECTED_MINUTES_LUNCH_BREAK,
+} from '@/constants';
 import { add, diffInMinutes, startOfDay } from '@/util/date';
 import { Settings, Worklog } from '@prisma/client';
-
-const EXPECTED_HOURS_PER_DAY = 7.5;
-const EXPECTED_MINUTES_LUNCH_BREAK = 30;
 
 function expectedMinutesUntilToday(beginDate: Date) {
   const today = startOfDay(new Date());
@@ -46,11 +47,7 @@ function minutesToSaldoObject(saldoInMinutes: number) {
 }
 
 export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
-  const worklogsSorted = [
-    ...worklogs.sort((a, b) => b.from.getTime() - a.from.getTime()),
-  ];
-
-  const sum = worklogsSorted.reduce(
+  const sum = sortWorklogs(worklogs).reduce(
     (acc, worklogItem) => {
       return worklogItem.from.getTime() < settings.begin_date.getTime()
         ? acc
@@ -76,4 +73,8 @@ export function calculateWorklogsSum(worklogs: Worklog[]) {
     );
   }, 0);
   return minutesToSaldoObject(total);
+}
+
+export function sortWorklogs(worklogs: Worklog[]) {
+  return [...worklogs].sort((a, b) => b.from.getTime() - a.from.getTime());
 }

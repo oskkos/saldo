@@ -84,7 +84,7 @@ const weekItem = (date: Date) => {
       className={`${calendarItemClass} text-base-300 sm:text-lg`}
       key={toYearAndWeek(date)}
     >
-      {toWeek(date)}
+      {calendarCell(toWeek(date), '\u00A0')}
     </div>
   );
 };
@@ -137,15 +137,20 @@ const dayItem = (
       key={toISODay(date)}
       className={`${calendarDayItemClass} ${borderClass()} ${sameDayClass} ${currentMonthClass}`}
     >
-      <div className="flex flex-col justify-center items-center">
-        <div>{toDay(date)}</div>
-        <div className="text-[10px]/[0.75rem] sm:text-sm">
-          {status === 'current' && hoursCompact ? `${hoursCompact}h` : '\u00A0'}
-        </div>
-      </div>
+      {calendarCell(
+        toDay(date),
+        status === 'current' && hoursCompact ? `${hoursCompact}h` : '\u00A0',
+      )}
     </Link>
   );
 };
+const calendarCell = (mainText: string | number, subText: string) => (
+  <div className="flex flex-col justify-center items-center">
+    <div>{mainText}</div>
+    <div className="text-[10px]/[0.75rem] sm:text-sm">{subText}</div>
+  </div>
+);
+
 const nextMonthStr = (date: Date) =>
   toYearAndMonth(startOfMonth(add(date, 1, 'month')));
 const prevMonthStr = (date: Date) =>

@@ -9,6 +9,7 @@ import {
   toYearAndMonth,
 } from '@/util/dateFormatter';
 import { diffInMinutes, startOfDay } from '@/util/date';
+import { sortWorklogs } from '@/services';
 
 function groupWorklogsByDay(worklogs: Worklog[]) {
   return worklogs.reduce((acc: Record<string, Worklog[] | undefined>, x) => {
@@ -96,18 +97,10 @@ export default function WorklogItems({
   }
 
   const onWorklogDelete = (deletedWorklogId: number) => {
-    setWl(
-      wl
-        .filter((x) => x.id !== deletedWorklogId)
-        .sort((a, b) => b.from.getTime() - a.from.getTime()),
-    );
+    setWl(sortWorklogs(wl.filter((x) => x.id !== deletedWorklogId)));
   };
-  const onWorklogEdit = (editedWorklog: Worklog) => {
-    setWl(
-      wl
-        .map((x) => (x.id !== editedWorklog.id ? x : editedWorklog))
-        .sort((a, b) => b.from.getTime() - a.from.getTime()),
-    );
+  const onWorklogEdit = (edited: Worklog) => {
+    setWl(sortWorklogs(wl.map((x) => (x.id !== edited.id ? x : edited))));
   };
   const groupedWorklogsByDay = groupWorklogsByDay(wl);
   const groupedWorklogsByMonth = groupWorklogsByMonth(groupedWorklogsByDay);

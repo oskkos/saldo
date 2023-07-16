@@ -10,6 +10,12 @@ import { useRouter } from 'next/navigation';
 import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 import Link from 'next/link';
 import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
+import {
+  NEW_WORKLOG_DEFAULT_FROM,
+  NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
+  NEW_WORKLOG_DEFAULT_TO,
+} from '@/constants';
+import { sortWorklogs } from '@/services';
 
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
@@ -24,10 +30,10 @@ export default function WorklogForm({
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
   const [value, setValue] = useState({
-    from: '08:00',
-    to: '16:00',
+    from: NEW_WORKLOG_DEFAULT_FROM,
+    to: NEW_WORKLOG_DEFAULT_TO,
     comment: '',
-    subtractLunchBreak: true,
+    subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
   const [wl, setWl] = useState(worklogs);
   const [, setTransition] = useTransition();
@@ -85,11 +91,7 @@ export default function WorklogForm({
               setTransition(() => {
                 onSubmit(ret)
                   .then((x) => {
-                    setWl(
-                      [...wl, x].sort(
-                        (a, b) => b.from.getTime() - a.from.getTime(),
-                      ),
-                    );
+                    setWl(sortWorklogs([...wl, x]));
                     router.refresh(); // https://github.com/vercel/next.js/issues/52350
                   })
                   .catch(() => {
@@ -106,17 +108,11 @@ export default function WorklogForm({
         <ExistingWorklogs
           worklogs={wl}
           onDelete={(deletedWorklogId: number) => {
-            setWl(
-              wl
-                .filter((x) => x.id !== deletedWorklogId)
-                .sort((a, b) => b.from.getTime() - a.from.getTime()),
-            );
+            setWl(sortWorklogs(wl.filter((x) => x.id !== deletedWorklogId)));
           }}
-          onEdit={(editedWorklog: Worklog) => {
+          onEdit={(edited: Worklog) => {
             setWl(
-              wl
-                .map((x) => (x.id !== editedWorklog.id ? x : editedWorklog))
-                .sort((a, b) => b.from.getTime() - a.from.getTime()),
+              sortWorklogs(wl.map((x) => (x.id !== edited.id ? x : edited))),
             );
           }}
         />
