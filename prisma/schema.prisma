@@ -26,8 +26,16 @@ model Worklog {
   to                   DateTime
   comment              String?
   subtract_lunch_break Boolean  @default(false)
+  absence              Absence?
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
+}
+
+enum Absence {
+  holiday
+  flex_hours
+  sick_leave
+  other
 }
 
 model Settings {

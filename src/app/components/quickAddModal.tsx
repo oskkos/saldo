@@ -7,6 +7,11 @@ import WorklogInputs from './worklogInputs';
 import { WorklogFormData } from '@/types';
 import { toISODay } from '@/util/dateFormatter';
 import { onWorklogSubmit } from '@/actions';
+import {
+  NEW_WORKLOG_DEFAULT_FROM,
+  NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
+  NEW_WORKLOG_DEFAULT_TO,
+} from '@/constants';
 
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
@@ -31,9 +36,9 @@ export default function QuickAddWorklogModal({
   const [value, setValue] = useState<WorklogFormData & { day?: string }>({
     day: toISODay(new Date()),
     comment: '',
-    from: '08:00',
-    to: '16:00',
-    subtractLunchBreak: true,
+    from: NEW_WORKLOG_DEFAULT_FROM,
+    to: NEW_WORKLOG_DEFAULT_TO,
+    subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
   return (
     <dialog id={modalId} className="modal modal-bottom sm:modal-middle">
@@ -72,7 +77,7 @@ export default function QuickAddWorklogModal({
                     router.refresh(); // https://github.com/vercel/next.js/issues/52350
                   })
                   .catch(() => {
-                    throw new Error('Failed to edit worklog');
+                    throw new Error('Failed to add worklog');
                   });
               });
             }}

@@ -1,6 +1,14 @@
 'use client';
 import { useRef } from 'react';
-import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
+import {
+  MdArrowBack,
+  MdArrowForward,
+  MdMoreTime,
+  MdOutlineSick,
+  MdToday,
+  MdWorkOff,
+} from 'react-icons/md';
+import { GiPalmTree } from 'react-icons/gi';
 import Link from 'next/link';
 import {
   add,
@@ -24,11 +32,33 @@ import { Worklog } from '@prisma/client';
 import { calculateWorklogsSum } from '@/services';
 import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
 import { useRouter } from 'next/navigation';
+import { AbsenceReason, SaldoForDay } from '@/types';
+import { throwUnsupportedEnumMember } from '@/util';
 
 const calendarItemClass =
   'w-10 sm:w-12 h-12 sm:h-14 sm:text-lg flex justify-center items-center rounded-full';
 const calendarDayItemClass = `${calendarItemClass} cursor-pointer`;
 const calendarIconClass = 'w-6 h-6 cursor-pointer';
+
+const dailyDataForCalendar = (
+  date: Date,
+  status: string,
+  worklogs: Worklog[],
+): {
+  date: Date;
+  status: string;
+  saldo: SaldoForDay;
+  absence: AbsenceReason | undefined;
+} => {
+  return {
+    date,
+    status,
+    saldo: calculateWorklogsSum(worklogs),
+    absence: worklogs.find((wl) => wl.absence)?.absence as unknown as
+      | AbsenceReason
+      | undefined,
+  };
+};
 
 const daysForCalendarBuilder = (
   d: Date,
@@ -41,22 +71,22 @@ const daysForCalendarBuilder = (
     .fill(null)
     .map((_, i) => {
       const prevD = subtract(startOfMonthDate, prevMonthDateAmount - i, 'days');
-      return {
-        date: prevD,
-        status: 'prev',
-        saldo: calculateWorklogsSum(worklogsByDay[toISODay(prevD)] ?? []),
-      };
+      return dailyDataForCalendar(
+        prevD,
+        'prev',
+        worklogsByDay[toISODay(prevD)] ?? [],
+      );
     });
 
   const currentMonthDates = Array(daysInMonth(d))
     .fill(null)
     .map((_, i) => {
       const currentD = add(startOfMonthDate, i, 'days');
-      return {
-        date: currentD,
-        status: 'current',
-        saldo: calculateWorklogsSum(worklogsByDay[toISODay(currentD)] ?? []),
-      };
+      return dailyDataForCalendar(
+        currentD,
+        'current',
+        worklogsByDay[toISODay(currentD)] ?? [],
+      );
     });
 
   const endOfMonthDate = endOfMonth(d);
@@ -69,11 +99,11 @@ const daysForCalendarBuilder = (
           .fill(null)
           .map((_, i) => {
             const nextD = add(endOfMonthDate, i + 1, 'days');
-            return {
-              date: nextD,
-              status: 'next',
-              saldo: calculateWorklogsSum(worklogsByDay[toISODay(nextD)] ?? []),
-            };
+            return dailyDataForCalendar(
+              nextD,
+              'next',
+              worklogsByDay[toISODay(nextD)] ?? [],
+            );
           });
 
   return [...prevMonthDates, ...currentMonthDates, ...nextMonthDates];
@@ -93,10 +123,12 @@ const dayItem = (
     date,
     status,
     saldo,
+    absence,
   }: {
     date: Date;
     status: string;
     saldo: { hours: number; minutes: number; toString: () => string };
+    absence?: AbsenceReason;
   },
   beginDate: Date,
 ) => {
@@ -140,16 +172,39 @@ const dayItem = (
       {calendarCell(
         toDay(date),
         status === 'current' && hoursCompact ? `${hoursCompact}h` : '\u00A0',
+        absence,
       )}
     </Link>
   );
 };
-const calendarCell = (mainText: string | number, subText: string) => (
-  <div className="flex flex-col justify-center items-center">
-    <div>{mainText}</div>
-    <div className="text-[10px]/[0.75rem] sm:text-sm">{subText}</div>
-  </div>
-);
+const calendarCell = (
+  mainText: string | number,
+  subText: string,
+  absence?: AbsenceReason,
+) => {
+  let sub;
+  if (absence) {
+    if (absence === AbsenceReason.holiday) {
+      sub = <GiPalmTree className="w-5 h-5" title="Holiday" />;
+    } else if (absence === AbsenceReason.sick_leave) {
+      sub = <MdOutlineSick className="w-5 h-5" title="Sick leave" />;
+    } else if (absence === AbsenceReason.flex_hours) {
+      sub = <MdMoreTime className="w-5 h-5" title="Flex hours" />;
+    } else if (absence === AbsenceReason.other) {
+      sub = <MdWorkOff className="w-5 h-5" title="Full-day absence" />;
+    } else {
+      throwUnsupportedEnumMember(absence);
+    }
+  } else {
+    sub = <div className="text-[10px]/[0.75rem] sm:text-sm">{subText}</div>;
+  }
+  return (
+    <div className="flex flex-col justify-center items-center">
+      <div>{mainText}</div>
+      {sub}
+    </div>
+  );
+};
 
 const nextMonthStr = (date: Date) =>
   toYearAndMonth(startOfMonth(add(date, 1, 'month')));
