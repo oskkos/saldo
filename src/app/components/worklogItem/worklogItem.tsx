@@ -1,6 +1,6 @@
 'use client';
 import { Worklog } from '@prisma/client';
-import { MdDelete, MdModeEdit, MdRestaurant } from 'react-icons/md';
+import { MdDelete, MdModeEdit } from 'react-icons/md';
 import WorklogTitle from '../../worklog-entry/worklogTitle';
 import WorklogDeleteConfirm, {
   showDeleteConfirmModal,
@@ -46,14 +46,13 @@ export default function WorklogItem({
       <div className={`card-body pr-4 ${ignored ? 'text-base-300' : ''}`}>
         <div className="flex justify-between">
           <WorklogTitle worklog={worklog} />
-          {worklog.subtract_lunch_break ? (
-            <MdRestaurant className="w-6 h-6" />
-          ) : null}
           <div className="card-actions justify-end w-16">
-            <MdModeEdit
-              className="w-6 h-6 cursor-pointer"
-              onClick={() => setShowEdit(true)}
-            />
+            {worklog.absence ? null : (
+              <MdModeEdit
+                className="w-6 h-6 cursor-pointer"
+                onClick={() => setShowEdit(true)}
+              />
+            )}
             <MdDelete
               className="w-6 h-6 cursor-pointer"
               onClick={() => setShowDeleteConfirm(true)}

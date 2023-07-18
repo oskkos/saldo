@@ -1,6 +1,7 @@
 'use client';
 import { onWorklogSubmit } from '@/actions';
 import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
+import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
 import { add, startOfDay, toDate } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
@@ -77,10 +78,7 @@ export default function Absence({ userId }: { userId: number }) {
             </option>
             {Object.keys(AbsenceReason).map((reason) => (
               <option key={reason} value={reason}>
-                {(reason.charAt(0).toUpperCase() + reason.slice(1)).replaceAll(
-                  '_',
-                  ' ',
-                )}
+                {absenceReasonToString(reason)}
               </option>
             ))}
           </select>

@@ -33,7 +33,7 @@ import { calculateWorklogsSum } from '@/services';
 import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
 import { useRouter } from 'next/navigation';
 import { AbsenceReason, SaldoForDay } from '@/types';
-import { throwUnsupportedEnumMember } from '@/util';
+import AbsenceIcon from './worklogItem/absenceIcon';
 
 const calendarItemClass =
   'w-10 sm:w-12 h-12 sm:h-14 sm:text-lg flex justify-center items-center rounded-full';
@@ -182,26 +182,14 @@ const calendarCell = (
   subText: string,
   absence?: AbsenceReason,
 ) => {
-  let sub;
-  if (absence) {
-    if (absence === AbsenceReason.holiday) {
-      sub = <GiPalmTree className="w-5 h-5" title="Holiday" />;
-    } else if (absence === AbsenceReason.sick_leave) {
-      sub = <MdOutlineSick className="w-5 h-5" title="Sick leave" />;
-    } else if (absence === AbsenceReason.flex_hours) {
-      sub = <MdMoreTime className="w-5 h-5" title="Flex hours" />;
-    } else if (absence === AbsenceReason.other) {
-      sub = <MdWorkOff className="w-5 h-5" title="Full-day absence" />;
-    } else {
-      throwUnsupportedEnumMember(absence);
-    }
-  } else {
-    sub = <div className="text-[10px]/[0.75rem] sm:text-sm">{subText}</div>;
-  }
   return (
     <div className="flex flex-col justify-center items-center">
       <div>{mainText}</div>
-      {sub}
+      {absence ? (
+        <AbsenceIcon absence={absence} className="w-5 h-5" />
+      ) : (
+        <div className="text-[10px]/[0.75rem] sm:text-sm">{subText}</div>
+      )}
     </div>
   );
 };
