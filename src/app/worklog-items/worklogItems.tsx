@@ -55,7 +55,10 @@ function worklogsOfDayToElements(
 ) {
   const ignored = beginDate.getTime() > startOfDay(day).getTime();
   return (
-    <div key={`${day}-wrapper`}>
+    <div
+      key={`${day}-wrapper`}
+      className="flex flex-col justify-center items-center"
+    >
       <div
         className={`mt-4 badge ${
           ignored ? 'badge-base-100 text-base-300' : 'badge-neutral'
