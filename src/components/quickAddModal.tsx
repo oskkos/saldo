@@ -11,6 +11,7 @@ import {
   NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
+import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 
 export function showQuickAddWorklogModal(modalId: string) {
   (
@@ -37,8 +38,8 @@ export default function QuickAddWorklogModal({
   }>({
     day: toISODay(new Date()),
     comment: '',
-    from: NEW_WORKLOG_DEFAULT_FROM as Date_Time,
-    to: NEW_WORKLOG_DEFAULT_TO as Date_Time,
+    from: NEW_WORKLOG_DEFAULT_FROM,
+    to: NEW_WORKLOG_DEFAULT_TO,
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
   return (
@@ -53,7 +54,8 @@ export default function QuickAddWorklogModal({
             className="input input-bordered w-full mb-3"
             value={value.day}
             onChange={(e) => {
-              setValue({ ...value, day: e.target.value as Date_ISODay });
+              assertIsISODay(e.target.value);
+              setValue({ ...value, day: e.target.value });
             }}
           />
           <WorklogInputs value={value} setValue={setValue} />

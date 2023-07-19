@@ -3,7 +3,7 @@ import WorklogEntry from './worklogEntry';
 import { onWorklogSubmit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
 import { getUserFromSession } from '@/auth/authSession';
-import { Date_ISODay } from '@/util/dateFormatter';
+import { assertIsISODay } from '@/util/assertionFunctions';
 
 export default async function WorklogEntryPage({
   searchParams,
@@ -16,10 +16,11 @@ export default async function WorklogEntryPage({
     startOfDay(searchParams.day),
     endOfDay(searchParams.day),
   );
+  assertIsISODay(searchParams.day);
   return (
     <WorklogEntry
-      key={searchParams.day as Date_ISODay}
-      day={searchParams.day as Date_ISODay}
+      key={searchParams.day}
+      day={searchParams.day}
       worklogs={worklogs}
       onSubmit={onWorklogSubmit.bind(null, user.id)}
     />

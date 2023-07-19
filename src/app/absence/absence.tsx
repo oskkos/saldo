@@ -3,6 +3,7 @@ import { onWorklogSubmit } from '@/actions';
 import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
+import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import { add, startOfDay, toDate } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
 import { useRouter } from 'next/navigation';
@@ -67,9 +68,10 @@ export default function Absence({ userId }: { userId: number }) {
             className="select select-bordered w-full"
             value={data.reason ?? ''}
             onChange={(e) => {
+              assertIsAbsenceReason(e.target.value);
               setData({
                 ...data,
-                reason: e.target.value as AbsenceReason,
+                reason: e.target.value,
               });
             }}
           >

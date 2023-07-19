@@ -95,7 +95,7 @@ export function calculateWorklogsSum(worklogs: Worklog[]) {
 export function sortWorklogs(worklogs: Worklog[]) {
   return [...worklogs].sort((a, b) => b.from.getTime() - a.from.getTime());
 }
-export function absenceReasonToString(reason: string) {
+export function absenceReasonToString(reason: AbsenceReason) {
   return (reason.charAt(0).toUpperCase() + reason.slice(1)).replaceAll(
     '_',
     ' ',

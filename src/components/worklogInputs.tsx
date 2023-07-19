@@ -1,4 +1,5 @@
 import { WorklogFormDataEntry } from '@/types';
+import { assertIsTime } from '@/util/assertionFunctions';
 import { Date_Time } from '@/util/dateFormatter';
 import { Dispatch, SetStateAction } from 'react';
 
@@ -16,9 +17,10 @@ export default function WorklogInputs({
         placeholder="From"
         value={value.from}
         className="input input-bordered w-[45%]"
-        onChange={(e) =>
-          setValue({ ...value, from: e.target.value as Date_Time })
-        }
+        onChange={(e) => {
+          assertIsTime(e.target.value);
+          setValue({ ...value, from: e.target.value });
+        }}
       />
       -
       <input
@@ -26,9 +28,10 @@ export default function WorklogInputs({
         placeholder="To"
         value={value.to}
         className="input input-bordered w-[45%]"
-        onChange={(e) =>
-          setValue({ ...value, to: e.target.value as Date_Time })
-        }
+        onChange={(e) => {
+          assertIsTime(e.target.value);
+          setValue({ ...value, to: e.target.value });
+        }}
       />
       <div className="form-control ml-2 mt-3 w-full">
         <label className="label cursor-pointer">

@@ -1,12 +1,7 @@
 'use client';
 import { WorklogFormData, WorklogFormDataEntry } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
-import {
-  Date_ISODay,
-  Date_Time,
-  toDayMonthYear,
-  toISODay,
-} from '@/util/dateFormatter';
+import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import { useRef, useState, useTransition } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
@@ -33,8 +28,8 @@ export default function WorklogEntry({
 }) {
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: day,
-    from: NEW_WORKLOG_DEFAULT_FROM as Date_Time,
-    to: NEW_WORKLOG_DEFAULT_TO as Date_Time,
+    from: NEW_WORKLOG_DEFAULT_FROM,
+    to: NEW_WORKLOG_DEFAULT_TO,
     comment: '',
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });

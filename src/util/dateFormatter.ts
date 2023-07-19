@@ -1,6 +1,7 @@
 // All formatting on client to ensure proper timezone
 'use client';
 import dayjs from 'dayjs';
+import { assertIsISODay, assertIsTime } from './assertionFunctions';
 
 type Date_Day = string & { kind: 'Date_Day' };
 export function toDay(date: string | number | Date) {
@@ -14,7 +15,9 @@ export function toDayMonthYear(date: string | number | Date) {
 
 export type Date_ISODay = string & { kind: 'Date_ISODay' };
 export function toISODay(date: string | number | Date) {
-  return dayjs(date).format('YYYY-MM-DD') as Date_ISODay;
+  const x = dayjs(date).format('YYYY-MM-DD');
+  assertIsISODay(x);
+  return x;
 }
 
 type Date_MonthAndYear = string & { kind: 'Date_MonthAndYear' };
@@ -24,7 +27,9 @@ export function toMonthAndYear(date: string | number | Date) {
 
 export type Date_Time = string & { kind: 'Date_Time' };
 export function toTime(date: string | number | Date) {
-  return dayjs(date).format('HH:mm') as Date_Time;
+  const x = dayjs(date).format('HH:mm');
+  assertIsTime(x);
+  return x;
 }
 
 type Date_Week = number & { kind: 'Date_Week' };

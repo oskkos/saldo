@@ -1,5 +1,6 @@
 import { calculateWorklogsSum } from '@/services';
 import { AbsenceReason, SaldoForDay } from '@/types';
+import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import {
   add,
   daysInMonth,
@@ -24,13 +25,15 @@ const dailyDataForCalendar = (
   saldo: SaldoForDay;
   absence: AbsenceReason | undefined;
 } => {
+  const absence = worklogs.find((wl) => wl.absence)?.absence;
+  if (absence) {
+    assertIsAbsenceReason(absence);
+  }
   return {
     date,
     status,
     saldo: calculateWorklogsSum(worklogs),
-    absence: worklogs.find((wl) => wl.absence)?.absence as unknown as
-      | AbsenceReason
-      | undefined,
+    absence: absence ?? undefined,
   };
 };
 
