@@ -2,14 +2,11 @@
 import { useState, useTransition } from 'react';
 import WorklogInputs from '../worklogInputs';
 import { Worklog } from '@prisma/client';
-import { toTime } from '@/util/dateFormatter';
+import { toISODay, toTime } from '@/util/dateFormatter';
 import { useRouter } from 'next/navigation';
 import { onWorklogEdit } from '@/actions';
 import { toDate } from '@/util/date';
-
-const toString = (day: string, time: string) => {
-  return day && time ? toDate(`${day} ${time}`).toISOString() : '';
-};
+import { WorklogFormDataEntry } from '@/types';
 
 export function showWorklogEditModal(editModalId: string) {
   (
@@ -27,13 +24,13 @@ export default function WorklogEditModal({
 }) {
   const [, setTransition] = useTransition();
   const router = useRouter();
-  const [value, setValue] = useState({
+  const [value, setValue] = useState<WorklogFormDataEntry>({
+    day: toISODay(worklog.from),
     from: toTime(worklog.from),
     to: toTime(worklog.to),
     comment: worklog.comment ?? '',
     subtractLunchBreak: worklog.subtract_lunch_break,
   });
-  const day = worklog.from.toISOString().split('T')[0];
   return (
     <dialog id={editModalId} className="modal modal-bottom sm:modal-middle">
       <form method="dialog" className="modal-box">
@@ -46,10 +43,13 @@ export default function WorklogEditModal({
           <button
             className="btn btn-primary"
             onClick={() => {
+              if (!value.day) {
+                throw new Error('Day is missing');
+              }
               const ret = {
                 ...value,
-                from: toString(day, value.from),
-                to: toString(day, value.to),
+                from: toDate(`${value.day} ${value.from}`),
+                to: toDate(`${value.day} ${value.to}`),
               };
               setTransition(() => {
                 onWorklogEdit(worklog.id, ret)

@@ -1,7 +1,12 @@
 'use client';
-import { WorklogFormData } from '@/types';
+import { WorklogFormData, WorklogFormDataEntry } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
-import { toDayMonthYear, toISODay } from '@/util/dateFormatter';
+import {
+  Date_ISODay,
+  Date_Time,
+  toDayMonthYear,
+  toISODay,
+} from '@/util/dateFormatter';
 import { useRef, useState, useTransition } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
@@ -17,21 +22,19 @@ import {
 } from '@/constants';
 import { sortWorklogs } from '@/services';
 
-const toString = (day: string, time: string) => {
-  return day && time ? toDate(`${day} ${time}`).toISOString() : '';
-};
 export default function WorklogEntry({
   day,
   worklogs,
   onSubmit,
 }: {
-  day: string;
+  day: Date_ISODay;
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
-  const [value, setValue] = useState({
-    from: NEW_WORKLOG_DEFAULT_FROM,
-    to: NEW_WORKLOG_DEFAULT_TO,
+  const [value, setValue] = useState<WorklogFormDataEntry>({
+    day: day,
+    from: NEW_WORKLOG_DEFAULT_FROM as Date_Time,
+    to: NEW_WORKLOG_DEFAULT_TO as Date_Time,
     comment: '',
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
@@ -83,10 +86,13 @@ export default function WorklogEntry({
           <button
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
+              if (!value.day) {
+                throw new Error('Day is missing');
+              }
               const ret = {
                 ...value,
-                from: toString(day, value.from),
-                to: toString(day, value.to),
+                from: toDate(`${value.day} ${value.from}`),
+                to: toDate(`${value.day} ${value.to}`),
               };
               setTransition(() => {
                 onSubmit(ret)

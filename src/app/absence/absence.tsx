@@ -93,12 +93,8 @@ export default function Absence({ userId }: { userId: number }) {
             let x = data.from;
             while (x && data.to && x <= data.to) {
               worklogs.push({
-                from: new Date(
-                  `${toISODay(x)} ${NEW_WORKLOG_DEFAULT_FROM}`,
-                ).toISOString(),
-                to: new Date(
-                  `${toISODay(x)} ${NEW_WORKLOG_DEFAULT_TO}`,
-                ).toISOString(),
+                from: new Date(`${toISODay(x)} ${NEW_WORKLOG_DEFAULT_FROM}`),
+                to: new Date(`${toISODay(x)} ${NEW_WORKLOG_DEFAULT_TO}`),
                 comment: '',
                 subtractLunchBreak: true,
                 absence: data.reason,

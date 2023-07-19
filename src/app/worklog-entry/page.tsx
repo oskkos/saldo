@@ -3,6 +3,7 @@ import WorklogEntry from './worklogEntry';
 import { onWorklogSubmit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
 import { getUserFromSession } from '@/auth/authSession';
+import { Date_ISODay } from '@/util/dateFormatter';
 
 export default async function WorklogEntryPage({
   searchParams,
@@ -17,8 +18,8 @@ export default async function WorklogEntryPage({
   );
   return (
     <WorklogEntry
-      key={searchParams.day}
-      day={searchParams.day}
+      key={searchParams.day as Date_ISODay}
+      day={searchParams.day as Date_ISODay}
       worklogs={worklogs}
       onSubmit={onWorklogSubmit.bind(null, user.id)}
     />

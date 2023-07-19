@@ -1,12 +1,13 @@
-import { WorklogFormData } from '@/types';
+import { WorklogFormDataEntry } from '@/types';
+import { Date_Time } from '@/util/dateFormatter';
 import { Dispatch, SetStateAction } from 'react';
 
 export default function WorklogInputs({
   value,
   setValue,
 }: {
-  value: WorklogFormData;
-  setValue: Dispatch<SetStateAction<WorklogFormData>>;
+  value: WorklogFormDataEntry;
+  setValue: Dispatch<SetStateAction<WorklogFormDataEntry>>;
 }) {
   return (
     <>
@@ -15,7 +16,9 @@ export default function WorklogInputs({
         placeholder="From"
         value={value.from}
         className="input input-bordered w-[45%]"
-        onChange={(e) => setValue({ ...value, from: e.target.value })}
+        onChange={(e) =>
+          setValue({ ...value, from: e.target.value as Date_Time })
+        }
       />
       -
       <input
@@ -23,7 +26,9 @@ export default function WorklogInputs({
         placeholder="To"
         value={value.to}
         className="input input-bordered w-[45%]"
-        onChange={(e) => setValue({ ...value, to: e.target.value })}
+        onChange={(e) =>
+          setValue({ ...value, to: e.target.value as Date_Time })
+        }
       />
       <div className="form-control ml-2 mt-3 w-full">
         <label className="label cursor-pointer">

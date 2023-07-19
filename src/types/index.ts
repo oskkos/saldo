@@ -1,11 +1,20 @@
+import { Date_ISODay, Date_Time } from '@/util/dateFormatter';
+
 export interface AuthUser {
   email: string;
   name?: string;
 }
 
+export interface WorklogFormDataEntry {
+  day?: Date_ISODay;
+  comment: string;
+  from: Date_Time;
+  to: Date_Time;
+  subtractLunchBreak: boolean;
+}
 export interface WorklogFormData {
-  from: string;
-  to: string;
+  from: Date;
+  to: Date;
   comment: string;
   subtractLunchBreak: boolean;
   absence?: AbsenceReason;

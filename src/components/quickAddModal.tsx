@@ -4,18 +4,13 @@ import { Worklog } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
-import { WorklogFormData } from '@/types';
-import { toISODay } from '@/util/dateFormatter';
+import { Date_ISODay, Date_Time, toISODay } from '@/util/dateFormatter';
 import { onWorklogSubmit } from '@/actions';
 import {
   NEW_WORKLOG_DEFAULT_FROM,
   NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
-
-const toString = (day: string, time: string) => {
-  return day && time ? toDate(`${day} ${time}`).toISOString() : '';
-};
 
 export function showQuickAddWorklogModal(modalId: string) {
   (
@@ -33,11 +28,17 @@ export default function QuickAddWorklogModal({
 }) {
   const [, setTransition] = useTransition();
   const router = useRouter();
-  const [value, setValue] = useState<WorklogFormData & { day?: string }>({
+  const [value, setValue] = useState<{
+    day?: Date_ISODay;
+    comment: string;
+    from: Date_Time;
+    to: Date_Time;
+    subtractLunchBreak: boolean;
+  }>({
     day: toISODay(new Date()),
     comment: '',
-    from: NEW_WORKLOG_DEFAULT_FROM,
-    to: NEW_WORKLOG_DEFAULT_TO,
+    from: NEW_WORKLOG_DEFAULT_FROM as Date_Time,
+    to: NEW_WORKLOG_DEFAULT_TO as Date_Time,
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
   return (
@@ -52,7 +53,7 @@ export default function QuickAddWorklogModal({
             className="input input-bordered w-full mb-3"
             value={value.day}
             onChange={(e) => {
-              setValue({ ...value, day: e.target.value });
+              setValue({ ...value, day: e.target.value as Date_ISODay });
             }}
           />
           <WorklogInputs value={value} setValue={setValue} />
@@ -67,8 +68,8 @@ export default function QuickAddWorklogModal({
               }
               const ret = {
                 ...value,
-                from: toString(value.day, value.from),
-                to: toString(value.day, value.to),
+                from: toDate(`${value.day} ${value.from}`),
+                to: toDate(`${value.day} ${value.to}`),
               };
               setTransition(() => {
                 onWorklogSubmit(userId, ret)
