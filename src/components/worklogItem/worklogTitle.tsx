@@ -2,7 +2,7 @@
 
 import { toTime } from '@/util/dateFormatter';
 import { Worklog } from '@prisma/client';
-import AbsenceIcon from '../components/worklogItem/absenceIcon';
+import AbsenceIcon from '@/components/worklogItem/absenceIcon';
 import { AbsenceReason } from '@/types';
 import { MdRestaurant } from 'react-icons/md';
 import { absenceReasonToString } from '@/services';

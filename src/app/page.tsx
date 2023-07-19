@@ -1,7 +1,7 @@
 import { getSettings } from '@/repository/userRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { startOfMonth } from '@/util/date';
-import MiniCalendar from './components/miniCalendar';
+import MiniCalendar from '@/components/miniCalendar';
 import { getUserFromSession } from '@/auth/authSession';
 
 export default async function Home({

@@ -5,7 +5,7 @@ import { toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import { useRef, useState, useTransition } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
-import WorklogInputs from '../components/worklogInputs';
+import WorklogInputs from '@/components/worklogInputs';
 import { useRouter } from 'next/navigation';
 import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 import Link from 'next/link';
@@ -20,7 +20,7 @@ import { sortWorklogs } from '@/services';
 const toString = (day: string, time: string) => {
   return day && time ? toDate(`${day} ${time}`).toISOString() : '';
 };
-export default function WorklogForm({
+export default function WorklogEntry({
   day,
   worklogs,
   onSubmit,

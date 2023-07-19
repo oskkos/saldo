@@ -1,6 +1,6 @@
 'use client';
 import { Settings, Worklog } from '@prisma/client';
-import WorklogItem from '../components/worklogItem/worklogItem';
+import WorklogItem from '@/components/worklogItem/worklogItem';
 import { useState } from 'react';
 import {
   toDayMonthYear,

@@ -1,10 +1,10 @@
 import { getWorklogs } from '@/repository/worklogRepository';
-import WorklogForm from './worklogForm';
+import WorklogEntry from './worklogEntry';
 import { onWorklogSubmit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
 import { getUserFromSession } from '@/auth/authSession';
 
-export default async function WorklogEntry({
+export default async function WorklogEntryPage({
   searchParams,
 }: {
   searchParams: { day: string };
@@ -16,7 +16,7 @@ export default async function WorklogEntry({
     endOfDay(searchParams.day),
   );
   return (
-    <WorklogForm
+    <WorklogEntry
       key={searchParams.day}
       day={searchParams.day}
       worklogs={worklogs}
