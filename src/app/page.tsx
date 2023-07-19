@@ -3,6 +3,7 @@ import { getWorklogs } from '@/repository/worklogRepository';
 import { startOfMonth } from '@/util/date';
 import MiniCalendar from '@/components/miniCalendar';
 import { getUserFromSession } from '@/auth/authSession';
+import { assertExists } from '@/util/assertionFunctions';
 
 export default async function Home({
   searchParams,
@@ -12,10 +13,7 @@ export default async function Home({
   const user = await getUserFromSession();
   const worklogs = await getWorklogs(user.id);
   const settings = await getSettings(user.id);
-  if (!settings) {
-    throw new Error('No settings');
-  }
-
+  assertExists(settings);
   return (
     <div className="flex flex-wrap justify-center mt-4">
       <MiniCalendar

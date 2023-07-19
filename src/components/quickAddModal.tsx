@@ -11,7 +11,11 @@ import {
   NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
-import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
+import {
+  assertExists,
+  assertIsISODay,
+  assertIsTime,
+} from '@/util/assertionFunctions';
 
 export function showQuickAddWorklogModal(modalId: string) {
   (
@@ -65,9 +69,7 @@ export default function QuickAddWorklogModal({
           <button
             className="btn btn-primary"
             onClick={() => {
-              if (!value.day) {
-                throw new Error('Day is missing');
-              }
+              assertExists(value.day);
               const ret = {
                 ...value,
                 from: toDate(`${value.day} ${value.from}`),

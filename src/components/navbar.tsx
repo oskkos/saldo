@@ -9,6 +9,7 @@ import { getWorklogs } from '@/repository/worklogRepository';
 import { calculateCurrentSaldo } from '@/services';
 import QuickAdd from './quickAdd';
 import { getSession } from '@/auth/authSession';
+import { assertExists } from '@/util/assertionFunctions';
 
 function items(session: Session | null) {
   return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
@@ -17,9 +18,7 @@ function items(session: Session | null) {
 async function getSaldoBadge(userId: number) {
   const worklogs = await getWorklogs(userId);
   const settings = await getSettings(userId);
-  if (!settings) {
-    throw new Error('No settings!');
-  }
+  assertExists(settings);
   const saldo = calculateCurrentSaldo(settings, worklogs);
   return saldo.toBadge('badge-lg');
 }

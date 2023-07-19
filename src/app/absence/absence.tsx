@@ -3,7 +3,7 @@ import { onWorklogSubmit } from '@/actions';
 import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
-import { assertIsAbsenceReason } from '@/util/assertionFunctions';
+import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
 import { add, startOfDay, toDate } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
 import { useRouter } from 'next/navigation';
@@ -78,19 +78,20 @@ export default function Absence({ userId }: { userId: number }) {
             <option value="" disabled>
               Pick one
             </option>
-            {Object.keys(AbsenceReason).map((reason) => (
-              <option key={reason} value={reason}>
-                {absenceReasonToString(reason)}
-              </option>
-            ))}
+            {Object.keys(AbsenceReason).map((reason) => {
+              assertIsAbsenceReason(reason);
+              return (
+                <option key={reason} value={reason}>
+                  {absenceReasonToString(reason)}
+                </option>
+              );
+            })}
           </select>
         </div>
         <button
           className="btn btn-secondary mt-3 w-full"
           onClick={() => {
-            if (!data.reason) {
-              throw new Error('Reason is missing');
-            }
+            assertExists(data.reason);
             const worklogs: WorklogFormData[] = [];
             let x = data.from;
             while (x && data.to && x <= data.to) {

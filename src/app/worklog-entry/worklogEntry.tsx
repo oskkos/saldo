@@ -16,6 +16,7 @@ import {
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
 import { sortWorklogs } from '@/services';
+import { assertExists } from '@/util/assertionFunctions';
 
 export default function WorklogEntry({
   day,
@@ -81,9 +82,7 @@ export default function WorklogEntry({
           <button
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
-              if (!value.day) {
-                throw new Error('Day is missing');
-              }
+              assertExists(value.day);
               const ret = {
                 ...value,
                 from: toDate(`${value.day} ${value.from}`),

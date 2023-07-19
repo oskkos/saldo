@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { onWorklogEdit } from '@/actions';
 import { toDate } from '@/util/date';
 import { WorklogFormDataEntry } from '@/types';
+import { assertExists } from '@/util/assertionFunctions';
 
 export function showWorklogEditModal(editModalId: string) {
   (
@@ -43,9 +44,7 @@ export default function WorklogEditModal({
           <button
             className="btn btn-primary"
             onClick={() => {
-              if (!value.day) {
-                throw new Error('Day is missing');
-              }
+              assertExists(value.day);
               const ret = {
                 ...value,
                 from: toDate(`${value.day} ${value.from}`),

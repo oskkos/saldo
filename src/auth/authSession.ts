@@ -1,4 +1,5 @@
 import { getUser } from '@/repository/userRepository';
+import { assertExists } from '@/util/assertionFunctions';
 import { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 
@@ -20,9 +21,7 @@ export async function getSession() {
 }
 export async function getUserFromSession() {
   const session = await getSession();
-  if (!session) {
-    throw new Error('No session!');
-  }
-  const user = await getUser(session.user?.email ?? '');
+  assertExists(session?.user);
+  const user = await getUser(session.user.email ?? '');
   return user;
 }

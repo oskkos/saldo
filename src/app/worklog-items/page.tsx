@@ -3,14 +3,12 @@ import { getSettings } from '@/repository/userRepository';
 import WorklogItems from './worklogItems';
 import { sortWorklogs } from '@/services';
 import { getUserFromSession } from '@/auth/authSession';
+import { assertExists } from '@/util/assertionFunctions';
 
 export default async function WorklogItemsPage() {
   const user = await getUserFromSession();
   const worklogs = await getWorklogs(user.id);
   const settings = await getSettings(user.id);
-  if (!settings) {
-    throw new Error('No settings!');
-  }
-
+  assertExists(settings);
   return <WorklogItems worklogs={sortWorklogs(worklogs)} settings={settings} />;
 }
