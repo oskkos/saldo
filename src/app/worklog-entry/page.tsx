@@ -1,20 +1,15 @@
-import { getSession } from '../api/auth/[...nextauth]/route';
 import { getWorklogs } from '@/repository/worklogRepository';
-import { getUser } from '@/repository/userRepository';
 import WorklogForm from './worklogForm';
 import { onWorklogSubmit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
+import { getUserFromSession } from '@/auth/authSession';
 
 export default async function WorklogEntry({
   searchParams,
 }: {
   searchParams: { day: string };
 }) {
-  const session = await getSession();
-  if (!session) {
-    throw new Error('No session!');
-  }
-  const user = await getUser(session.user?.email ?? '');
+  const user = await getUserFromSession();
   const worklogs = await getWorklogs(
     user.id,
     startOfDay(searchParams.day),

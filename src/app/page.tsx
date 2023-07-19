@@ -1,19 +1,15 @@
-import MiniCalendar from '@/app/components/miniCalendar';
-import { getSettings, getUser } from '@/repository/userRepository';
-import { getSession } from './api/auth/[...nextauth]/route';
+import { getSettings } from '@/repository/userRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { startOfMonth } from '@/util/date';
+import MiniCalendar from './components/miniCalendar';
+import { getUserFromSession } from '@/auth/authSession';
 
 export default async function Home({
   searchParams,
 }: {
   searchParams: { month: string };
 }) {
-  const session = await getSession();
-  if (!session) {
-    throw new Error('No session');
-  }
-  const user = await getUser(session.user?.email ?? '');
+  const user = await getUserFromSession();
   const worklogs = await getWorklogs(user.id);
   const settings = await getSettings(user.id);
   if (!settings) {

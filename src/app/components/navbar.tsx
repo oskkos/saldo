@@ -2,13 +2,13 @@ import { onAfterSignin } from '@/actions';
 import AuthActions from '@/auth/authActions';
 import AuthenticatedContent from '@/auth/authenticatedContent';
 import { MdOutlineMenu } from 'react-icons/md';
-import { getSession } from '../api/auth/[...nextauth]/route';
 import NavbarItems from './navBarItems';
 import { Session } from 'next-auth';
 import { getSettings, getUser } from '@/repository/userRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { calculateCurrentSaldo } from '@/services';
 import QuickAdd from './quickAdd';
+import { getSession } from '@/auth/authSession';
 
 function items(session: Session | null) {
   return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];

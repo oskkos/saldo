@@ -1,13 +1,8 @@
-import { getUser } from '@/repository/userRepository';
-import { getSession } from '../api/auth/[...nextauth]/route';
 import Absence from './absence';
+import { getUserFromSession } from '@/auth/authSession';
 
 export default async function AbsencePage() {
-  const session = await getSession();
-  if (!session) {
-    throw new Error('No session!');
-  }
-  const user = await getUser(session.user?.email ?? '');
+  const user = await getUserFromSession();
 
   return <Absence userId={user.id} />;
 }

@@ -1,25 +1,6 @@
-import NextAuth, { NextAuthOptions, getServerSession } from 'next-auth';
-import GoogleProvider from 'next-auth/providers/google';
+import { authOptions } from '@/auth/authSession';
+import NextAuth from 'next-auth';
 
-const opts: NextAuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: String(process.env.GOOGLE_CLIENT_ID),
-      clientSecret: String(process.env.GOOGLE_CLIENT_SECRET),
-    }),
-  ],
-  session: {
-    strategy: 'jwt',
-  },
-};
-
-// TODO: Move to some util place
-export async function getSession() {
-  const session = await getServerSession(opts);
-  return session;
-}
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-const handler = NextAuth(opts) as Function | undefined;
-
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
