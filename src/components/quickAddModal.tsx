@@ -11,17 +11,8 @@ import {
   NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
-import {
-  assertExists,
-  assertIsISODay,
-  assertIsTime,
-} from '@/util/assertionFunctions';
+import { assertExists, assertIsISODay } from '@/util/assertionFunctions';
 
-export function showQuickAddWorklogModal(modalId: string) {
-  (
-    window[modalId as unknown as number] as unknown as { showModal(): void }
-  ).showModal();
-}
 export default function QuickAddWorklogModal({
   userId,
   modalId,

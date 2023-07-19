@@ -9,11 +9,6 @@ import { toDate } from '@/util/date';
 import { WorklogFormDataEntry } from '@/types';
 import { assertExists } from '@/util/assertionFunctions';
 
-export function showWorklogEditModal(editModalId: string) {
-  (
-    window[editModalId as unknown as number] as unknown as { showModal(): void }
-  ).showModal();
-}
 export default function WorklogEditModal({
   worklog,
   editModalId,

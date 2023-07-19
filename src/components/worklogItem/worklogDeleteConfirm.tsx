@@ -4,12 +4,6 @@ import { onWorklogDelete } from '@/actions';
 import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 
-export function showDeleteConfirmModal(confirmId: string) {
-  (
-    window[confirmId as unknown as number] as unknown as { showModal(): void }
-  ).showModal();
-}
-
 export default function WorklogDeleteConfirm({
   worklogId,
   confirmId,

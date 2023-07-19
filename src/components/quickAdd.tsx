@@ -1,16 +1,15 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { MdAdd } from 'react-icons/md';
-import QuickAddWorklogModal, {
-  showQuickAddWorklogModal,
-} from './quickAddModal';
+import QuickAddWorklogModal from './quickAddModal';
+import { showModal } from './modal';
 
 export default function QuickAdd({ userId }: { userId: number }) {
   const quickAddWorklogModalId = `worklog-new-worklog-modal`;
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   useEffect(() => {
     if (showQuickAdd) {
-      showQuickAddWorklogModal(quickAddWorklogModalId);
+      showModal(quickAddWorklogModalId);
       setShowQuickAdd(false);
     }
   }, [showQuickAdd, quickAddWorklogModalId]);

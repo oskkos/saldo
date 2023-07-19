@@ -2,11 +2,10 @@
 import { Worklog } from '@prisma/client';
 import { MdDelete, MdModeEdit } from 'react-icons/md';
 import WorklogTitle from '@/components/worklogItem/worklogTitle';
-import WorklogDeleteConfirm, {
-  showDeleteConfirmModal,
-} from './worklogDeleteConfirm';
+import WorklogDeleteConfirm from './worklogDeleteConfirm';
 import { useEffect, useState } from 'react';
-import WorklogEditModal, { showWorklogEditModal } from './worklogEditModal';
+import WorklogEditModal from './worklogEditModal';
+import { showModal } from '../modal';
 
 export default function WorklogItem({
   worklog,
@@ -23,7 +22,7 @@ export default function WorklogItem({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   useEffect(() => {
     if (showDeleteConfirm) {
-      showDeleteConfirmModal(confirmId);
+      showModal(confirmId);
       setShowDeleteConfirm(false);
     }
   }, [showDeleteConfirm, confirmId]);
@@ -32,7 +31,7 @@ export default function WorklogItem({
   const [showEdit, setShowEdit] = useState(false);
   useEffect(() => {
     if (showEdit) {
-      showWorklogEditModal(editModalId);
+      showModal(editModalId);
       setShowEdit(false);
     }
   }, [showEdit, editModalId]);
