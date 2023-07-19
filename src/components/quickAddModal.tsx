@@ -12,6 +12,7 @@ import {
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
 import { assertExists, assertIsISODay } from '@/util/assertionFunctions';
+import Modal from './modal';
 
 export default function QuickAddWorklogModal({
   userId,
@@ -37,51 +38,42 @@ export default function QuickAddWorklogModal({
     to: NEW_WORKLOG_DEFAULT_TO,
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
-  return (
-    <dialog id={modalId} className="modal modal-bottom sm:modal-middle">
-      <form method="dialog" className="modal-box">
-        <h3 className="font-bold text-lg">Add new worklog</h3>
 
-        <div className="flex flex-wrap justify-between items-center m-3">
-          <input
-            type="date"
-            placeholder="Date"
-            className="input input-bordered w-full mb-3"
-            value={value.day}
-            onChange={(e) => {
-              assertIsISODay(e.target.value);
-              setValue({ ...value, day: e.target.value });
-            }}
-          />
-          <WorklogInputs value={value} setValue={setValue} />
-        </div>
-        <div className="modal-action">
-          <button className="btn">Cancel</button>
-          <button
-            className="btn btn-primary"
-            onClick={() => {
-              assertExists(value.day);
-              const ret = {
-                ...value,
-                from: toDate(`${value.day} ${value.from}`),
-                to: toDate(`${value.day} ${value.to}`),
-              };
-              setTransition(() => {
-                onWorklogSubmit(userId, ret)
-                  .then((worklog) => {
-                    onSubmit(worklog);
-                    router.refresh(); // https://github.com/vercel/next.js/issues/52350
-                  })
-                  .catch(() => {
-                    throw new Error('Failed to add worklog');
-                  });
-              });
-            }}
-          >
-            Save
-          </button>
-        </div>
-      </form>
-    </dialog>
+  const saveWorklog = () => {
+    assertExists(value.day);
+    const ret = {
+      ...value,
+      from: toDate(`${value.day} ${value.from}`),
+      to: toDate(`${value.day} ${value.to}`),
+    };
+    setTransition(() => {
+      onWorklogSubmit(userId, ret)
+        .then((worklog) => {
+          onSubmit(worklog);
+          router.refresh(); // https://github.com/vercel/next.js/issues/52350
+        })
+        .catch(() => {
+          throw new Error('Failed to add worklog');
+        });
+    });
+  };
+  return (
+    <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>
+      <h3 className="font-bold text-lg">Add new worklog</h3>
+
+      <div className="flex flex-wrap justify-between items-center m-3">
+        <input
+          type="date"
+          placeholder="Date"
+          className="input input-bordered w-full mb-3"
+          value={value.day}
+          onChange={(e) => {
+            assertIsISODay(e.target.value);
+            setValue({ ...value, day: e.target.value });
+          }}
+        />
+        <WorklogInputs value={value} setValue={setValue} />
+      </div>
+    </Modal>
   );
 }
