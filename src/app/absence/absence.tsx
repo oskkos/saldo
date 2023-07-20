@@ -7,12 +7,11 @@ import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
 import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
 import { add, startOfDay, toDate } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useTransitionWrapper } from '@/util/useTransitionWrapper';
+import { useState } from 'react';
 
 export default function Absence({ userId }: { userId: number }) {
-  const [, setTransition] = useTransition();
-  const router = useRouter();
+  const [, startTransitionWrapper] = useTransitionWrapper();
   const [data, setData] = useState<AbsenceData>({
     from: toDate(
       `${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_FROM}`,
@@ -38,6 +37,18 @@ export default function Absence({ userId }: { userId: number }) {
     });
   };
 
+  const toWorklogFormData = (
+    day: Date,
+    reason: AbsenceReason,
+  ): WorklogFormData => {
+    return {
+      from: new Date(`${toISODay(day)} ${NEW_WORKLOG_DEFAULT_FROM}`),
+      to: new Date(`${toISODay(day)} ${NEW_WORKLOG_DEFAULT_TO}`),
+      comment: '',
+      subtractLunchBreak: true,
+      absence: reason,
+    };
+  };
   return (
     <div className="flex flex-wrap justify-center items-start mt-3">
       <div className="flex justify-between items-center w-full max-w-xs">
@@ -92,26 +103,13 @@ export default function Absence({ userId }: { userId: number }) {
             const worklogs: WorklogFormData[] = [];
             let x = data.from;
             while (x && data.to && x <= data.to) {
-              worklogs.push({
-                from: new Date(`${toISODay(x)} ${NEW_WORKLOG_DEFAULT_FROM}`),
-                to: new Date(`${toISODay(x)} ${NEW_WORKLOG_DEFAULT_TO}`),
-                comment: '',
-                subtractLunchBreak: true,
-                absence: data.reason,
-              });
+              worklogs.push(toWorklogFormData(x, data.reason));
               x = add(x, 1, 'day');
             }
-
-            setTransition(() => {
+            const action = () =>
               // TODO: Handle all in one call
-              Promise.all(worklogs.map((ret) => onWorklogSubmit(userId, ret)))
-                .then(() => {
-                  router.refresh(); // https://github.com/vercel/next.js/issues/52350
-                })
-                .catch(() => {
-                  throw new Error('Failed to add absences');
-                });
-            });
+              Promise.all(worklogs.map((ret) => onWorklogSubmit(userId, ret)));
+            startTransitionWrapper(action);
           }}
         >
           Submit

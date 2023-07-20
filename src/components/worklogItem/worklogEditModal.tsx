@@ -1,14 +1,14 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import WorklogInputs from '../worklogInputs';
 import { Worklog } from '@prisma/client';
 import { toISODay, toTime } from '@/util/dateFormatter';
-import { useRouter } from 'next/navigation';
 import { onWorklogEdit } from '@/actions';
 import { toDate } from '@/util/date';
 import { WorklogFormDataEntry } from '@/types';
 import { assertExists } from '@/util/assertionFunctions';
 import Modal from '../modal';
+import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 
 export default function WorklogEditModal({
   worklog,
@@ -19,8 +19,7 @@ export default function WorklogEditModal({
   editModalId: string;
   onEdit: (editedWorklog: Worklog) => void;
 }) {
-  const [, setTransition] = useTransition();
-  const router = useRouter();
+  const [, startTransitionWrapper] = useTransitionWrapper();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(worklog.from),
     from: toTime(worklog.from),
@@ -36,16 +35,7 @@ export default function WorklogEditModal({
       from: toDate(`${value.day} ${value.from}`),
       to: toDate(`${value.day} ${value.to}`),
     };
-    setTransition(() => {
-      onWorklogEdit(worklog.id, ret)
-        .then((editedWorklog) => {
-          onEdit(editedWorklog);
-          router.refresh(); // https://github.com/vercel/next.js/issues/52350
-        })
-        .catch(() => {
-          throw new Error('Failed to edit worklog');
-        });
-    });
+    startTransitionWrapper(() => onWorklogEdit(worklog.id, ret), onEdit);
   };
   return (
     <Modal id={editModalId} confirmLabel="Edit" confirmAction={editWorklog}>

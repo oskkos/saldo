@@ -1,7 +1,6 @@
 'use client';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 import { Worklog } from '@prisma/client';
-import { useRouter } from 'next/navigation';
 import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
 import { toISODay } from '@/util/dateFormatter';
@@ -15,6 +14,7 @@ import { assertExists } from '@/util/assertionFunctions';
 import Modal from './modal';
 import DateInput from './form/dateInput';
 import { WorklogFormDataEntry } from '@/types';
+import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 
 export default function QuickAddWorklogModal({
   userId,
@@ -25,8 +25,7 @@ export default function QuickAddWorklogModal({
   modalId: string;
   onSubmit: (worklog: Worklog) => void;
 }) {
-  const [, setTransition] = useTransition();
-  const router = useRouter();
+  const [, startTransitionWrapper] = useTransitionWrapper();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(new Date()),
     comment: '',
@@ -42,16 +41,7 @@ export default function QuickAddWorklogModal({
       from: toDate(`${value.day} ${value.from}`),
       to: toDate(`${value.day} ${value.to}`),
     };
-    setTransition(() => {
-      onWorklogSubmit(userId, ret)
-        .then((worklog) => {
-          onSubmit(worklog);
-          router.refresh(); // https://github.com/vercel/next.js/issues/52350
-        })
-        .catch(() => {
-          throw new Error('Failed to add worklog');
-        });
-    });
+    startTransitionWrapper(() => onWorklogSubmit(userId, ret), onSubmit);
   };
   return (
     <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>

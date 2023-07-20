@@ -6,14 +6,13 @@ import IntegerInput from '@/components/form/integerInput';
 import { assertExists } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
+import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { Settings } from '@prisma/client';
-import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useState } from 'react';
 
 export default function Settings({ settings }: { settings: Settings }) {
+  const [, startTransitionWrapper] = useTransitionWrapper();
   const [data, setData] = useState(settings);
-  const [, setTransition] = useTransition();
-  const router = useRouter();
 
   return (
     <div className="flex flex-col flex-nowrap justify-center items-center mt-3">
@@ -66,19 +65,13 @@ export default function Settings({ settings }: { settings: Settings }) {
           <button
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
-              setTransition(() => {
+              const action = () =>
                 onSettingsUpdate(data.user_id, {
                   initialBalanceHours: data.initial_balance_hours,
                   initialBalanceMins: data.initial_balance_mins,
                   beginDate: data.begin_date,
-                })
-                  .then(() => {
-                    router.refresh(); // https://github.com/vercel/next.js/issues/52350
-                  })
-                  .catch(() => {
-                    throw new Error('Failed to add worklog');
-                  });
-              });
+                });
+              startTransitionWrapper(action);
             }}
           >
             Submit

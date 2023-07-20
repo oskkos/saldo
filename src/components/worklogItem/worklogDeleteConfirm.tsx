@@ -1,9 +1,8 @@
 'use client';
 
 import { onWorklogDelete } from '@/actions';
-import { useRouter } from 'next/navigation';
-import { useTransition } from 'react';
 import Modal from '../modal';
+import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 
 export default function WorklogDeleteConfirm({
   worklogId,
@@ -14,20 +13,15 @@ export default function WorklogDeleteConfirm({
   confirmId: string;
   onDelete: (id: number) => void;
 }) {
-  const [, setTransition] = useTransition();
-  const router = useRouter();
+  const [, startTransitionWrapper] = useTransitionWrapper();
 
   const deleteWorklog = () => {
-    setTransition(() => {
-      onWorklogDelete(worklogId)
-        .then(() => {
-          onDelete(worklogId);
-          router.refresh(); // https://github.com/vercel/next.js/issues/52350
-        })
-        .catch(() => {
-          throw new Error('Failed to delete worklog');
-        });
-    });
+    startTransitionWrapper(
+      () => onWorklogDelete(worklogId),
+      () => {
+        onDelete(worklogId);
+      },
+    );
   };
   return (
     <Modal id={confirmId} confirmLabel="Delete" confirmAction={deleteWorklog}>

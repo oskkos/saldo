@@ -2,7 +2,7 @@
 import { WorklogFormData, WorklogFormDataEntry } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
 import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
-import { useRef, useState, useTransition } from 'react';
+import { useRef, useState } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
 import WorklogInputs from '@/components/worklogInputs';
@@ -17,6 +17,7 @@ import {
 } from '@/constants';
 import { sortWorklogs } from '@/services';
 import { assertExists } from '@/util/assertionFunctions';
+import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 
 export default function WorklogEntry({
   day,
@@ -27,6 +28,8 @@ export default function WorklogEntry({
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
+  const [, startTransitionWrapper] = useTransitionWrapper();
+  const router = useRouter();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: day,
     from: NEW_WORKLOG_DEFAULT_FROM,
@@ -35,8 +38,6 @@ export default function WorklogEntry({
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
   const [wl, setWl] = useState(worklogs);
-  const [, setTransition] = useTransition();
-  const router = useRouter();
 
   const ref = useRef<HTMLDivElement>(null);
   const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, {
@@ -88,16 +89,11 @@ export default function WorklogEntry({
                 from: toDate(`${value.day} ${value.from}`),
                 to: toDate(`${value.day} ${value.to}`),
               };
-              setTransition(() => {
-                onSubmit(ret)
-                  .then((x) => {
-                    setWl(sortWorklogs([...wl, x]));
-                    router.refresh(); // https://github.com/vercel/next.js/issues/52350
-                  })
-                  .catch(() => {
-                    throw new Error('Failed to add worklog');
-                  });
-              });
+              const action = () => onSubmit(ret);
+              const callback = (x: Worklog) => {
+                setWl(sortWorklogs([...wl, x]));
+              };
+              startTransitionWrapper(action, callback);
             }}
           >
             Submit
