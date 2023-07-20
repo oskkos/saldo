@@ -2,6 +2,7 @@
 
 import { onSettingsUpdate } from '@/actions';
 import DateInput from '@/components/form/dateInput';
+import IntegerInput from '@/components/form/integerInput';
 import { assertExists } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
@@ -21,42 +22,31 @@ export default function Settings({ settings }: { settings: Settings }) {
       <div className="grid grid-cols-[8rem_auto] gap-2 items-center w-80">
         <div>Initial balance</div>
         <div className="flex items-center">
-          <div className="indicator">
-            <span className="indicator-item indicator-top indicator-center badge">
-              Hours
-            </span>
-
-            <input
-              type="number"
-              className="input input-bordered w-20"
-              placeholder="hh"
-              value={data.initial_balance_hours}
-              onChange={(e) => {
-                setData({
-                  ...data,
-                  initial_balance_hours: parseInt(e.target.value),
-                });
-              }}
-            />
-          </div>
+          <IntegerInput
+            label="Hours"
+            value={data.initial_balance_hours}
+            className="w-20"
+            placeholder="hh"
+            onChange={(val) => {
+              setData({
+                ...data,
+                initial_balance_hours: val ?? 0,
+              });
+            }}
+          />
           <span className="mx-3">:</span>
-          <div className="indicator">
-            <span className="indicator-item indicator-top indicator-center badge">
-              Minutes
-            </span>
-            <input
-              type="number"
-              className="input input-bordered w-20"
-              placeholder="mm"
-              value={data.initial_balance_mins}
-              onChange={(e) => {
-                setData({
-                  ...data,
-                  initial_balance_mins: parseInt(e.target.value),
-                });
-              }}
-            />
-          </div>
+          <IntegerInput
+            label="Minutes"
+            value={data.initial_balance_mins}
+            className="w-20"
+            placeholder="mm"
+            onChange={(val) => {
+              setData({
+                ...data,
+                initial_balance_mins: val ?? 0,
+              });
+            }}
+          />
         </div>
         <div>Begin date</div>
         <div>
