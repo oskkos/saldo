@@ -1,11 +1,12 @@
 'use client';
 import { onWorklogSubmit } from '@/actions';
+import DateInput from '@/components/form/dateInput';
 import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
 import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
 import { add, startOfDay, toDate } from '@/util/date';
-import { toISODay } from '@/util/dateFormatter';
+import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 import { useRouter } from 'next/navigation';
 import { useState, useTransition } from 'react';
 
@@ -19,47 +20,43 @@ export default function Absence({ userId }: { userId: number }) {
     to: toDate(`${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_TO}`),
   });
 
+  const from = data.from ? toISODay(data.from) : undefined;
+  const onFromChange = (value?: Date_ISODay) => {
+    assertExists(value);
+    setData({
+      ...data,
+      from: toDate(`${value} ${NEW_WORKLOG_DEFAULT_FROM}`),
+    });
+  };
+
+  const to = data.to ? toISODay(data.to) : undefined;
+  const onToChange = (value?: Date_ISODay) => {
+    assertExists(value);
+    setData({
+      ...data,
+      to: toDate(`${value} ${NEW_WORKLOG_DEFAULT_FROM}`),
+    });
+  };
+
   return (
     <div className="flex flex-wrap justify-center items-start mt-3">
       <div className="flex justify-between items-center w-full max-w-xs">
         <h2 className="text-xl text-center m-3 mb-8 w-full">Absence</h2>
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-full max-w-sm">
-        <div className="indicator">
-          <span className="indicator-item indicator-top indicator-center badge">
-            From
-          </span>
-
-          <input
-            type="date"
-            className="input input-bordered w-40"
-            value={data.from ? toISODay(data.from) : undefined}
-            onChange={(e) => {
-              setData({
-                ...data,
-                from: toDate(`${e.target.value} ${NEW_WORKLOG_DEFAULT_FROM}`),
-              });
-            }}
-          />
-        </div>
+        <DateInput
+          label="From"
+          value={from}
+          className="w-40"
+          onChange={onFromChange}
+        />
         -
-        <div className="indicator">
-          <span className="indicator-item indicator-top indicator-center badge">
-            To
-          </span>
-
-          <input
-            type="date"
-            className="input input-bordered w-40"
-            value={data.to ? toISODay(data.to) : undefined}
-            onChange={(e) => {
-              setData({
-                ...data,
-                to: toDate(`${e.target.value} ${NEW_WORKLOG_DEFAULT_TO}`),
-              });
-            }}
-          />
-        </div>
+        <DateInput
+          label="To"
+          value={to}
+          className="w-40"
+          onChange={onToChange}
+        />
         <div className="indicator w-full mt-5">
           <span className="indicator-item indicator-top indicator-center badge">
             Reason

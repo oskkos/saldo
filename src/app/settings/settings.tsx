@@ -1,6 +1,8 @@
 'use client';
 
 import { onSettingsUpdate } from '@/actions';
+import DateInput from '@/components/form/dateInput';
+import { assertExists } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
 import { Settings } from '@prisma/client';
@@ -58,14 +60,14 @@ export default function Settings({ settings }: { settings: Settings }) {
         </div>
         <div>Begin date</div>
         <div>
-          <input
-            type="date"
-            className="input input-bordered w-full"
+          <DateInput
             value={toISODay(data.begin_date)}
-            onChange={(e) => {
+            className="w-full"
+            onChange={(value) => {
+              assertExists(value);
               setData({
                 ...data,
-                begin_date: startOfDay(e.target.value),
+                begin_date: startOfDay(value),
               });
             }}
           />

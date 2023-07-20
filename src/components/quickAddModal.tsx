@@ -4,15 +4,17 @@ import { Worklog } from '@prisma/client';
 import { useRouter } from 'next/navigation';
 import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
-import { Date_ISODay, Date_Time, toISODay } from '@/util/dateFormatter';
+import { toISODay } from '@/util/dateFormatter';
 import { onWorklogSubmit } from '@/actions';
 import {
   NEW_WORKLOG_DEFAULT_FROM,
   NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
-import { assertExists, assertIsISODay } from '@/util/assertionFunctions';
+import { assertExists } from '@/util/assertionFunctions';
 import Modal from './modal';
+import DateInput from './form/dateInput';
+import { WorklogFormDataEntry } from '@/types';
 
 export default function QuickAddWorklogModal({
   userId,
@@ -25,13 +27,7 @@ export default function QuickAddWorklogModal({
 }) {
   const [, setTransition] = useTransition();
   const router = useRouter();
-  const [value, setValue] = useState<{
-    day?: Date_ISODay;
-    comment: string;
-    from: Date_Time;
-    to: Date_Time;
-    subtractLunchBreak: boolean;
-  }>({
+  const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(new Date()),
     comment: '',
     from: NEW_WORKLOG_DEFAULT_FROM,
@@ -62,14 +58,13 @@ export default function QuickAddWorklogModal({
       <h3 className="font-bold text-lg">Add new worklog</h3>
 
       <div className="flex flex-wrap justify-between items-center m-3">
-        <input
-          type="date"
-          placeholder="Date"
-          className="input input-bordered w-full mb-3"
+        <DateInput
           value={value.day}
-          onChange={(e) => {
-            assertIsISODay(e.target.value);
-            setValue({ ...value, day: e.target.value });
+          placeholder="Date"
+          className="w-full mb-3"
+          onChange={(day) => {
+            assertExists(day);
+            setValue({ ...value, day: day });
           }}
         />
         <WorklogInputs value={value} setValue={setValue} />
