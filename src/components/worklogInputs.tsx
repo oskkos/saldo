@@ -2,6 +2,7 @@ import { WorklogFormDataEntry } from '@/types';
 import { assertExists } from '@/util/assertionFunctions';
 import { Dispatch, SetStateAction } from 'react';
 import TimeInput from './form/timeInput';
+import Checkbox from './form/checkbox';
 
 export default function WorklogInputs({
   value,
@@ -32,20 +33,16 @@ export default function WorklogInputs({
         }}
       />
       <div className="form-control ml-2 mt-3 w-full">
-        <label className="label cursor-pointer">
-          <span className="label-text">Subtract lunch break automatically</span>
-          <input
-            type="checkbox"
-            className="toggle toggle-primary"
-            checked={value.subtractLunchBreak}
-            onChange={(e) => {
-              setValue({
-                ...value,
-                subtractLunchBreak: e.target.checked,
-              });
-            }}
-          />
-        </label>
+        <Checkbox
+          label="Subtract lunch break automatically"
+          checked={value.subtractLunchBreak}
+          onChange={(checked) => {
+            setValue({
+              ...value,
+              subtractLunchBreak: checked,
+            });
+          }}
+        />
       </div>
       <textarea
         className="textarea textarea-bordered mt-3 w-full"
