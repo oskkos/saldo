@@ -1,6 +1,7 @@
 import { WorklogFormDataEntry } from '@/types';
-import { assertIsTime } from '@/util/assertionFunctions';
+import { assertExists } from '@/util/assertionFunctions';
 import { Dispatch, SetStateAction } from 'react';
+import TimeInput from './form/timeInput';
 
 export default function WorklogInputs({
   value,
@@ -11,25 +12,23 @@ export default function WorklogInputs({
 }) {
   return (
     <>
-      <input
-        type="time"
+      <TimeInput
         placeholder="From"
         value={value.from}
-        className="input input-bordered w-[45%]"
-        onChange={(e) => {
-          assertIsTime(e.target.value);
-          setValue({ ...value, from: e.target.value });
+        className="w-[45%]"
+        onChange={(time) => {
+          assertExists(time);
+          setValue({ ...value, from: time });
         }}
       />
       -
-      <input
-        type="time"
+      <TimeInput
         placeholder="To"
         value={value.to}
-        className="input input-bordered w-[45%]"
-        onChange={(e) => {
-          assertIsTime(e.target.value);
-          setValue({ ...value, to: e.target.value });
+        className="w-[45%]"
+        onChange={(time) => {
+          assertExists(time);
+          setValue({ ...value, to: time });
         }}
       />
       <div className="form-control ml-2 mt-3 w-full">
