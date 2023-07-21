@@ -47,16 +47,18 @@ export default async function Navbar({
             <ul className="menu menu-horizontal">{items(session)}</ul>
           </div>
 
-          {user
-            ? [
-                <div key="saldoBadge" className="grow justify-center mr-2">
-                  {saldoBadge}
-                </div>,
-                <div key="quickAddWorklog" className="justify-end mr-2">
-                  <QuickAdd userId={user.id} />
-                </div>,
-              ]
-            : null}
+          {user ? (
+            [
+              <div key="saldoBadge" className="grow justify-center mr-2">
+                {saldoBadge}
+              </div>,
+              <div key="quickAddWorklog" className="justify-end mr-2">
+                <QuickAdd userId={user.id} />
+              </div>,
+            ]
+          ) : (
+            <div className="grow" />
+          )}
           <AuthActions onAfterSignIn={onAfterSignin} />
         </div>
         <AuthenticatedContent>{children}</AuthenticatedContent>
