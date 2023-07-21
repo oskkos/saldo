@@ -93,7 +93,9 @@ export default function WorklogEntry({
               const callback = (x: Worklog) => {
                 setWl(sortWorklogs([...wl, x]));
               };
-              startTransitionWrapper(action, callback);
+              startTransitionWrapper(action, callback).catch(() => {
+                throw new Error('Failed to create worklog');
+              });
             }}
           >
             Submit

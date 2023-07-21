@@ -41,7 +41,11 @@ export default function QuickAddWorklogModal({
       from: toDate(`${value.day} ${value.from}`),
       to: toDate(`${value.day} ${value.to}`),
     };
-    startTransitionWrapper(() => onWorklogSubmit(userId, ret), onSubmit);
+    startTransitionWrapper(() => onWorklogSubmit(userId, ret), onSubmit).catch(
+      () => {
+        throw new Error('Failed to create worklog');
+      },
+    );
   };
   return (
     <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>

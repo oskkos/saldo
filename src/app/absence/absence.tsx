@@ -109,7 +109,9 @@ export default function Absence({ userId }: { userId: number }) {
             const action = () =>
               // TODO: Handle all in one call
               Promise.all(worklogs.map((ret) => onWorklogSubmit(userId, ret)));
-            startTransitionWrapper(action);
+            startTransitionWrapper(action).catch(() => {
+              throw new Error('Failed to add absence');
+            });
           }}
         >
           Submit

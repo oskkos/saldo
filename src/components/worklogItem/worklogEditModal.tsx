@@ -35,7 +35,11 @@ export default function WorklogEditModal({
       from: toDate(`${value.day} ${value.from}`),
       to: toDate(`${value.day} ${value.to}`),
     };
-    startTransitionWrapper(() => onWorklogEdit(worklog.id, ret), onEdit);
+    startTransitionWrapper(() => onWorklogEdit(worklog.id, ret), onEdit).catch(
+      () => {
+        throw new Error('Failed to edit worklog');
+      },
+    );
   };
   return (
     <Modal id={editModalId} confirmLabel="Edit" confirmAction={editWorklog}>

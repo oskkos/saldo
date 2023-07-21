@@ -9,11 +9,5 @@
   "parserOptions": {
     "parser": "@typescript-eslint/parser",
     "project": "./tsconfig.json"
-  },
-  "rules": {
-    "@typescript-eslint/no-floating-promises": [
-      "warn",
-      { "ignoreVoid": true, "ignoreIIFE": true }
-    ]
   }
 }

@@ -71,7 +71,9 @@ export default function Settings({ settings }: { settings: Settings }) {
                   initialBalanceMins: data.initial_balance_mins,
                   beginDate: data.begin_date,
                 });
-              startTransitionWrapper(action);
+              startTransitionWrapper(action).catch(() => {
+                throw new Error('Failed to update settings');
+              });
             }}
           >
             Submit

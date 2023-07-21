@@ -21,7 +21,9 @@ export default function WorklogDeleteConfirm({
       () => {
         onDelete(worklogId);
       },
-    );
+    ).catch(() => {
+      throw new Error('Failed to delete worklog');
+    });
   };
   return (
     <Modal id={confirmId} confirmLabel="Delete" confirmAction={deleteWorklog}>
