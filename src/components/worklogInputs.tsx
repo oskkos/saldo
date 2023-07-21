@@ -1,5 +1,4 @@
 import { WorklogFormDataEntry } from '@/types';
-import { assertExists } from '@/util/assertionFunctions';
 import { Dispatch, SetStateAction } from 'react';
 import TimeInput from './form/timeInput';
 import Checkbox from './form/checkbox';
@@ -18,8 +17,7 @@ export default function WorklogInputs({
         value={value.from}
         className="w-[45%]"
         onChange={(time) => {
-          assertExists(time);
-          setValue({ ...value, from: time });
+          setValue({ ...value, from: time ?? '' });
         }}
       />
       -
@@ -28,8 +26,7 @@ export default function WorklogInputs({
         value={value.to}
         className="w-[45%]"
         onChange={(time) => {
-          assertExists(time);
-          setValue({ ...value, to: time });
+          setValue({ ...value, to: time ?? '' });
         }}
       />
       <div className="form-control ml-2 mt-3 w-full">

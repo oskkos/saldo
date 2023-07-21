@@ -9,7 +9,7 @@ export default function DateInput({
   onChange,
 }: {
   label?: string;
-  value?: Date_ISODay;
+  value: Date_ISODay | '';
   placeholder?: string;
   className?: string;
   onChange?: (value?: Date_ISODay) => void;

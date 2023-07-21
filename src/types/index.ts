@@ -6,10 +6,10 @@ export interface AuthUser {
 }
 
 export interface WorklogFormDataEntry {
-  day?: Date_ISODay;
+  day: Date_ISODay | '';
   comment: string;
-  from: Date_Time;
-  to: Date_Time;
+  from: Date_Time | '';
+  to: Date_Time | '';
   subtractLunchBreak: boolean;
 }
 export interface WorklogFormData {

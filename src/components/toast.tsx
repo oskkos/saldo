@@ -12,7 +12,7 @@ export default function Toast({
     error: 'alert-error',
   };
   return (
-    <div className="toast toast-top toast-center">
+    <div className="toast toast-top toast-center z-10">
       <div className={`alert ${type ? map[type] : ''}`}>
         <span>{msg}</span>
       </div>

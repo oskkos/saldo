@@ -21,7 +21,7 @@ export default function Absence({ userId }: { userId: number }) {
     to: toDate(`${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_TO}`),
   });
 
-  const from = data.from ? toISODay(data.from) : undefined;
+  const from = data.from ? toISODay(data.from) : '';
   const onFromChange = (value?: Date_ISODay) => {
     assertExists(value);
     setData({
@@ -30,7 +30,7 @@ export default function Absence({ userId }: { userId: number }) {
     });
   };
 
-  const to = data.to ? toISODay(data.to) : undefined;
+  const to = data.to ? toISODay(data.to) : '';
   const onToChange = (value?: Date_ISODay) => {
     assertExists(value);
     setData({

@@ -16,7 +16,7 @@ import {
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
 import { sortWorklogs } from '@/services';
-import { assertExists } from '@/util/assertionFunctions';
+import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import useToastMessage from '@/util/useToastMessage';
 
@@ -87,7 +87,9 @@ export default function WorklogEntry({
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
               const action = () => {
-                assertExists(value.day, 'Day is required');
+                assertIsISODay(value.day, 'Invalid day');
+                assertIsTime(value.from, 'Invalid from time');
+                assertIsTime(value.to, 'Invalid to time');
                 const ret = {
                   ...value,
                   from: toDate(`${value.day} ${value.from}`),

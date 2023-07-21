@@ -10,7 +10,7 @@ import {
   NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   NEW_WORKLOG_DEFAULT_TO,
 } from '@/constants';
-import { assertExists } from '@/util/assertionFunctions';
+import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from './modal';
 import DateInput from './form/dateInput';
 import { WorklogFormDataEntry } from '@/types';
@@ -37,13 +37,18 @@ export default function QuickAddWorklogModal({
   });
 
   const saveWorklog = () => {
-    assertExists(value.day);
-    const ret = {
-      ...value,
-      from: toDate(`${value.day} ${value.from}`),
-      to: toDate(`${value.day} ${value.to}`),
-    };
-    startTransitionWrapper(() => onWorklogSubmit(userId, ret), onSubmit)
+    startTransitionWrapper(() => {
+      assertIsISODay(value.day, 'Invalid day');
+      assertIsTime(value.from, 'Invalid from time');
+      assertIsTime(value.to, 'Invalid to time');
+      const ret = {
+        ...value,
+        from: toDate(`${value.day} ${value.from}`),
+        to: toDate(`${value.day} ${value.to}`),
+      };
+
+      return onWorklogSubmit(userId, ret);
+    }, onSubmit)
       .then(() => {
         setMsg({ type: 'success', message: 'Worklog created' });
       })
@@ -75,8 +80,7 @@ export default function QuickAddWorklogModal({
             placeholder="Date"
             className="w-full mb-3"
             onChange={(day) => {
-              assertExists(day);
-              setValue({ ...value, day: day });
+              setValue({ ...value, day: day ?? '' });
             }}
           />
           <WorklogInputs value={value} setValue={setValue} />

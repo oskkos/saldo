@@ -6,7 +6,7 @@ import { toISODay, toTime } from '@/util/dateFormatter';
 import { onWorklogEdit } from '@/actions';
 import { toDate } from '@/util/date';
 import { WorklogFormDataEntry } from '@/types';
-import { assertExists } from '@/util/assertionFunctions';
+import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import useToastMessage from '@/util/useToastMessage';
@@ -31,7 +31,9 @@ export default function WorklogEditModal({
   });
 
   const editWorklog = () => {
-    assertExists(value.day, 'Day is required');
+    assertIsISODay(value.day, 'Day is required');
+    assertIsTime(value.from, 'From is required');
+    assertIsTime(value.to, 'To is required');
     const ret = {
       ...value,
       from: toDate(`${value.day} ${value.from}`),

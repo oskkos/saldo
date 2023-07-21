@@ -9,7 +9,7 @@ export default function TimeInput({
   onChange,
 }: {
   label?: string;
-  value?: Date_Time;
+  value: Date_Time | '';
   placeholder?: string;
   className?: string;
   onChange?: (value?: Date_Time) => void;
