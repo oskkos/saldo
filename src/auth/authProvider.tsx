@@ -1,5 +1,6 @@
 'use client';
 
+import ToastContextWrapper from '@/components/toastContext';
 import { SessionProvider } from 'next-auth/react';
 
 interface Props {
@@ -7,5 +8,9 @@ interface Props {
 }
 
 export const AuthProvider = ({ children }: Props) => {
-  return <SessionProvider>{children}</SessionProvider>;
+  return (
+    <SessionProvider>
+      <ToastContextWrapper>{children}</ToastContextWrapper>
+    </SessionProvider>
+  );
 };

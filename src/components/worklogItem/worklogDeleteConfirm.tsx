@@ -3,7 +3,8 @@
 import { onWorklogDelete } from '@/actions';
 import Modal from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import useToastMessage from '@/util/useToastMessage';
+import { useContext } from 'react';
+import { ToastContext } from '../toastContext';
 
 export default function WorklogDeleteConfirm({
   worklogId,
@@ -15,7 +16,7 @@ export default function WorklogDeleteConfirm({
   onDelete: (id: number) => void;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [ToastMsg, setMsg] = useToastMessage();
+  const { setMsg } = useContext(ToastContext);
 
   const deleteWorklog = () => {
     startTransitionWrapper(
@@ -44,12 +45,9 @@ export default function WorklogDeleteConfirm({
       });
   };
   return (
-    <>
-      <ToastMsg />
-      <Modal id={confirmId} confirmLabel="Delete" confirmAction={deleteWorklog}>
-        <h3 className="font-bold text-lg">Confirmation</h3>
-        <p className="py-4">Are you sure you want to delete this worklog?</p>
-      </Modal>
-    </>
+    <Modal id={confirmId} confirmLabel="Delete" confirmAction={deleteWorklog}>
+      <h3 className="font-bold text-lg">Confirmation</h3>
+      <p className="py-4">Are you sure you want to delete this worklog?</p>
+    </Modal>
   );
 }

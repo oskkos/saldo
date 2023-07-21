@@ -1,19 +1,19 @@
 'use client';
 import { onWorklogSubmit } from '@/actions';
 import DateInput from '@/components/form/dateInput';
+import { ToastContext } from '@/components/toastContext';
 import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
 import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
 import { add, startOfDay, toDate } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
-import useToastMessage from '@/util/useToastMessage';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 export default function Absence({ userId }: { userId: number }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [ToastMsg, setMsg] = useToastMessage();
+  const { setMsg } = useContext(ToastContext);
   const [data, setData] = useState<AbsenceData>({
     from: toDate(
       `${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_FROM}`,
@@ -53,7 +53,6 @@ export default function Absence({ userId }: { userId: number }) {
   };
   return (
     <div className="flex flex-wrap justify-center items-start mt-3">
-      <ToastMsg />
       <div className="flex justify-between items-center w-full max-w-xs">
         <h2 className="text-xl text-center m-3 mb-8 w-full">Absence</h2>
       </div>

@@ -2,7 +2,7 @@
 import { WorklogFormData, WorklogFormDataEntry } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
 import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
-import { useRef, useState } from 'react';
+import { useContext, useRef, useState } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
 import WorklogInputs from '@/components/worklogInputs';
@@ -18,7 +18,7 @@ import {
 import { sortWorklogs } from '@/services';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import useToastMessage from '@/util/useToastMessage';
+import { ToastContext } from '@/components/toastContext';
 
 export default function WorklogEntry({
   day,
@@ -30,7 +30,7 @@ export default function WorklogEntry({
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [ToastMsg, setMsg] = useToastMessage();
+  const { setMsg } = useContext(ToastContext);
   const router = useRouter();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: day,
@@ -55,7 +55,6 @@ export default function WorklogEntry({
 
   return (
     <>
-      <ToastMsg />
       <div className="flex flex-wrap justify-center items-start mt-3" ref={ref}>
         <div className="flex justify-between items-center w-80">
           <div>

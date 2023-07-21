@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import WorklogInputs from '../worklogInputs';
 import { Worklog } from '@prisma/client';
 import { toISODay, toTime } from '@/util/dateFormatter';
@@ -9,7 +9,7 @@ import { WorklogFormDataEntry } from '@/types';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import useToastMessage from '@/util/useToastMessage';
+import { ToastContext } from '../toastContext';
 
 export default function WorklogEditModal({
   worklog,
@@ -21,7 +21,7 @@ export default function WorklogEditModal({
   onEdit: (editedWorklog: Worklog) => void;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [ToastMsg, setMsg] = useToastMessage();
+  const { setMsg } = useContext(ToastContext);
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(worklog.from),
     from: toTime(worklog.from),
@@ -60,14 +60,11 @@ export default function WorklogEditModal({
       });
   };
   return (
-    <>
-      <ToastMsg />
-      <Modal id={editModalId} confirmLabel="Edit" confirmAction={editWorklog}>
-        <h3 className="font-bold text-lg">Edit worklog</h3>
-        <div className="flex flex-wrap justify-between items-center m-3 sm:w-11/12">
-          <WorklogInputs value={value} setValue={setValue} />
-        </div>
-      </Modal>
-    </>
+    <Modal id={editModalId} confirmLabel="Edit" confirmAction={editWorklog}>
+      <h3 className="font-bold text-lg">Edit worklog</h3>
+      <div className="flex flex-wrap justify-between items-center m-3 sm:w-11/12">
+        <WorklogInputs value={value} setValue={setValue} />
+      </div>
+    </Modal>
   );
 }

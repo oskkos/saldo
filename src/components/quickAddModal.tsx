@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Worklog } from '@prisma/client';
 import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
@@ -15,7 +15,7 @@ import Modal from './modal';
 import DateInput from './form/dateInput';
 import { WorklogFormDataEntry } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import useToastMessage from '@/util/useToastMessage';
+import { ToastContext } from './toastContext';
 
 export default function QuickAddWorklogModal({
   userId,
@@ -27,7 +27,7 @@ export default function QuickAddWorklogModal({
   onSubmit: (worklog: Worklog) => void;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [ToastMsg, setMsg] = useToastMessage();
+  const { setMsg } = useContext(ToastContext);
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(new Date()),
     comment: '',
@@ -69,23 +69,20 @@ export default function QuickAddWorklogModal({
       });
   };
   return (
-    <>
-      <ToastMsg />
-      <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>
-        <h3 className="font-bold text-lg">Add new worklog</h3>
+    <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>
+      <h3 className="font-bold text-lg">Add new worklog</h3>
 
-        <div className="flex flex-wrap justify-between items-center m-3">
-          <DateInput
-            value={value.day}
-            placeholder="Date"
-            className="w-full mb-3"
-            onChange={(day) => {
-              setValue({ ...value, day: day ?? '' });
-            }}
-          />
-          <WorklogInputs value={value} setValue={setValue} />
-        </div>
-      </Modal>
-    </>
+      <div className="flex flex-wrap justify-between items-center m-3">
+        <DateInput
+          value={value.day}
+          placeholder="Date"
+          className="w-full mb-3"
+          onChange={(day) => {
+            setValue({ ...value, day: day ?? '' });
+          }}
+        />
+        <WorklogInputs value={value} setValue={setValue} />
+      </div>
+    </Modal>
   );
 }

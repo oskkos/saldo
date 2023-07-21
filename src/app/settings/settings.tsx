@@ -3,22 +3,21 @@
 import { onSettingsUpdate } from '@/actions';
 import DateInput from '@/components/form/dateInput';
 import IntegerInput from '@/components/form/integerInput';
+import { ToastContext } from '@/components/toastContext';
 import { assertExists } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
-import useToastMessage from '@/util/useToastMessage';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { Settings } from '@prisma/client';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 
 export default function Settings({ settings }: { settings: Settings }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [ToastMsg, setMsg] = useToastMessage();
   const [data, setData] = useState(settings);
+  const { setMsg } = useContext(ToastContext);
 
   return (
     <div className="flex flex-col flex-nowrap justify-center items-center mt-3">
-      <ToastMsg />
       <h2 className="text-xl text-center m-3 mb-8 w-64">Settings</h2>
 
       <div className="grid grid-cols-[8rem_auto] gap-2 items-center w-80">
