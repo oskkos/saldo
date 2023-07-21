@@ -29,6 +29,7 @@ export default async function Navbar({
 }) {
   const session = await getSession();
   const user = session ? await getUser(session.user?.email ?? '') : null;
+  const saldoBadge = user ? await getSaldoBadge(user.id) : null;
 
   return (
     <div className="drawer">
@@ -49,7 +50,7 @@ export default async function Navbar({
           {user
             ? [
                 <div key="saldoBadge" className="grow justify-center mr-2">
-                  {getSaldoBadge(user.id)}
+                  {saldoBadge}
                 </div>,
                 <div key="quickAddWorklog" className="justify-end mr-2">
                   <QuickAdd userId={user.id} />
