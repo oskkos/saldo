@@ -18,6 +18,7 @@ import {
 import { sortWorklogs } from '@/services';
 import { assertExists } from '@/util/assertionFunctions';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
+import useToastMessage from '@/util/useToastMessage';
 
 export default function WorklogEntry({
   day,
@@ -29,6 +30,7 @@ export default function WorklogEntry({
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
+  const [ToastMsg, setMsg] = useToastMessage();
   const router = useRouter();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: day,
@@ -53,6 +55,7 @@ export default function WorklogEntry({
 
   return (
     <>
+      <ToastMsg />
       <div className="flex flex-wrap justify-center items-start mt-3" ref={ref}>
         <div className="flex justify-between items-center w-80">
           <div>
@@ -83,19 +86,37 @@ export default function WorklogEntry({
           <button
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
-              assertExists(value.day);
-              const ret = {
-                ...value,
-                from: toDate(`${value.day} ${value.from}`),
-                to: toDate(`${value.day} ${value.to}`),
+              const action = () => {
+                assertExists(value.day, 'Day is required');
+                const ret = {
+                  ...value,
+                  from: toDate(`${value.day} ${value.from}`),
+                  to: toDate(`${value.day} ${value.to}`),
+                };
+                return onSubmit(ret);
               };
-              const action = () => onSubmit(ret);
               const callback = (x: Worklog) => {
                 setWl(sortWorklogs([...wl, x]));
               };
-              startTransitionWrapper(action, callback).catch(() => {
-                throw new Error('Failed to create worklog');
-              });
+              startTransitionWrapper(action, callback)
+                .then(() => {
+                  setMsg({ type: 'success', message: 'Worklog created' });
+                })
+                .catch((e) => {
+                  const errorMsg =
+                    e instanceof Error ? (
+                      <div className="text-sm">{e.message}</div>
+                    ) : null;
+                  setMsg({
+                    type: 'error',
+                    message: (
+                      <div>
+                        <div>Failed to create worklog</div>
+                        {errorMsg}
+                      </div>
+                    ),
+                  });
+                });
             }}
           >
             Submit

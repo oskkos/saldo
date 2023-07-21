@@ -1,12 +1,15 @@
 import { AbsenceReason } from '@/types';
 import { Date_ISODay, Date_Time } from './dateFormatter';
 
-export function assertExists<T>(val: T | null | undefined): asserts val is T {
+export function assertExists<T>(
+  val: T | null | undefined,
+  errMsg?: string,
+): asserts val is T {
   if (typeof val === 'undefined') {
-    throw new Error('Value was not defined');
+    throw new Error(errMsg ?? 'Value was not defined');
   }
   if (val === null) {
-    throw new Error('Value was null');
+    throw new Error(errMsg ?? 'Value was null');
   }
 }
 export function assertIsAbsenceReason(

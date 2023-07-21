@@ -6,16 +6,19 @@ import IntegerInput from '@/components/form/integerInput';
 import { assertExists } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
+import useToastMessage from '@/util/useToastMessage';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { Settings } from '@prisma/client';
 import { useState } from 'react';
 
 export default function Settings({ settings }: { settings: Settings }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
+  const [ToastMsg, setMsg] = useToastMessage();
   const [data, setData] = useState(settings);
 
   return (
     <div className="flex flex-col flex-nowrap justify-center items-center mt-3">
+      <ToastMsg />
       <h2 className="text-xl text-center m-3 mb-8 w-64">Settings</h2>
 
       <div className="grid grid-cols-[8rem_auto] gap-2 items-center w-80">
@@ -71,9 +74,25 @@ export default function Settings({ settings }: { settings: Settings }) {
                   initialBalanceMins: data.initial_balance_mins,
                   beginDate: data.begin_date,
                 });
-              startTransitionWrapper(action).catch(() => {
-                throw new Error('Failed to update settings');
-              });
+              startTransitionWrapper(action)
+                .then(() => {
+                  setMsg({ type: 'success', message: 'Settings saved' });
+                })
+                .catch((e) => {
+                  const errorMsg =
+                    e instanceof Error ? (
+                      <div className="text-sm">{e.message}</div>
+                    ) : null;
+                  setMsg({
+                    type: 'error',
+                    message: (
+                      <div>
+                        <div>Failed to save settings</div>
+                        {errorMsg}
+                      </div>
+                    ),
+                  });
+                });
             }}
           >
             Submit

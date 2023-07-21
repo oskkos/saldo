@@ -15,6 +15,7 @@ import Modal from './modal';
 import DateInput from './form/dateInput';
 import { WorklogFormDataEntry } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
+import useToastMessage from '@/util/useToastMessage';
 
 export default function QuickAddWorklogModal({
   userId,
@@ -26,6 +27,7 @@ export default function QuickAddWorklogModal({
   onSubmit: (worklog: Worklog) => void;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
+  const [ToastMsg, setMsg] = useToastMessage();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(new Date()),
     comment: '',
@@ -41,28 +43,45 @@ export default function QuickAddWorklogModal({
       from: toDate(`${value.day} ${value.from}`),
       to: toDate(`${value.day} ${value.to}`),
     };
-    startTransitionWrapper(() => onWorklogSubmit(userId, ret), onSubmit).catch(
-      () => {
-        throw new Error('Failed to create worklog');
-      },
-    );
+    startTransitionWrapper(() => onWorklogSubmit(userId, ret), onSubmit)
+      .then(() => {
+        setMsg({ type: 'success', message: 'Worklog created' });
+      })
+      .catch((e) => {
+        const errorMsg =
+          e instanceof Error ? (
+            <div className="text-sm">{e.message}</div>
+          ) : null;
+        setMsg({
+          type: 'error',
+          message: (
+            <div>
+              <div>Failed to create worklog</div>
+              {errorMsg}
+            </div>
+          ),
+        });
+      });
   };
   return (
-    <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>
-      <h3 className="font-bold text-lg">Add new worklog</h3>
+    <>
+      <ToastMsg />
+      <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>
+        <h3 className="font-bold text-lg">Add new worklog</h3>
 
-      <div className="flex flex-wrap justify-between items-center m-3">
-        <DateInput
-          value={value.day}
-          placeholder="Date"
-          className="w-full mb-3"
-          onChange={(day) => {
-            assertExists(day);
-            setValue({ ...value, day: day });
-          }}
-        />
-        <WorklogInputs value={value} setValue={setValue} />
-      </div>
-    </Modal>
+        <div className="flex flex-wrap justify-between items-center m-3">
+          <DateInput
+            value={value.day}
+            placeholder="Date"
+            className="w-full mb-3"
+            onChange={(day) => {
+              assertExists(day);
+              setValue({ ...value, day: day });
+            }}
+          />
+          <WorklogInputs value={value} setValue={setValue} />
+        </div>
+      </Modal>
+    </>
   );
 }

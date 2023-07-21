@@ -7,11 +7,13 @@ import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
 import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
 import { add, startOfDay, toDate } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
+import useToastMessage from '@/util/useToastMessage';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useState } from 'react';
 
 export default function Absence({ userId }: { userId: number }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
+  const [ToastMsg, setMsg] = useToastMessage();
   const [data, setData] = useState<AbsenceData>({
     from: toDate(
       `${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_FROM}`,
@@ -51,6 +53,7 @@ export default function Absence({ userId }: { userId: number }) {
   };
   return (
     <div className="flex flex-wrap justify-center items-start mt-3">
+      <ToastMsg />
       <div className="flex justify-between items-center w-full max-w-xs">
         <h2 className="text-xl text-center m-3 mb-8 w-full">Absence</h2>
       </div>
@@ -99,19 +102,38 @@ export default function Absence({ userId }: { userId: number }) {
         <button
           className="btn btn-secondary mt-3 w-full"
           onClick={() => {
-            assertExists(data.reason);
-            const worklogs: WorklogFormData[] = [];
-            let x = data.from;
-            while (x && data.to && x <= data.to) {
-              worklogs.push(toWorklogFormData(x, data.reason));
-              x = add(x, 1, 'day');
-            }
-            const action = () =>
+            const action = () => {
+              assertExists(data.reason, 'Reason is required');
+              const worklogs: WorklogFormData[] = [];
+              let x = data.from;
+              while (x && data.to && x <= data.to) {
+                worklogs.push(toWorklogFormData(x, data.reason));
+                x = add(x, 1, 'day');
+              }
               // TODO: Handle all in one call
-              Promise.all(worklogs.map((ret) => onWorklogSubmit(userId, ret)));
-            startTransitionWrapper(action).catch(() => {
-              throw new Error('Failed to add absence');
-            });
+              return Promise.all(
+                worklogs.map((ret) => onWorklogSubmit(userId, ret)),
+              );
+            };
+            startTransitionWrapper(action)
+              .then(() => {
+                setMsg({ type: 'success', message: 'Absence added' });
+              })
+              .catch((e) => {
+                const errorMsg =
+                  e instanceof Error ? (
+                    <div className="text-sm">{e.message}</div>
+                  ) : null;
+                setMsg({
+                  type: 'error',
+                  message: (
+                    <div>
+                      <div>Failed to add absence</div>
+                      {errorMsg}
+                    </div>
+                  ),
+                });
+              });
           }}
         >
           Submit
