@@ -43,8 +43,8 @@ export default function QuickAddWorklogModal({
       assertIsTime(value.to, 'Invalid to time');
       const ret = {
         ...value,
-        from: toDate(`${value.day} ${value.from}`),
-        to: toDate(`${value.day} ${value.to}`),
+        from: toDate(value.day, value.from),
+        to: toDate(value.day, value.to),
       };
 
       return onWorklogSubmit(userId, ret);

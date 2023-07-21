@@ -15,10 +15,8 @@ export default function Absence({ userId }: { userId: number }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [data, setData] = useState<AbsenceData>({
-    from: toDate(
-      `${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_FROM}`,
-    ),
-    to: toDate(`${toISODay(startOfDay(new Date()))} ${NEW_WORKLOG_DEFAULT_TO}`),
+    from: toDate(toISODay(startOfDay(new Date())), NEW_WORKLOG_DEFAULT_FROM),
+    to: toDate(toISODay(startOfDay(new Date())), NEW_WORKLOG_DEFAULT_TO),
   });
 
   const from = data.from ? toISODay(data.from) : '';
@@ -26,7 +24,7 @@ export default function Absence({ userId }: { userId: number }) {
     assertExists(value);
     setData({
       ...data,
-      from: toDate(`${value} ${NEW_WORKLOG_DEFAULT_FROM}`),
+      from: toDate(value, NEW_WORKLOG_DEFAULT_FROM),
     });
   };
 
@@ -35,7 +33,7 @@ export default function Absence({ userId }: { userId: number }) {
     assertExists(value);
     setData({
       ...data,
-      to: toDate(`${value} ${NEW_WORKLOG_DEFAULT_FROM}`),
+      to: toDate(value, NEW_WORKLOG_DEFAULT_FROM),
     });
   };
 

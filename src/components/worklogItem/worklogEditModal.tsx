@@ -36,8 +36,8 @@ export default function WorklogEditModal({
     assertIsTime(value.to, 'To is required');
     const ret = {
       ...value,
-      from: toDate(`${value.day} ${value.from}`),
-      to: toDate(`${value.day} ${value.to}`),
+      from: toDate(value.day, value.from),
+      to: toDate(value.day, value.to),
     };
     startTransitionWrapper(() => onWorklogEdit(worklog.id, ret), onEdit)
       .then(() => {

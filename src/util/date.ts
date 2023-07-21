@@ -1,6 +1,7 @@
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
+import { Date_ISODay, Date_Time } from './dateFormatter';
 
 dayjs.extend(isoWeek);
 dayjs.extend(advancedFormat);
@@ -52,6 +53,6 @@ export function subtract(
   return dayjs(date).subtract(value, unit).toDate();
 }
 
-export function toDate(value: string) {
-  return dayjs(value).toDate();
+export function toDate(day: Date_ISODay, time: Date_Time) {
+  return dayjs(`${day} ${time}`).toDate();
 }
