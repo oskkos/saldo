@@ -1,4 +1,5 @@
 .next
 .prettierignore
 .husky
+.gitignore
 prisma/migrations
