@@ -6,7 +6,7 @@ export default function IntegerInput({
   onChange,
 }: {
   label: string;
-  value?: number;
+  value: number | '';
   placeholder?: string;
   className?: string;
   onChange?: (val?: number) => void;

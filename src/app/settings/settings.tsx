@@ -13,9 +13,11 @@ import { useContext, useState } from 'react';
 
 export default function Settings({ settings }: { settings: Settings }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [data, setData] = useState<
-    Omit<Settings, 'begin_date'> & { begin_date: Date | null }
-  >(settings);
+  const [data, setData] = useState<{
+    begin_date: Date | null;
+    initial_balance_hours: number | '';
+    initial_balance_mins: number | '';
+  }>(settings);
   const { setMsg } = useContext(ToastContext);
 
   return (
@@ -33,7 +35,7 @@ export default function Settings({ settings }: { settings: Settings }) {
             onChange={(val) => {
               setData({
                 ...data,
-                initial_balance_hours: val ?? 0,
+                initial_balance_hours: val ?? '',
               });
             }}
           />
@@ -46,7 +48,7 @@ export default function Settings({ settings }: { settings: Settings }) {
             onChange={(val) => {
               setData({
                 ...data,
-                initial_balance_mins: val ?? 0,
+                initial_balance_mins: val ?? '',
               });
             }}
           />
@@ -70,9 +72,9 @@ export default function Settings({ settings }: { settings: Settings }) {
             onClick={() => {
               const action = () => {
                 assertExists(data.begin_date, 'Begin date is required');
-                return onSettingsUpdate(data.user_id, {
-                  initialBalanceHours: data.initial_balance_hours,
-                  initialBalanceMins: data.initial_balance_mins,
+                return onSettingsUpdate(settings.user_id, {
+                  initialBalanceHours: data.initial_balance_hours || 0,
+                  initialBalanceMins: data.initial_balance_mins || 0,
                   beginDate: data.begin_date,
                 });
               };
