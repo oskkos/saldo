@@ -13,7 +13,9 @@ import { useContext, useState } from 'react';
 
 export default function Settings({ settings }: { settings: Settings }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
-  const [data, setData] = useState(settings);
+  const [data, setData] = useState<
+    Omit<Settings, 'begin_date'> & { begin_date: Date | null }
+  >(settings);
   const { setMsg } = useContext(ToastContext);
 
   return (
@@ -52,13 +54,12 @@ export default function Settings({ settings }: { settings: Settings }) {
         <div>Begin date</div>
         <div>
           <DateInput
-            value={toISODay(data.begin_date)}
+            value={data.begin_date ? toISODay(data.begin_date) : ''}
             className="w-full"
             onChange={(value) => {
-              assertExists(value);
               setData({
                 ...data,
-                begin_date: startOfDay(value),
+                begin_date: value ? startOfDay(value) : null,
               });
             }}
           />
@@ -67,12 +68,14 @@ export default function Settings({ settings }: { settings: Settings }) {
           <button
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
-              const action = () =>
-                onSettingsUpdate(data.user_id, {
+              const action = () => {
+                assertExists(data.begin_date, 'Begin date is required');
+                return onSettingsUpdate(data.user_id, {
                   initialBalanceHours: data.initial_balance_hours,
                   initialBalanceMins: data.initial_balance_mins,
                   beginDate: data.begin_date,
                 });
+              };
               startTransitionWrapper(action)
                 .then(() => {
                   setMsg({ type: 'success', message: 'Settings saved' });

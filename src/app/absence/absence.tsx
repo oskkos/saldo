@@ -21,19 +21,17 @@ export default function Absence({ userId }: { userId: number }) {
 
   const from = data.from ? toISODay(data.from) : '';
   const onFromChange = (value?: Date_ISODay) => {
-    assertExists(value);
     setData({
       ...data,
-      from: toDate(value, NEW_WORKLOG_DEFAULT_FROM),
+      from: value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null,
     });
   };
 
   const to = data.to ? toISODay(data.to) : '';
   const onToChange = (value?: Date_ISODay) => {
-    assertExists(value);
     setData({
       ...data,
-      to: toDate(value, NEW_WORKLOG_DEFAULT_FROM),
+      to: value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null,
     });
   };
 
@@ -101,9 +99,11 @@ export default function Absence({ userId }: { userId: number }) {
           onClick={() => {
             const action = () => {
               assertExists(data.reason, 'Reason is required');
+              assertExists(data.from, 'From date is required');
+              assertExists(data.to, 'To date is required');
               const worklogs: WorklogFormData[] = [];
               let x = data.from;
-              while (x && data.to && x <= data.to) {
+              while (x <= data.to) {
                 worklogs.push(toWorklogFormData(x, data.reason));
                 x = add(x, 1, 'day');
               }
