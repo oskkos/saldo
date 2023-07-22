@@ -17,6 +17,7 @@ export default function Absence({ userId }: { userId: number }) {
   const [data, setData] = useState<AbsenceData>({
     from: toDate(toISODay(startOfDay(new Date())), NEW_WORKLOG_DEFAULT_FROM),
     to: toDate(toISODay(startOfDay(new Date())), NEW_WORKLOG_DEFAULT_TO),
+    comment: '',
   });
 
   const from = data.from ? toISODay(data.from) : '';
@@ -38,11 +39,12 @@ export default function Absence({ userId }: { userId: number }) {
   const toWorklogFormData = (
     day: Date,
     reason: AbsenceReason,
+    comment: string,
   ): WorklogFormData => {
     return {
       from: new Date(`${toISODay(day)} ${NEW_WORKLOG_DEFAULT_FROM}`),
       to: new Date(`${toISODay(day)} ${NEW_WORKLOG_DEFAULT_TO}`),
-      comment: '',
+      comment: comment,
       subtractLunchBreak: true,
       absence: reason,
     };
@@ -94,6 +96,12 @@ export default function Absence({ userId }: { userId: number }) {
             })}
           </select>
         </div>
+        <textarea
+          className="textarea textarea-bordered mt-3 w-full"
+          placeholder="Comment"
+          value={data.comment}
+          onChange={(e) => setData({ ...data, comment: e.target.value })}
+        ></textarea>
         <button
           className="btn btn-secondary mt-3 w-full"
           onClick={() => {
@@ -104,7 +112,7 @@ export default function Absence({ userId }: { userId: number }) {
               const worklogs: WorklogFormData[] = [];
               let x = data.from;
               while (x <= data.to) {
-                worklogs.push(toWorklogFormData(x, data.reason));
+                worklogs.push(toWorklogFormData(x, data.reason, data.comment));
                 x = add(x, 1, 'day');
               }
               // TODO: Handle all in one call

@@ -36,6 +36,7 @@ export interface AbsenceData {
   from: Date | null;
   to: Date | null;
   reason?: AbsenceReason;
+  comment: string;
 }
 export interface SaldoForDay {
   hours: number;
