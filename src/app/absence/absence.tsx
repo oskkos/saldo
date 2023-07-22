@@ -6,7 +6,7 @@ import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
 import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
-import { add, startOfDay, toDate } from '@/util/date';
+import { add, toDate } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useContext, useState } from 'react';
@@ -15,12 +15,11 @@ export default function Absence({ userId }: { userId: number }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [data, setData] = useState<AbsenceData>({
-    from: toDate(toISODay(startOfDay(new Date())), NEW_WORKLOG_DEFAULT_FROM),
-    to: toDate(toISODay(startOfDay(new Date())), NEW_WORKLOG_DEFAULT_TO),
+    from: toDate(toISODay(), NEW_WORKLOG_DEFAULT_FROM),
+    to: toDate(toISODay(), NEW_WORKLOG_DEFAULT_TO),
     comment: '',
   });
 
-  const from = data.from ? toISODay(data.from) : '';
   const onFromChange = (value?: Date_ISODay) => {
     setData({
       ...data,
@@ -28,7 +27,6 @@ export default function Absence({ userId }: { userId: number }) {
     });
   };
 
-  const to = data.to ? toISODay(data.to) : '';
   const onToChange = (value?: Date_ISODay) => {
     setData({
       ...data,
@@ -37,13 +35,13 @@ export default function Absence({ userId }: { userId: number }) {
   };
 
   const toWorklogFormData = (
-    day: Date,
+    day: Date_ISODay,
     reason: AbsenceReason,
     comment: string,
   ): WorklogFormData => {
     return {
-      from: new Date(`${toISODay(day)} ${NEW_WORKLOG_DEFAULT_FROM}`),
-      to: new Date(`${toISODay(day)} ${NEW_WORKLOG_DEFAULT_TO}`),
+      from: toDate(day, NEW_WORKLOG_DEFAULT_FROM),
+      to: toDate(day, NEW_WORKLOG_DEFAULT_TO),
       comment: comment,
       subtractLunchBreak: true,
       absence: reason,
@@ -57,14 +55,14 @@ export default function Absence({ userId }: { userId: number }) {
       <div className="flex flex-wrap justify-between items-center m-3 w-full max-w-sm">
         <DateInput
           label="From"
-          value={from}
+          value={data.from ? toISODay(data.from) : ''}
           className="w-40"
           onChange={onFromChange}
         />
         -
         <DateInput
           label="To"
-          value={to}
+          value={data.to ? toISODay(data.to) : ''}
           className="w-40"
           onChange={onToChange}
         />
@@ -112,7 +110,9 @@ export default function Absence({ userId }: { userId: number }) {
               const worklogs: WorklogFormData[] = [];
               let x = data.from;
               while (x <= data.to) {
-                worklogs.push(toWorklogFormData(x, data.reason, data.comment));
+                worklogs.push(
+                  toWorklogFormData(toISODay(x), data.reason, data.comment),
+                );
                 x = add(x, 1, 'day');
               }
               // TODO: Handle all in one call

@@ -25,7 +25,7 @@ export function diffInMinutes(
   return dayjs(date1).diff(date2, 'm');
 }
 
-export function endOfDay(date: string | number | Date) {
+export function endOfDay(date?: string | number | Date) {
   return dayjs(date).endOf('day').toDate();
 }
 
@@ -37,12 +37,15 @@ export function sameDay(date1: Date, date2: Date) {
   return dayjs(date1).isSame(dayjs(date2), 'day');
 }
 
-export function startOfDay(date: string | number | Date) {
+export function startOfDay(date?: string | number | Date) {
   return dayjs(date).startOf('day').toDate();
 }
 
-export function startOfMonth(date: string | number | Date) {
+export function startOfMonth(date?: string | number | Date) {
   return dayjs(date).startOf('month').toDate();
+}
+export function now() {
+  return new Date();
 }
 
 export function subtract(

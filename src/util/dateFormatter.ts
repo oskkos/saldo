@@ -14,7 +14,7 @@ export function toDayMonthYear(date: string | number | Date) {
 }
 
 export type Date_ISODay = string & { kind: 'Date_ISODay' };
-export function toISODay(date: string | number | Date) {
+export function toISODay(date?: string | number | Date) {
   const x = dayjs(date).format('YYYY-MM-DD');
   assertIsISODay(x);
   return x;

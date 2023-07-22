@@ -29,7 +29,7 @@ export default function QuickAddWorklogModal({
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [value, setValue] = useState<WorklogFormDataEntry>({
-    day: toISODay(new Date()),
+    day: toISODay(),
     comment: '',
     from: NEW_WORKLOG_DEFAULT_FROM,
     to: NEW_WORKLOG_DEFAULT_TO,

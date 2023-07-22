@@ -18,7 +18,7 @@ export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user);
   const settings = await getSettings(u.id);
   if (!settings) {
-    await insertSettings(u.id, startOfDay(new Date()), 0, 0);
+    await insertSettings(u.id, startOfDay(), 0, 0);
   }
 }
 

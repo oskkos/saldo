@@ -1,5 +1,5 @@
 import { AbsenceReason } from '@/types';
-import { sameDay, startOfDay } from '@/util/date';
+import { now, sameDay, startOfDay } from '@/util/date';
 import { toDay, toISODay } from '@/util/dateFormatter';
 import Link from 'next/link';
 import CalendarCell from './calendarCell';
@@ -26,10 +26,8 @@ export default function DayItem({
     if (status !== 'current') {
       return '';
     }
-    const beforeBegin =
-      startOfDay(date.getTime()) < startOfDay(beginDate.getTime());
-    const inFuture =
-      startOfDay(date.getTime()) > startOfDay(new Date().getTime());
+    const beforeBegin = startOfDay(date) < startOfDay(beginDate);
+    const inFuture = startOfDay(date) > startOfDay();
     if (beforeBegin || inFuture) {
       return minutes !== 0 ? 'border-2 border-solid border-base-300' : '';
     }
@@ -46,7 +44,7 @@ export default function DayItem({
     }
     return 'border-2 border-solid border-success';
   };
-  const sameDayClass = sameDay(date, new Date())
+  const sameDayClass = sameDay(date, now())
     ? 'bg-neutral text-neutral-content'
     : '';
   const currentMonthClass = status !== 'current' ? 'text-base-300' : '';

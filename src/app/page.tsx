@@ -21,11 +21,7 @@ export default async function Home({
   return (
     <div className="flex flex-wrap justify-center mt-4">
       <MiniCalendar
-        date={
-          searchParams.month
-            ? startOfMonth(searchParams.month)
-            : startOfMonth(new Date())
-        }
+        date={startOfMonth(searchParams.month || undefined)}
         beginDate={settings.begin_date}
         worklogs={worklogs}
       />

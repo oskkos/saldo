@@ -27,7 +27,7 @@ function groupWorklogsByMonth(
       day,
     ) => {
       let group: string;
-      if (diffInMinutes(startOfDay(day), startOfDay(new Date())) <= 0) {
+      if (diffInMinutes(startOfDay(day), startOfDay()) <= 0) {
         group = toYearAndMonth(day);
       } else {
         group = 'future';

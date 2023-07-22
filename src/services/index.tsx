@@ -12,7 +12,7 @@ function isWeekend(d: Date) {
 }
 
 function expectedMinutesUntilToday(beginDate: Date) {
-  const today = startOfDay(new Date());
+  const today = startOfDay();
   let d = beginDate;
   let workDays = 0;
   while (d.getTime() <= today.getTime()) {
@@ -58,7 +58,7 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
       if (worklogItem.from.getTime() < settings.begin_date.getTime()) {
         return acc;
       }
-      if (worklogItem.to.getTime() > endOfDay(new Date()).getTime()) {
+      if (worklogItem.to.getTime() > endOfDay().getTime()) {
         return acc;
       }
       if (worklogItem.absence === AbsenceReason.flex_hours) {
