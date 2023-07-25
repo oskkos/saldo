@@ -1,36 +1,31 @@
-import { onAfterSignin } from '@/actions';
+import 'server-only';
+
 import AuthActions from '@/auth/authActions';
 import AuthenticatedContent from '@/auth/authenticatedContent';
 import { MdOutlineMenu } from 'react-icons/md';
 import NavbarItems from './navBarItems';
 import { Session } from 'next-auth';
-import { getSettings, getUser } from '@/repository/userRepository';
-import { getWorklogs } from '@/repository/worklogRepository';
-import { calculateCurrentSaldo } from '@/services';
 import QuickAdd from './quickAdd';
-import { getSession } from '@/auth/authSession';
-import { assertExists } from '@/util/assertionFunctions';
+import SaldoBadge from './saldoBadge';
+import { Settings, User, Worklog } from '@prisma/client';
 
 function items(session: Session | null) {
   return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
 }
 
-async function getSaldoBadge(userId: number) {
-  const worklogs = await getWorklogs(userId);
-  const settings = await getSettings(userId);
-  assertExists(settings);
-  const saldo = calculateCurrentSaldo(settings, worklogs);
-  return saldo.toBadge('badge-lg');
-}
-export default async function Navbar({
+export default function Navbar({
+  user,
+  settings,
+  session,
+  worklogs,
   children,
 }: {
+  user: User | null;
+  settings: Settings | null;
+  session: Session | null;
+  worklogs: Worklog[];
   children: React.ReactNode;
 }) {
-  const session = await getSession();
-  const user = session ? await getUser(session.user?.email ?? '') : null;
-  const saldoBadge = user ? await getSaldoBadge(user.id) : null;
-
   return (
     <div className="drawer">
       <input id="saldo-navbar" type="checkbox" className="drawer-toggle" />
@@ -50,7 +45,7 @@ export default async function Navbar({
           {user ? (
             [
               <div key="saldoBadge" className="grow justify-center mr-2">
-                {saldoBadge}
+                <SaldoBadge settings={settings} worklogs={worklogs} />
               </div>,
               <div key="quickAddWorklog" className="justify-end mr-2">
                 <QuickAdd userId={user.id} />
@@ -59,9 +54,11 @@ export default async function Navbar({
           ) : (
             <div className="grow" />
           )}
-          <AuthActions onAfterSignIn={onAfterSignin} />
+          <AuthActions />
         </div>
-        <AuthenticatedContent>{children}</AuthenticatedContent>
+        <AuthenticatedContent user={user} settings={settings}>
+          {children}
+        </AuthenticatedContent>
       </div>
       <div className="drawer-side z-10">
         <label htmlFor="saldo-navbar" className="drawer-overlay"></label>

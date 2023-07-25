@@ -9,6 +9,9 @@ export default async function SettingsPage() {
     return null;
   }
   const user = await getUserFromSession();
+  if (!user) {
+    return null;
+  }
   const settings = await getSettings(user.id);
   assertExists(settings);
   return <Settings settings={settings} />;

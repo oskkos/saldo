@@ -14,7 +14,7 @@ export async function upsertUser({ email, name }: AuthUser) {
 }
 
 export async function getUser(email: string) {
-  const user = await prisma.user.findUniqueOrThrow({
+  const user = await prisma.user.findUnique({
     where: { email },
   });
   return user;
@@ -33,13 +33,17 @@ export async function insertSettings(
   initialBalanceHours: number,
   initialBalanceMins: number,
 ) {
-  const s = await prisma.settings.create({
-    data: {
+  const s = await prisma.settings.upsert({
+    where: {
+      user_id: userId,
+    },
+    create: {
       user_id: userId,
       begin_date: beginDate,
       initial_balance_hours: initialBalanceHours,
       initial_balance_mins: initialBalanceMins,
     },
+    update: {},
   });
   return s;
 }

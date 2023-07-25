@@ -7,6 +7,9 @@ export default async function AbsencePage() {
     return null;
   }
   const user = await getUserFromSession();
+  if (!user) {
+    return null;
+  }
 
   return <Absence userId={user.id} />;
 }

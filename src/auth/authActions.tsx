@@ -1,26 +1,11 @@
 'use client';
 
-import { AuthUser } from '@/types';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import Image from 'next/image';
-import { useEffect } from 'react';
 import { MdAccountCircle, MdLogin, MdLogout } from 'react-icons/md';
 
-export default function AuthActions({
-  onAfterSignIn,
-}: {
-  onAfterSignIn: (user: AuthUser) => Promise<void>;
-}) {
+export default function AuthActions() {
   const { data: session, status } = useSession();
-
-  useEffect(() => {
-    if (status === 'authenticated' && session.user?.email) {
-      void onAfterSignIn({
-        email: session.user.email,
-        name: session.user.name ?? '',
-      });
-    }
-  }, [session, status, onAfterSignIn]);
 
   if (status === 'loading') {
     return (

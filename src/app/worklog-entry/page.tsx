@@ -15,6 +15,9 @@ export default async function WorklogEntryPage({
     return null;
   }
   const user = await getUserFromSession();
+  if (!user) {
+    return null;
+  }
   const worklogs = await getWorklogs(
     user.id,
     startOfDay(searchParams.day),

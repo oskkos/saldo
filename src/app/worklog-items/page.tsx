@@ -11,6 +11,9 @@ export default async function WorklogItemsPage() {
     return null;
   }
   const user = await getUserFromSession();
+  if (!user) {
+    return null;
+  }
   const worklogs = await getWorklogs(user.id);
   const settings = await getSettings(user.id);
   assertExists(settings);

@@ -2,7 +2,6 @@
 
 import { AuthUser, SettingsData, WorklogFormData } from '@/types';
 import {
-  getSettings,
   insertSettings,
   upsertSettings,
   upsertUser,
@@ -16,10 +15,8 @@ import { startOfDay } from '@/util/date';
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user);
-  const settings = await getSettings(u.id);
-  if (!settings) {
-    await insertSettings(u.id, startOfDay(), 0, 0);
-  }
+  const settings = await insertSettings(u.id, startOfDay(), 0, 0);
+  return [u, settings] as const;
 }
 
 export async function onWorklogSubmit(userId: number, data: WorklogFormData) {
