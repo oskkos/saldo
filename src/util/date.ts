@@ -1,4 +1,4 @@
-import dayjs from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import utc from 'dayjs/plugin/utc';
@@ -9,48 +9,51 @@ dayjs.extend(isoWeek);
 dayjs.extend(advancedFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
-dayjs.tz.setDefault('UTC');
+
+function tzWrapper(d: Dayjs) {
+  return dayjs.tz(d, 'UTC');
+}
 
 export function add(
   date: string | number | Date,
   value: number,
   unit: dayjs.ManipulateType,
 ) {
-  return dayjs.tz(date).add(value, unit).toDate();
+  return tzWrapper(dayjs(date).add(value, unit)).toDate();
 }
 
 export function daysInMonth(date: Date) {
-  return dayjs.tz(date).daysInMonth();
+  return tzWrapper(dayjs(date)).daysInMonth();
 }
 
 export function diffInMinutes(
   date1: string | number | Date,
   date2: string | number | Date,
 ) {
-  return dayjs.tz(date1).diff(date2, 'm');
+  return dayjs(date1).diff(date2, 'm');
 }
 
 export function endOfDay(date?: string | number | Date) {
-  return dayjs.tz(date).endOf('day').toDate();
+  return tzWrapper(dayjs(date).endOf('day')).toDate();
 }
 
 export function endOfMonth(date: Date) {
-  return dayjs.tz(date).endOf('month').toDate();
+  return tzWrapper(dayjs(date).endOf('month')).toDate();
 }
 
 export function sameDay(date1: Date, date2: Date) {
-  return dayjs.tz(date1).isSame(dayjs.tz(date2), 'day');
+  return dayjs(date1).isSame(date2, 'day');
 }
 
 export function startOfDay(date?: string | number | Date) {
-  return dayjs.tz(date).startOf('day').toDate();
+  return tzWrapper(dayjs(date).startOf('day')).toDate();
 }
 
 export function startOfMonth(date?: string | number | Date) {
-  return dayjs.tz(date).startOf('month').toDate();
+  return tzWrapper(dayjs(date).startOf('month')).toDate();
 }
 export function now() {
-  return dayjs.tz().toDate();
+  return tzWrapper(dayjs()).toDate();
 }
 
 export function subtract(
@@ -58,9 +61,9 @@ export function subtract(
   value: number,
   unit: dayjs.ManipulateType,
 ) {
-  return dayjs.tz(date).subtract(value, unit).toDate();
+  return tzWrapper(dayjs(date).subtract(value, unit)).toDate();
 }
 
 export function toDate(day: Date_ISODay, time: Date_Time) {
-  return dayjs.tz(`${day} ${time}`).toDate();
+  return tzWrapper(dayjs(`${day} ${time}`)).toDate();
 }
