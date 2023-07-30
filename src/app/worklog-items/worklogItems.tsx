@@ -3,6 +3,7 @@ import { Settings, Worklog } from '@prisma/client';
 import WorklogItem from '@/components/worklogItem/worklogItem';
 import { useState } from 'react';
 import {
+  Date_ISODay,
   toDayMonthYear,
   toISODay,
   toMonthAndYear,
@@ -10,6 +11,10 @@ import {
 } from '@/util/dateFormatter';
 import { diffInMinutes, startOfDay } from '@/util/date';
 import { sortWorklogs } from '@/services';
+import {
+  assertIsISODay,
+  assertIsYearAndMonth,
+} from '@/util/assertionFunctions';
 
 function groupWorklogsByDay(worklogs: Worklog[]) {
   return worklogs.reduce((acc: Record<string, Worklog[] | undefined>, x) => {
@@ -27,6 +32,7 @@ function groupWorklogsByMonth(
       day,
     ) => {
       let group: string;
+      assertIsISODay(day);
       if (diffInMinutes(startOfDay(day), startOfDay()) <= 0) {
         group = toYearAndMonth(day);
       } else {
@@ -47,7 +53,7 @@ function groupWorklogsByMonth(
   );
 }
 function worklogsOfDayToElements(
-  day: string,
+  day: Date_ISODay,
   worklogs: Worklog[],
   beginDate: Date,
   onWorklogDelete: (deletedWorklogId: number) => void,
@@ -113,28 +119,32 @@ export default function WorklogItems({
       {Object.keys(groupedWorklogsByMonth)
         .sort()
         .reverse()
-        .map((k) => (
-          <div
-            key={k}
-            className="join-item collapse collapse-arrow border border-base-300 w-11/12 sm:w-3/4"
-          >
-            <input type="checkbox" />
-            <div className="collapse-title text-xl font-medium">
-              {k === 'future' ? 'Future worklogs' : toMonthAndYear(k)}
+        .map((k) => {
+          assertIsYearAndMonth(k);
+          return (
+            <div
+              key={k}
+              className="join-item collapse collapse-arrow border border-base-300 w-11/12 sm:w-3/4"
+            >
+              <input type="checkbox" />
+              <div className="collapse-title text-xl font-medium">
+                {k === 'future' ? 'Future worklogs' : toMonthAndYear(k)}
+              </div>
+              <div className="collapse-content flex flex-nowrap flex-col justify-center items-center">
+                {Object.keys(groupedWorklogsByMonth[k] ?? {}).map((day) => {
+                  assertIsISODay(day);
+                  return worklogsOfDayToElements(
+                    day,
+                    groupedWorklogsByMonth[k]?.[day] ?? [],
+                    settings.begin_date,
+                    onWorklogDelete,
+                    onWorklogEdit,
+                  );
+                })}
+              </div>
             </div>
-            <div className="collapse-content flex flex-nowrap flex-col justify-center items-center">
-              {Object.keys(groupedWorklogsByMonth[k] ?? {}).map((day) =>
-                worklogsOfDayToElements(
-                  day,
-                  groupedWorklogsByMonth[k]?.[day] ?? [],
-                  settings.begin_date,
-                  onWorklogDelete,
-                  onWorklogEdit,
-                ),
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
     </div>
   );
 }

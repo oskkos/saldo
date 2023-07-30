@@ -18,12 +18,12 @@ export default async function WorklogEntryPage({
   if (!user) {
     return null;
   }
+  assertIsISODay(searchParams.day);
   const worklogs = await getWorklogs(
     user.id,
     startOfDay(searchParams.day),
     endOfDay(searchParams.day),
   );
-  assertIsISODay(searchParams.day);
   return (
     <WorklogEntry
       key={searchParams.day}

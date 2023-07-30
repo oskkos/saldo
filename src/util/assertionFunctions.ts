@@ -1,5 +1,5 @@
 import { AbsenceReason } from '@/types';
-import { Date_ISODay, Date_Time } from './dateFormatter';
+import { Date_ISODay, Date_Time, Date_YearAndMonth } from './dateFormatter';
 
 export function assertExists<T>(
   val: T | null | undefined,
@@ -33,5 +33,13 @@ export function assertIsTime(
 ): asserts val is Date_Time {
   if (!val.match(/^(\d{2}):(\d{2})$/)) {
     throw new Error(errMsg ?? 'Not a valid Time: ' + String(val));
+  }
+}
+export function assertIsYearAndMonth(
+  val: string,
+  errMsg?: string,
+): asserts val is Date_YearAndMonth {
+  if (!val.match(/^(\d{4})-(\d{2})$/)) {
+    throw new Error(errMsg ?? 'Not a valid YearAndMonth: ' + String(val));
   }
 }

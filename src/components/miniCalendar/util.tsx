@@ -47,7 +47,7 @@ export const daysForCalendarBuilder = (
   const prevMonthDates = Array(prevMonthDateAmount)
     .fill(null)
     .map((_, i) => {
-      const prevD = subtract(startOfMonthDate, prevMonthDateAmount - i, 'days');
+      const prevD = subtract(startOfMonthDate, prevMonthDateAmount - i, 'day');
       return dailyDataForCalendar(
         prevD,
         'prev',
@@ -58,7 +58,7 @@ export const daysForCalendarBuilder = (
   const currentMonthDates = Array(daysInMonth(d))
     .fill(null)
     .map((_, i) => {
-      const currentD = add(startOfMonthDate, i, 'days');
+      const currentD = add(startOfMonthDate, i, 'day');
       return dailyDataForCalendar(
         currentD,
         'current',
@@ -75,7 +75,7 @@ export const daysForCalendarBuilder = (
       : Array(nextMonthDateAmount)
           .fill(null)
           .map((_, i) => {
-            const nextD = add(endOfMonthDate, i + 1, 'days');
+            const nextD = add(endOfMonthDate, i + 1, 'day');
             return dailyDataForCalendar(
               nextD,
               'next',

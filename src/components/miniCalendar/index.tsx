@@ -29,12 +29,12 @@ export default function MiniCalendar({
   };
   const toPrevMonth = () => {
     router.push(
-      `/?month=${toYearAndMonth(startOfMonth(subtract(date, 1, 'month')))}`,
+      `/?month=${toYearAndMonth(subtract(startOfMonth(date), 1, 'month'))}`,
     );
   };
   const toNextMonth = () => {
     router.push(
-      `/?month=${toYearAndMonth(startOfMonth(add(date, 1, 'month')))}`,
+      `/?month=${toYearAndMonth(add(startOfMonth(date), 1, 'month'))}`,
     );
   };
 
