@@ -18,7 +18,7 @@ function tzWrapper(d: Dayjs) {
 export function add(
   date: Date_ISODay | Date,
   value: number,
-  unit: 'day' | 'month' | 'year',
+  unit: 'day' | 'month' | 'year' | 'hour',
 ) {
   const d = date instanceof Date ? date : date + 'T00:00:00.000Z';
   return dayjs(d).add(value, unit).toDate();

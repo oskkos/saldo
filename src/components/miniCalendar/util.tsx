@@ -75,7 +75,7 @@ export const daysForCalendarBuilder = (
       : Array(nextMonthDateAmount)
           .fill(null)
           .map((_, i) => {
-            const nextD = add(endOfMonthDate, i + 1, 'day');
+            const nextD = add(add(endOfMonthDate, i, 'day'), 1, 'hour');
             return dailyDataForCalendar(
               nextD,
               'next',
