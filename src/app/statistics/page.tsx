@@ -11,11 +11,11 @@ export default async function Statistics() {
     return null;
   }
   const worklogs = await getWorklogs(user.id);
-  const workDays = worklogs.filter((x) => !x.absence);
-  const totalWorklogs = workDays.reduce((acc, x) => {
+  const workDayWorklogs = worklogs.filter((x) => !x.absence);
+  const totalWorklogs = workDayWorklogs.reduce((acc, x) => {
     return acc + worklogMinutes(x);
   }, 0);
-  const workMinutesPerDay = workDays.reduce(
+  const workMinutesPerDay = workDayWorklogs.reduce(
     (acc, x) => {
       const day = toISODay(x.from);
       return acc.set(day, (acc.get(day) || 0) + worklogMinutes(x));
@@ -33,7 +33,9 @@ export default async function Statistics() {
 
         <span>Avg hours per day</span>
         <span>
-          {minutesToSaldoObject(totalWorklogs / workDays.length).toString()}
+          {minutesToSaldoObject(
+            totalWorklogs / workMinutesPerDay.size,
+          ).toString()}
         </span>
 
         <span>Most hours per day</span>
