@@ -1,6 +1,12 @@
 'use client';
 import Link from 'next/link';
-import { MdCalendarMonth, MdList, MdSettings, MdWorkOff } from 'react-icons/md';
+import {
+  MdCalendarMonth,
+  MdList,
+  MdQueryStats,
+  MdSettings,
+  MdWorkOff,
+} from 'react-icons/md';
 
 export default function NavbarItems({
   drawerToggleId,
@@ -13,6 +19,7 @@ export default function NavbarItems({
       ['/worklog-items', MdList, 'All worklogs'],
       ['/absence', MdWorkOff, 'Absence'],
       ['/settings', MdSettings, 'Settings'],
+      ['/statistics', MdQueryStats, 'Statistics'],
     ] as const
   ).map((li) => {
     const href = li[0];

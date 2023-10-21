@@ -25,7 +25,7 @@ function expectedMinutesUntilToday(beginDate: Date) {
   }
   return workDays * 60 * EXPECTED_HOURS_PER_DAY;
 }
-function minutesToSaldoObject(saldoInMinutes: number): SaldoForDay {
+export function minutesToSaldoObject(saldoInMinutes: number): SaldoForDay {
   if (saldoInMinutes < 0) {
     const negativeStr = `-${Math.abs(
       Math.ceil(saldoInMinutes / 60),
@@ -51,7 +51,12 @@ function minutesToSaldoObject(saldoInMinutes: number): SaldoForDay {
     ),
   };
 }
-
+export function worklogMinutes(worklogItem: Worklog) {
+  return (
+    diffInMinutes(worklogItem.to, worklogItem.from) -
+    (worklogItem.subtract_lunch_break ? EXPECTED_MINUTES_LUNCH_BREAK : 0)
+  );
+}
 export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
   const sum = sortWorklogs(worklogs).reduce(
     (acc, worklogItem) => {
@@ -69,11 +74,7 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
           ? acc
           : acc + EXPECTED_HOURS_PER_DAY * 60;
       }
-      return (
-        acc +
-        diffInMinutes(worklogItem.to, worklogItem.from) -
-        (worklogItem.subtract_lunch_break ? EXPECTED_MINUTES_LUNCH_BREAK : 0)
-      );
+      return acc + worklogMinutes(worklogItem);
     },
     settings.initial_balance_hours * 60 + settings.initial_balance_mins,
   );
@@ -83,11 +84,7 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
 
 export function calculateWorklogsSum(worklogs: Worklog[]) {
   const total = worklogs.reduce((sum, worklog) => {
-    return (
-      sum +
-      diffInMinutes(worklog.to, worklog.from) -
-      (worklog.subtract_lunch_break ? EXPECTED_MINUTES_LUNCH_BREAK : 0)
-    );
+    return sum + worklogMinutes(worklog);
   }, 0);
   return minutesToSaldoObject(total);
 }
