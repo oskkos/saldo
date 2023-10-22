@@ -4,6 +4,7 @@ import { minutesToSaldoObject, worklogMinutes } from '@/services';
 import { AbsenceReason, SaldoForDay } from '@/types';
 import { assertIsISODay } from '@/util/assertionFunctions';
 import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
+import WorkMinutesPerDayChart from './workMinutesPerDayChart';
 
 export default async function Statistics() {
   const user = await getUserFromSession();
@@ -52,6 +53,7 @@ export default async function Statistics() {
           }
         </span>
       </div>
+      <WorkMinutesPerDayChart workMinutesPerDay={workMinutesPerDay} />
     </div>
   );
 }
