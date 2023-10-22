@@ -4,7 +4,7 @@ import {
 } from '@/constants';
 import { AbsenceReason, SaldoForDay } from '@/types';
 import { add, diffInMinutes, endOfDay, startOfDay } from '@/util/date';
-import { Settings, Worklog } from '@prisma/client';
+import { Absence, Settings, Worklog } from '@prisma/client';
 
 function isWeekend(d: Date) {
   const weekDay = d.getDay();
@@ -92,7 +92,7 @@ export function calculateWorklogsSum(worklogs: Worklog[]) {
 export function sortWorklogs(worklogs: Worklog[]) {
   return [...worklogs].sort((a, b) => b.from.getTime() - a.from.getTime());
 }
-export function absenceReasonToString(reason: AbsenceReason) {
+export function absenceReasonToString(reason: Absence | AbsenceReason) {
   return (reason.charAt(0).toUpperCase() + reason.slice(1)).replaceAll(
     '_',
     ' ',

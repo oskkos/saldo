@@ -41,9 +41,6 @@ export const options = {
     },
   },
   scales: {
-    y: {
-      suggestedMin: 0,
-    },
     x: {
       type: 'time' as const,
       time: {
@@ -62,9 +59,6 @@ export default function WorkMinutesPerDayChart({
   workMinutesPerDay: Map<string, number>;
 }) {
   const workMinsSorted = new Map([...workMinutesPerDay].sort());
-
-  console.log(workMinsSorted.keys());
-  console.log(workMinsSorted.values());
 
   const data = {
     labels: Array.from(workMinsSorted.keys()),

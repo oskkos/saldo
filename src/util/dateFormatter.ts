@@ -18,7 +18,7 @@ export function toDay(date: Date) {
 type Date_DayMonthYear = string & { kind: 'Date_DayMonthYear' };
 export function toDayMonthYear(date: Date_ISODay | Date) {
   const d = date instanceof Date ? date : date + 'T00:00:00.000Z';
-  return dayjs(d).format('D.M.YYYY') as Date_DayMonthYear;
+  return dayjs.tz(d).format('D.M.YYYY') as Date_DayMonthYear;
 }
 
 export type Date_ISODay = string & { kind: 'Date_ISODay' };
