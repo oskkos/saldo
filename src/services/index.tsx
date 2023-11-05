@@ -3,22 +3,22 @@ import {
   EXPECTED_MINUTES_LUNCH_BREAK,
 } from '@/constants';
 import { AbsenceReason, SaldoForDay } from '@/types';
-import { add, diffInMinutes, endOfDay, startOfDay } from '@/util/date';
+import {
+  add,
+  diffInMinutes,
+  endOfDay,
+  isNonWorkingDay,
+  startOfDay,
+} from '@/util/date';
 import { Absence, Settings, Worklog } from '@prisma/client';
-
-function isWeekend(d: Date) {
-  const weekDay = d.getDay();
-  return weekDay === 0 || weekDay === 6;
-}
 
 function expectedMinutesUntilToday(beginDate: Date) {
   const today = startOfDay();
   let d = beginDate;
   let workDays = 0;
   while (d.getTime() <= today.getTime()) {
-    const weekend = isWeekend(d);
     d = add(d, 1, 'day');
-    if (weekend) {
+    if (isNonWorkingDay(d)) {
       continue;
     }
     workDays++;
@@ -70,7 +70,7 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
         return acc;
       }
       if (worklogItem.absence) {
-        return isWeekend(worklogItem.from)
+        return isNonWorkingDay(worklogItem.from)
           ? acc
           : acc + EXPECTED_HOURS_PER_DAY * 60;
       }
