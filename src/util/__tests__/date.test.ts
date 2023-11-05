@@ -180,4 +180,32 @@ describe('date module', () => {
       new Date('2024-02-29T12:34:00.000Z'),
     );
   });
+
+  test('isHoliday', () => {
+    expect(date.isHoliday(new Date('2022-01-01T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-12-24T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-12-25T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-12-26T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-12-31T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-06-24T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-06-25T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-06-26T00:00:00Z'))).toBe(false);
+  });
+
+  test('isWeekend', () => {
+    const saturday = new Date('2022-10-01T00:00:00.000Z');
+    expect(date.isWeekend(saturday)).toBe(true);
+    const sunday = new Date('2022-10-02T00:00:00.000Z');
+    expect(date.isWeekend(sunday)).toBe(true);
+    const monday = new Date('2022-10-03T00:00:00.000Z');
+    expect(date.isWeekend(monday)).toBe(false);
+    const tuesday = new Date('2022-10-04T00:00:00.000Z');
+    expect(date.isWeekend(tuesday)).toBe(false);
+    const wednesday = new Date('2022-10-05T00:00:00.000Z');
+    expect(date.isWeekend(wednesday)).toBe(false);
+    const thursday = new Date('2022-10-06T00:00:00.000Z');
+    expect(date.isWeekend(thursday)).toBe(false);
+    const friday = new Date('2022-10-07T00:00:00.000Z');
+    expect(date.isWeekend(friday)).toBe(false);
+  });
 });

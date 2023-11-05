@@ -4,6 +4,7 @@ import advancedFormat from 'dayjs/plugin/advancedFormat';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { Date_ISODay, Date_Time, Date_YearAndMonth } from './dateFormatter';
+import Holidays from 'date-holidays';
 
 dayjs.extend(isoWeek);
 dayjs.extend(advancedFormat);
@@ -66,4 +67,13 @@ export function subtract(
 
 export function toDate(day: Date_ISODay, time: Date_Time) {
   return tzWrapper(dayjs(`${day} ${time}`)).toDate();
+}
+
+export function isWeekend(date: Date) {
+  return date.getDay() === 0 || date.getDay() === 6;
+}
+
+export function isHoliday(date: Date) {
+  const finHolidays = new Holidays('FI');
+  return !!finHolidays.isHoliday(date);
 }

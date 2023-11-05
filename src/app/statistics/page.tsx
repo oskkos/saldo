@@ -11,7 +11,7 @@ import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import WorkMinutesPerDayChart from './workMinutesPerDayChart';
 import { Absence, Worklog } from '@prisma/client';
 import { getSettings } from '@/repository/userRepository';
-import { endOfDay } from '@/util/date';
+import { endOfDay, isHoliday, isWeekend } from '@/util/date';
 
 async function getWorklogData(userId: number, beginDate: Date) {
   const worklogs = await getWorklogs(userId);
@@ -47,6 +47,10 @@ async function getWorklogData(userId: number, beginDate: Date) {
 
   const absenceMap = absenceWorklogs.reduce(
     (acc, x) => {
+      if (isWeekend(x.from) || isHoliday(x.from)) {
+        return acc;
+      }
+
       return x.absence
         ? acc.set(x.absence, (acc.get(x.absence) ?? 0) + 1)
         : acc;
@@ -76,8 +80,6 @@ export default async function Statistics() {
       ...acc,
       <span key={absence}>{absenceReasonToString(absence)}</span>,
       <span key={`${absence}-${count}`}>{count}</span>,
-      //<span>{absenceReasonToString(absence)}</span>,
-      //<span>{count}</span>,
     ],
     [] as JSX.Element[],
   );

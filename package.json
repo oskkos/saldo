@@ -22,6 +22,7 @@
     "chart.js": "^4.4.0",
     "chartjs-adapter-dayjs-4": "^1.0.4",
     "chartjs-plugin-zoom": "^2.0.1",
+    "date-holidays": "^3.23.1",
     "dayjs": "^1.11.10",
     "eslint": "8.53.0",
     "eslint-config-next": "14.0.1",

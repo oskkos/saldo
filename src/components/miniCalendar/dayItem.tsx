@@ -1,5 +1,5 @@
 import { AbsenceReason } from '@/types';
-import { now, sameDay, startOfDay } from '@/util/date';
+import { isWeekend, now, sameDay, startOfDay } from '@/util/date';
 import { toDay, toISODay } from '@/util/dateFormatter';
 import Link from 'next/link';
 import CalendarCell from './calendarCell';
@@ -32,8 +32,7 @@ export default function DayItem({
       return minutes !== 0 ? 'border-2 border-solid border-base-300' : '';
     }
 
-    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-    if (isWeekend) {
+    if (isWeekend(date)) {
       return minutes ? 'border-2 border-solid border-info' : '';
     }
     if (minutes === 0) {
