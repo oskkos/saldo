@@ -5,14 +5,16 @@ export default function CalendarCell({
   mainText,
   subText,
   absence,
+  className,
 }: {
   mainText: string | number;
   subText?: string;
   absence?: AbsenceReason;
+  className?: string;
 }) {
   return (
     <div className="flex flex-col justify-center items-center">
-      <div>{mainText}</div>
+      <div className={className}>{mainText}</div>
       {absence ? (
         <AbsenceIcon absence={absence} className="w-4 h-4 sm:w-6 sm:h-6" />
       ) : (

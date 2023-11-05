@@ -1,5 +1,5 @@
 import { AbsenceReason } from '@/types';
-import { isWeekend, now, sameDay, startOfDay } from '@/util/date';
+import { isHoliday, isWeekend, now, sameDay, startOfDay } from '@/util/date';
 import { toDay, toISODay } from '@/util/dateFormatter';
 import Link from 'next/link';
 import CalendarCell from './calendarCell';
@@ -32,7 +32,7 @@ export default function DayItem({
       return minutes !== 0 ? 'border-2 border-solid border-base-300' : '';
     }
 
-    if (isWeekend(date)) {
+    if (isHoliday(date) || isWeekend(date)) {
       return minutes ? 'border-2 border-solid border-info' : '';
     }
     if (minutes === 0) {
@@ -48,6 +48,19 @@ export default function DayItem({
     : '';
   const currentMonthClass = status !== 'current' ? 'text-base-300' : '';
 
+  const calendarCellClass = () => {
+    if (status !== 'current') {
+      return '';
+    }
+    if (isHoliday(date)) {
+      return 'text-red-400';
+    }
+    if (isWeekend(date)) {
+      return 'text-blue-300';
+    }
+    return '';
+  };
+
   return (
     <Link
       href={`/worklog-entry?day=${toISODay(date)}`}
@@ -60,6 +73,7 @@ export default function DayItem({
           status === 'current' && hoursCompact ? `${hoursCompact}h` : undefined
         }
         absence={absence}
+        className={calendarCellClass()}
       />
     </Link>
   );
