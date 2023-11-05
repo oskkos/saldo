@@ -17,8 +17,9 @@ function expectedMinutesUntilToday(beginDate: Date) {
   let d = beginDate;
   let workDays = 0;
   while (d.getTime() <= today.getTime()) {
+    const nonWorkingDay = isNonWorkingDay(d);
     d = add(d, 1, 'day');
-    if (isNonWorkingDay(d)) {
+    if (nonWorkingDay) {
       continue;
     }
     workDays++;
