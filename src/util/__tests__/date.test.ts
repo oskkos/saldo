@@ -183,11 +183,11 @@ describe('date module', () => {
 
   test('isHoliday', () => {
     expect(date.isHoliday(new Date('2022-01-01T00:00:00Z'))).toBe(true);
-    expect(date.isHoliday(new Date('2022-12-24T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-12-24T00:00:00Z'))).toBe(false);
     expect(date.isHoliday(new Date('2022-12-25T00:00:00Z'))).toBe(true);
     expect(date.isHoliday(new Date('2022-12-26T00:00:00Z'))).toBe(true);
-    expect(date.isHoliday(new Date('2022-12-31T00:00:00Z'))).toBe(true);
-    expect(date.isHoliday(new Date('2022-06-24T00:00:00Z'))).toBe(true);
+    expect(date.isHoliday(new Date('2022-12-31T00:00:00Z'))).toBe(false);
+    expect(date.isHoliday(new Date('2022-06-24T00:00:00Z'))).toBe(false);
     expect(date.isHoliday(new Date('2022-06-25T00:00:00Z'))).toBe(true);
     expect(date.isHoliday(new Date('2022-06-26T00:00:00Z'))).toBe(false);
   });

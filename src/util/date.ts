@@ -75,7 +75,9 @@ export function isWeekend(date: Date) {
 
 export function isHoliday(date: Date) {
   const finHolidays = new Holidays('FI');
-  return !!finHolidays.isHoliday(date);
+  console.log(finHolidays.getHolidays());
+  const holidays = finHolidays.isHoliday(date) || [];
+  return holidays.some((h) => h.type === 'public');
 }
 
 export function isNonWorkingDay(date: Date) {
