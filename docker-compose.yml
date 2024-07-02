@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: dev.Dockerfile
+    volumes:
+      - ./:/app
+      - /app/node_modules/
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/saldo
+      POSTGRES_PRISMA_URL: postgres://postgres:password@db:5432/saldo
+      POSTGRES_URL_NON_POOLING: postgres://postgres:password@db:5432/saldo
+
+  prisma-migrate:
+    image: node:20-alpine
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: sh -c "npm install && npx prisma migrate deploy && exit"
+    depends_on:
+      - db
+      - app
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/saldo
+      POSTGRES_PRISMA_URL: postgres://postgres:password@db:5432/saldo
+      POSTGRES_URL_NON_POOLING: postgres://postgres:password@db:5432/saldo
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: saldo
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
