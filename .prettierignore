@@ -3,3 +3,5 @@
 .husky
 .gitignore
 prisma/migrations
+*Dockerfile
+docker-compose*
