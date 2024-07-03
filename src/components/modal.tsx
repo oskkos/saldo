@@ -19,7 +19,7 @@ export default function Modal({
 }) {
   return (
     <dialog id={id} className="modal modal-bottom sm:modal-middle">
-      <form method="dialog" className="modal-box">
+      <form method="dialog" className="modal-box text-base-content">
         {children}
         <div className="modal-action">
           <button className="btn">Cancel</button>

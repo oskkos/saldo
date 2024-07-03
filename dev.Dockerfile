@@ -5,6 +5,7 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Copy package.json and package-lock.json to the working directory
+COPY ./prisma ./prisma
 COPY package*.json ./
 
 # Install any needed packages specified in package.json
