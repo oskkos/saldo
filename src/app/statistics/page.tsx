@@ -33,9 +33,9 @@ async function getWorklogData(userId: number, beginDate: Date) {
       absenceWorklogs: [] as Worklog[],
     },
   );
-  const totalWorkMinutes = workDayWorklogs
-    .map(worklogMinutes)
-    .reduce((a, b) => a + b);
+  const totalWorkMinutes = workDayWorklogs.length
+    ? workDayWorklogs.map(worklogMinutes).reduce((a, b) => a + b)
+    : 0;
 
   const workMinutesPerDay = workDayWorklogs.reduce(
     (acc, x) => {

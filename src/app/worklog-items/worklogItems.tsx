@@ -120,7 +120,9 @@ export default function WorklogItems({
         .sort()
         .reverse()
         .map((k) => {
-          assertIsYearAndMonth(k);
+          if (k !== 'future') {
+            assertIsYearAndMonth(k);
+          }
           return (
             <div
               key={k}
