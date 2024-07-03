@@ -8,7 +8,7 @@ import { assertExists } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import { Settings } from '@prisma/client';
+import type { Settings } from '@prisma/client';
 import { useContext, useState } from 'react';
 
 export default function Settings({ settings }: { settings: Settings }) {
