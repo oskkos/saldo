@@ -28,5 +28,9 @@ jobs:
         run: npm run prettier:ci
       - name: Run tests
         run: npm run test:ci
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4.0.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
       - name: Build
         run: npm run build
