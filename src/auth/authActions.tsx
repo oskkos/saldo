@@ -4,15 +4,14 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import Image from 'next/image';
 import { MdAccountCircle, MdLogin, MdLogout } from 'react-icons/md';
 
-export default function AuthActions() {
+export default function AuthActions({ className }: { className: string }) {
   const { data: session, status } = useSession();
-
   if (status === 'loading') {
     return (
       <div className="flex items-center">
-        <MdAccountCircle className="mr-2 rounded-full h-8 w-8" />
+        <MdAccountCircle className={className} />
         <MdLogout
-          className="h-6 w-6 cursor-pointer mr-2"
+          className={className}
           onClick={() => {
             void signOut();
           }}
@@ -30,14 +29,14 @@ export default function AuthActions() {
             alt="Profile picture"
             width={32}
             height={32}
-            className="mr-2 rounded-full h-8 w-8"
+            className={className}
             title={session.user.name ?? ''}
           />
         ) : (
-          <MdAccountCircle className="mr-2 rounded-full h-8 w-8" />
+          <MdAccountCircle className={className} />
         )}
         <MdLogout
-          className="h-6 w-6 cursor-pointer mr-2"
+          className={`${className} cursor-pointer`}
           onClick={() => {
             void signOut();
           }}
@@ -48,7 +47,7 @@ export default function AuthActions() {
   }
   return (
     <MdLogin
-      className="h-6 w-6 cursor-pointer mr-2"
+      className={`${className} cursor-pointer`}
       onClick={() => {
         void signIn('google');
       }}
