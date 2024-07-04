@@ -14,7 +14,7 @@
     "test": "jest --watch",
     "lint:ci": "next lint",
     "prettier:ci": "prettier --check .",
-    "test:ci": "jest --ci"
+    "test:ci": "jest --ci --coverage"
   },
   "dependencies": {
     "@prisma/client": "^5.16.1",
