@@ -21,16 +21,22 @@ export default function Absence({ userId }: { userId: number }) {
   });
 
   const onFromChange = (value?: Date_ISODay) => {
+    const newFrom = value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null;
+    const newTo = newFrom && data.to && newFrom > data.to ? newFrom : data.to;
     setData({
       ...data,
-      from: value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null,
+      from: newFrom,
+      to: newTo,
     });
   };
 
   const onToChange = (value?: Date_ISODay) => {
+    const newTo = value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null;
+    const newFrom = newTo && data.from && newTo < data.from ? newTo : data.from;
     setData({
       ...data,
-      to: value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null,
+      from: newFrom,
+      to: newTo,
     });
   };
 

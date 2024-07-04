@@ -19,7 +19,6 @@ export default function ThemeSwitcher({ className }: { className: string }) {
   const [darkMode, setDarkMode] = useState(getDarkModeSetting());
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    console.log('darkMode', darkMode, localStorage.getItem('darkMode'));
   }, [darkMode]);
 
   return (
