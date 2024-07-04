@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import { DARK_THEME, LIGHT_THEME } from '@/constants';
+import React, { useState } from 'react';
 import { MdOutlineLightMode } from 'react-icons/md';
 import { MdOutlineDarkMode } from 'react-icons/md';
 
@@ -8,19 +9,18 @@ const getPrefersDarkMode = () =>
   window.matchMedia &&
   window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-const getDarkModeSetting = () => {
-  const fromLocalStorage = localStorage.getItem('darkMode');
+const ALTERNATE_THEME = getPrefersDarkMode() ? LIGHT_THEME : DARK_THEME;
+
+const alternateThemeInUse = () => {
+  const fromLocalStorage = localStorage.getItem('saldoAlternateTheme');
   if (fromLocalStorage) {
-    return fromLocalStorage;
+    return JSON.parse(fromLocalStorage) as boolean;
   }
   return getPrefersDarkMode();
 };
 export default function ThemeSwitcher({ className }: { className: string }) {
-  const [darkMode, setDarkMode] = useState(getDarkModeSetting());
-  useEffect(() => {
-    localStorage.setItem('darkMode', JSON.stringify(darkMode));
-    console.log('darkMode', darkMode, localStorage.getItem('darkMode'));
-  }, [darkMode]);
+  const initTheme = alternateThemeInUse();
+  const [alternateTheme, setAlternateTheme] = useState(initTheme);
 
   return (
     <label title="Light/dark mode" className="swap swap-rotate">
@@ -28,12 +28,27 @@ export default function ThemeSwitcher({ className }: { className: string }) {
       <input
         type="checkbox"
         className="theme-controller"
-        value={darkMode ? 'dark' : 'light'}
-        onChange={() => setDarkMode(!darkMode)}
+        checked={initTheme}
+        value={ALTERNATE_THEME}
+        onChange={() => {
+          localStorage.setItem(
+            'saldoAlternateTheme',
+            JSON.stringify(!alternateTheme),
+          );
+          setAlternateTheme(!alternateTheme);
+        }}
       />
-
-      <MdOutlineLightMode className={`${className} swap-on`} />
-      <MdOutlineDarkMode className={`${className} swap-off`} />
+      {ALTERNATE_THEME === LIGHT_THEME ? (
+        <>
+          <MdOutlineLightMode className={`${className} swap-on`} />
+          <MdOutlineDarkMode className={`${className} swap-off`} />
+        </>
+      ) : (
+        <>
+          <MdOutlineLightMode className={`${className} swap-off`} />
+          <MdOutlineDarkMode className={`${className} swap-on`} />
+        </>
+      )}
     </label>
   );
 }
