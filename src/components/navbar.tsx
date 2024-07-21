@@ -1,5 +1,6 @@
 import 'server-only';
 
+import dynamic from 'next/dynamic';
 import AuthActions from '@/auth/authActions';
 import AuthenticatedContent from '@/auth/authenticatedContent';
 import { MdOutlineMenu } from 'react-icons/md';
@@ -7,8 +8,9 @@ import NavbarItems from './navBarItems';
 import { Session } from 'next-auth';
 import QuickAdd from './quickAdd';
 import SaldoBadge from './saldoBadge';
-import ThemeSwitcher from './themeSwitcher';
 import { Settings, User, Worklog } from '@prisma/client';
+
+const ThemeSwitcher = dynamic(() => import('./themeSwitcher'), { ssr: false });
 
 function items(session: Session | null) {
   return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
