@@ -10,7 +10,7 @@ import { assertIsISODay } from '@/util/assertionFunctions';
 import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import WorkMinutesPerDayChart from './workMinutesPerDayChart';
 import { Absence, Worklog } from '@prisma/client';
-import { getSettings } from '@/repository/userRepository';
+import { getSettings } from '@/repository/settingsRepository';
 import { endOfDay, isNonWorkingDay } from '@/util/date';
 
 async function getWorklogData(userId: number, beginDate: Date) {

@@ -1,11 +1,11 @@
 'use server';
 
 import { AuthUser, SettingsData, WorklogFormData } from '@/types';
+import { upsertUser } from '@/repository/userRepository';
 import {
   insertSettings,
   upsertSettings,
-  upsertUser,
-} from '@/repository/userRepository';
+} from '@/repository/settingsRepository';
 import {
   deleteWorklog,
   insertWorklog,
