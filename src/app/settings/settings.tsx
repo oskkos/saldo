@@ -4,7 +4,7 @@ import { onSettingsUpdate } from '@/actions';
 import DateInput from '@/components/form/dateInput';
 import IntegerInput from '@/components/form/integerInput';
 import { ToastContext } from '@/components/toastContext';
-import { assertExists } from '@/util/assertionFunctions';
+import { assertExists, assertIsTime } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
 import { toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
@@ -17,6 +17,8 @@ export default function Settings({ settings }: { settings: Settings }) {
     begin_date: Date | null;
     initial_balance_hours: number | '';
     initial_balance_mins: number | '';
+    from_default: string;
+    to_default: string;
   }>(settings);
   const { setMsg } = useContext(ToastContext);
 
@@ -72,10 +74,14 @@ export default function Settings({ settings }: { settings: Settings }) {
             onClick={() => {
               const action = () => {
                 assertExists(data.begin_date, 'Begin date is required');
+                assertIsTime(data.from_default, 'Invalid from time');
+                assertIsTime(data.to_default, 'Invalid to time');
                 return onSettingsUpdate(settings.user_id, {
                   initialBalanceHours: data.initial_balance_hours || 0,
                   initialBalanceMins: data.initial_balance_mins || 0,
                   beginDate: data.begin_date,
+                  fromDefault: data.from_default,
+                  toDefault: data.to_default,
                 });
               };
               startTransitionWrapper(action)

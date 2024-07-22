@@ -17,9 +17,13 @@ export async function getSettings(userId: number) {
 }
 export async function insertSettings(
   userId: number,
-  beginDate: Date,
-  initialBalanceHours: number,
-  initialBalanceMins: number,
+  {
+    beginDate,
+    initialBalanceHours,
+    initialBalanceMins,
+    fromDefault,
+    toDefault,
+  }: SettingsData,
 ) {
   return await Sentry.startSpan(
     { name: 'insertSettings', op: 'db.sql.prisma' },
@@ -33,6 +37,8 @@ export async function insertSettings(
           begin_date: beginDate,
           initial_balance_hours: initialBalanceHours,
           initial_balance_mins: initialBalanceMins,
+          from_default: fromDefault,
+          to_default: toDefault,
         },
         update: {},
       });
@@ -42,7 +48,13 @@ export async function insertSettings(
 }
 export async function upsertSettings(
   userId: number,
-  { beginDate, initialBalanceHours, initialBalanceMins }: SettingsData,
+  {
+    beginDate,
+    initialBalanceHours,
+    initialBalanceMins,
+    fromDefault,
+    toDefault,
+  }: SettingsData,
 ) {
   return await Sentry.startSpan(
     { name: 'upsertSettings', op: 'db.sql.prisma' },
@@ -56,11 +68,15 @@ export async function upsertSettings(
           begin_date: beginDate,
           initial_balance_hours: initialBalanceHours,
           initial_balance_mins: initialBalanceMins,
+          from_default: fromDefault,
+          to_default: toDefault,
         },
         update: {
           begin_date: beginDate,
           initial_balance_hours: initialBalanceHours,
           initial_balance_mins: initialBalanceMins,
+          from_default: fromDefault,
+          to_default: toDefault,
         },
       });
       return s;

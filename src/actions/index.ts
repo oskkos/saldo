@@ -12,10 +12,17 @@ import {
   updateWorklog,
 } from '@/repository/worklogRepository';
 import { startOfDay } from '@/util/date';
+import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user);
-  const settings = await insertSettings(u.id, startOfDay(), 0, 0);
+  const settings = await insertSettings(u.id, {
+    beginDate: startOfDay(),
+    initialBalanceHours: 0,
+    initialBalanceMins: 0,
+    fromDefault: NEW_WORKLOG_DEFAULT_FROM,
+    toDefault: NEW_WORKLOG_DEFAULT_TO,
+  });
   return [u, settings] as const;
 }
 

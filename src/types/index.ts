@@ -24,6 +24,8 @@ export interface SettingsData {
   beginDate: Date;
   initialBalanceHours: number;
   initialBalanceMins: number;
+  fromDefault: Date_Time;
+  toDefault: Date_Time;
 }
 
 export enum AbsenceReason {
