@@ -47,4 +47,6 @@ model Settings {
   initial_balance_mins  Int
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
+  from_default          String   @default("08:00")
+  to_default            String   @default("16:00")
 }
