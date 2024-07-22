@@ -1,4 +1,4 @@
-import { getSettings } from '@/repository/userRepository';
+import { getSettings } from '@/repository/settingsRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { startOfMonth } from '@/util/date';
 import MiniCalendar from '@/components/miniCalendar';

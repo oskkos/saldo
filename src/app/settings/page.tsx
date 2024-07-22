@@ -1,4 +1,4 @@
-import { getSettings } from '@/repository/userRepository';
+import { getSettings } from '@/repository/settingsRepository';
 import Settings from './settings';
 import { getSession, getUserFromSession } from '@/auth/authSession';
 import { assertExists } from '@/util/assertionFunctions';

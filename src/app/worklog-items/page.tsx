@@ -1,5 +1,5 @@
 import { getWorklogs } from '@/repository/worklogRepository';
-import { getSettings } from '@/repository/userRepository';
+import { getSettings } from '@/repository/settingsRepository';
 import WorklogItems from './worklogItems';
 import { sortWorklogs } from '@/services';
 import { getSession, getUserFromSession } from '@/auth/authSession';
