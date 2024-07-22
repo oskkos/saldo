@@ -73,6 +73,7 @@ export default function DayItem({
       href={`/worklog-entry?day=${toISODay(date)}`}
       key={toISODay(date)}
       className={`${calendarDayItemClass} ${borderClass()} ${sameDayClass} ${currentMonthClass}`}
+      prefetch={false}
     >
       <CalendarCell
         mainText={toDay(date)}
