@@ -3,6 +3,7 @@
 import { onSettingsUpdate } from '@/actions';
 import DateInput from '@/components/form/dateInput';
 import IntegerInput from '@/components/form/integerInput';
+import TimeInput from '@/components/form/timeInput';
 import { ToastContext } from '@/components/toastContext';
 import { assertExists, assertIsTime } from '@/util/assertionFunctions';
 import { startOfDay } from '@/util/date';
@@ -21,6 +22,8 @@ export default function Settings({ settings }: { settings: Settings }) {
     to_default: string;
   }>(settings);
   const { setMsg } = useContext(ToastContext);
+  assertIsTime(data.from_default, 'Invalid from time');
+  assertIsTime(data.to_default, 'Invalid to time');
 
   return (
     <div className="flex flex-col flex-nowrap justify-center items-center mt-3">
@@ -68,6 +71,38 @@ export default function Settings({ settings }: { settings: Settings }) {
             }}
           />
         </div>
+        <div>Default times</div>
+        <div>
+          <TimeInput
+            placeholder="From"
+            label="From"
+            value={data.from_default}
+            className="w-full"
+            indicatorClassName="w-full mt-4"
+            onChange={(value) => {
+              assertExists(value, 'From time is required');
+              setData({
+                ...data,
+                from_default: value,
+              });
+            }}
+          />
+          <TimeInput
+            placeholder="To"
+            label="To"
+            value={data.to_default}
+            className="w-full"
+            indicatorClassName="w-full mt-4"
+            onChange={(value) => {
+              assertExists(value, 'To time is required');
+              setData({
+                ...data,
+                to_default: value,
+              });
+            }}
+          />
+        </div>
+
         <div className="col-span-2">
           <button
             className="btn btn-secondary mt-3 w-full"
