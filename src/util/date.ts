@@ -82,3 +82,17 @@ export function isHoliday(date: Date) {
 export function isNonWorkingDay(date: Date) {
   return isWeekend(date) || isHoliday(date);
 }
+
+export function timeIsGt(a: Date_Time, b: Date_Time) {
+  const a_split = a.split(':');
+  const b_split = b.split(':');
+
+  if (parseInt(a_split[0]) > parseInt(b_split[0])) {
+    return true;
+  } else if (parseInt(a_split[0]) === parseInt(b_split[0])) {
+    if (parseInt(a_split[1]) > parseInt(b_split[1])) {
+      return true;
+    }
+  }
+  return false;
+}
