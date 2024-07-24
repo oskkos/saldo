@@ -1,7 +1,12 @@
 'use client';
 import { WorklogFormData, WorklogFormDataEntry } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
-import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
+import {
+  Date_ISODay,
+  Date_Time,
+  toDayMonthYear,
+  toISODay,
+} from '@/util/dateFormatter';
 import { useContext, useRef, useState } from 'react';
 import ExistingWorklogs from './existingWorklogs';
 import { Worklog } from '@prisma/client';
@@ -10,11 +15,7 @@ import { useRouter } from 'next/navigation';
 import { MdArrowBack, MdArrowForward } from 'react-icons/md';
 import Link from 'next/link';
 import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
-import {
-  NEW_WORKLOG_DEFAULT_FROM,
-  NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
-  NEW_WORKLOG_DEFAULT_TO,
-} from '@/constants';
+import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import { sortWorklogs } from '@/services';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
@@ -22,10 +23,12 @@ import { ToastContext } from '@/components/toastContext';
 
 export default function WorklogEntry({
   day,
+  defaults,
   worklogs,
   onSubmit,
 }: {
   day: Date_ISODay;
+  defaults: { fromDefault: Date_Time; toDefault: Date_Time };
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
 }) {
@@ -34,8 +37,8 @@ export default function WorklogEntry({
   const router = useRouter();
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: day,
-    from: NEW_WORKLOG_DEFAULT_FROM,
-    to: NEW_WORKLOG_DEFAULT_TO,
+    from: defaults.fromDefault,
+    to: defaults.toDefault,
     comment: '',
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
