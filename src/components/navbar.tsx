@@ -8,7 +8,8 @@ import NavbarItems from './navBarItems';
 import { Session } from 'next-auth';
 import QuickAdd from './quickAdd';
 import SaldoBadge from './saldoBadge';
-import { Settings, User, Worklog } from '@prisma/client';
+import { User, Worklog } from '@prisma/client';
+import { Settings } from '@/repository/settingsRepository';
 
 const ThemeSwitcher = dynamic(() => import('./themeSwitcher'), { ssr: false });
 
@@ -47,12 +48,19 @@ export default function Navbar({
             <ul className="menu menu-horizontal">{items(session)}</ul>
           </div>
 
-          {user ? (
+          {user && settings ? (
             [
               <div key="saldoBadge" className="grow justify-center">
                 <SaldoBadge settings={settings} worklogs={worklogs} />
               </div>,
-              <QuickAdd key="quickAdd" userId={user.id} />,
+              <QuickAdd
+                key="quickAdd"
+                userId={user.id}
+                defaults={{
+                  fromDefault: settings.from_default,
+                  toDefault: settings.to_default,
+                }}
+              />,
             ]
           ) : (
             <div className="grow" />

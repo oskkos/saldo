@@ -1,7 +1,14 @@
 import { SettingsData } from '@/types';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
+import { Settings as S } from '@prisma/client';
+import { Date_Time } from '@/util/dateFormatter';
+import { assertIsTime } from '@/util/assertionFunctions';
 
+export interface Settings extends S {
+  from_default: Date_Time;
+  to_default: Date_Time;
+}
 export async function getSettings(userId: number) {
   return await Sentry.startSpan(
     { name: 'getSettings', op: 'db.sql.prisma' },
@@ -11,7 +18,12 @@ export async function getSettings(userId: number) {
           user_id: userId,
         },
       });
-      return s;
+      if (!s) {
+        return null;
+      }
+      assertIsTime(s.from_default);
+      assertIsTime(s.to_default);
+      return s as Settings;
     },
   );
 }
@@ -42,7 +54,9 @@ export async function insertSettings(
         },
         update: {},
       });
-      return s;
+      assertIsTime(s.from_default);
+      assertIsTime(s.to_default);
+      return s as Settings;
     },
   );
 }
@@ -79,7 +93,9 @@ export async function upsertSettings(
           to_default: toDefault,
         },
       });
-      return s;
+      assertIsTime(s.from_default);
+      assertIsTime(s.to_default);
+      return s as Settings;
     },
   );
 }

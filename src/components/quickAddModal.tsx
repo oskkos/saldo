@@ -3,13 +3,9 @@ import { useContext, useState } from 'react';
 import { Worklog } from '@prisma/client';
 import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
-import { toISODay } from '@/util/dateFormatter';
+import { Date_Time, toISODay } from '@/util/dateFormatter';
 import { onWorklogSubmit } from '@/actions';
-import {
-  NEW_WORKLOG_DEFAULT_FROM,
-  NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
-  NEW_WORKLOG_DEFAULT_TO,
-} from '@/constants';
+import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from './modal';
 import DateInput from './form/dateInput';
@@ -20,10 +16,12 @@ import { ToastContext } from './toastContext';
 export default function QuickAddWorklogModal({
   userId,
   modalId,
+  defaults,
   onSubmit,
 }: {
   userId: number;
   modalId: string;
+  defaults: { fromDefault: Date_Time; toDefault: Date_Time };
   onSubmit: (worklog: Worklog) => void;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
@@ -31,8 +29,8 @@ export default function QuickAddWorklogModal({
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(),
     comment: '',
-    from: NEW_WORKLOG_DEFAULT_FROM,
-    to: NEW_WORKLOG_DEFAULT_TO,
+    from: defaults.fromDefault,
+    to: defaults.toDefault,
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
 

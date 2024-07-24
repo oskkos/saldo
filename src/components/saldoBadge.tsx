@@ -5,10 +5,8 @@ export default function SaldoBadge({
   settings,
   worklogs,
 }: {
-  settings: Settings | null;
+  settings: Settings;
   worklogs: Worklog[];
 }) {
-  return settings
-    ? calculateCurrentSaldo(settings, worklogs).toBadge('badge-lg')
-    : null;
+  return calculateCurrentSaldo(settings, worklogs).toBadge('badge-lg');
 }
