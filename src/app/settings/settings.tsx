@@ -5,25 +5,23 @@ import DateInput from '@/components/form/dateInput';
 import IntegerInput from '@/components/form/integerInput';
 import TimeInput from '@/components/form/timeInput';
 import { ToastContext } from '@/components/toastContext';
-import { assertExists, assertIsTime } from '@/util/assertionFunctions';
-import { startOfDay } from '@/util/date';
-import { toISODay } from '@/util/dateFormatter';
+import { assertExists } from '@/util/assertionFunctions';
+import { startOfDay, timeIsGt } from '@/util/date';
+import { Date_Time, toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
-import type { Settings } from '@prisma/client';
 import { useContext, useState } from 'react';
+import { Settings as SettingsType } from '@/repository/settingsRepository';
 
-export default function Settings({ settings }: { settings: Settings }) {
+export default function Settings({ settings }: { settings: SettingsType }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const [data, setData] = useState<{
     begin_date: Date | null;
     initial_balance_hours: number | '';
     initial_balance_mins: number | '';
-    from_default: string;
-    to_default: string;
+    from_default: Date_Time | null;
+    to_default: Date_Time | null;
   }>(settings);
   const { setMsg } = useContext(ToastContext);
-  assertIsTime(data.from_default, 'Invalid from time');
-  assertIsTime(data.to_default, 'Invalid to time');
 
   return (
     <div className="flex flex-col flex-nowrap justify-center items-center mt-3">
@@ -76,28 +74,26 @@ export default function Settings({ settings }: { settings: Settings }) {
           <TimeInput
             placeholder="From"
             label="From"
-            value={data.from_default}
+            value={data.from_default ?? ''}
             className="w-full"
             indicatorClassName="w-full mt-4"
             onChange={(value) => {
-              assertExists(value, 'From time is required');
               setData({
                 ...data,
-                from_default: value,
+                from_default: value ?? null,
               });
             }}
           />
           <TimeInput
             placeholder="To"
             label="To"
-            value={data.to_default}
+            value={data.to_default ?? ''}
             className="w-full"
             indicatorClassName="w-full mt-4"
             onChange={(value) => {
-              assertExists(value, 'To time is required');
               setData({
                 ...data,
-                to_default: value,
+                to_default: value ?? null,
               });
             }}
           />
@@ -109,8 +105,12 @@ export default function Settings({ settings }: { settings: Settings }) {
             onClick={() => {
               const action = () => {
                 assertExists(data.begin_date, 'Begin date is required');
-                assertIsTime(data.from_default, 'Invalid from time');
-                assertIsTime(data.to_default, 'Invalid to time');
+                assertExists(data.from_default, 'From time is required');
+                assertExists(data.to_default, 'To time is required');
+
+                if (timeIsGt(data.from_default, data.to_default)) {
+                  throw new Error('From time must be before to time');
+                }
                 return onSettingsUpdate(settings.user_id, {
                   initialBalanceHours: data.initial_balance_hours || 0,
                   initialBalanceMins: data.initial_balance_mins || 0,
