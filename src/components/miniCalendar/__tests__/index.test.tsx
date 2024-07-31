@@ -2,8 +2,8 @@ import { describe, expect, test, jest } from '@jest/globals';
 import { render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MiniCalendar from '../index';
-import { Worklog } from '@prisma/client';
 import { useRouter } from 'next/navigation';
+import { Worklog } from '@/types';
 
 // Mock useRouter:
 jest.mock('next/navigation');

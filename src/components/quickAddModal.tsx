@@ -1,6 +1,5 @@
 'use client';
 import { useContext, useState } from 'react';
-import { Worklog } from '@prisma/client';
 import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
 import { Date_Time, toISODay } from '@/util/dateFormatter';
@@ -9,7 +8,7 @@ import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from './modal';
 import DateInput from './form/dateInput';
-import { WorklogFormDataEntry } from '@/types';
+import { Worklog, WorklogFormDataEntry } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from './toastContext';
 

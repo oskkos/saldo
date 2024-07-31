@@ -1,5 +1,5 @@
 import { calculateCurrentSaldo } from '@/services';
-import { Settings, Worklog } from '@prisma/client';
+import { Settings, Worklog } from '@/types';
 
 export default function SaldoBadge({
   settings,

@@ -1,7 +1,24 @@
-import { Worklog } from '@prisma/client';
 import { prisma } from './prisma';
-import { WorklogFormData } from '@/types';
+import { Worklog as PrismaWorklog } from '@prisma/client';
+import { Worklog, WorklogFormData } from '@/types';
+import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
+
+const toAbsenceReason = (absence: string | null) => {
+  if (!absence) {
+    return null;
+  }
+  assertIsAbsenceReason(absence);
+  return absence;
+};
+const toWorklog = (worklog: PrismaWorklog): Worklog => ({
+  id: worklog.id,
+  from: worklog.from,
+  to: worklog.to,
+  comment: worklog.comment,
+  subtractLunchBreak: worklog.subtract_lunch_break,
+  absence: toAbsenceReason(worklog.absence),
+});
 
 export async function getWorklogs(
   userId: number,
@@ -26,7 +43,7 @@ export async function getWorklogs(
         records: worklogs.length,
       });
 
-      return worklogs;
+      return worklogs.map(toWorklog);
     },
   );
 }
@@ -34,7 +51,7 @@ export async function getWorklogs(
 export async function insertWorklog(
   userId: number,
   { from, to, comment, subtractLunchBreak, absence }: WorklogFormData,
-) {
+): Promise<Worklog> {
   return await Sentry.startSpan(
     { name: 'insertWorklog', op: 'db.sql.prisma' },
     async () => {
@@ -48,7 +65,7 @@ export async function insertWorklog(
           absence,
         },
       });
-      return worklog;
+      return toWorklog(worklog);
     },
   );
 }
@@ -56,7 +73,7 @@ export async function insertWorklog(
 export async function updateWorklog(
   worklogId: number,
   { from, to, comment, subtractLunchBreak }: WorklogFormData,
-) {
+): Promise<Worklog> {
   return await Sentry.startSpan(
     { name: 'updatetWorklog', op: 'db.sql.prisma' },
     async () => {
@@ -69,12 +86,12 @@ export async function updateWorklog(
           subtract_lunch_break: subtractLunchBreak,
         },
       });
-      return worklog;
+      return toWorklog(worklog);
     },
   );
 }
 
-export async function deleteWorklog(worklogId: number) {
+export async function deleteWorklog(worklogId: number): Promise<void> {
   return await Sentry.startSpan(
     { name: 'deleteWorklog', op: 'db.sql.prisma' },
     async () => {

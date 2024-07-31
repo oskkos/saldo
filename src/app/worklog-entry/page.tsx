@@ -31,8 +31,8 @@ export default async function WorklogEntryPage({
       key={searchParams.day}
       day={searchParams.day}
       defaults={{
-        fromDefault: settings.from_default,
-        toDefault: settings.to_default,
+        fromDefault: settings.fromDefault,
+        toDefault: settings.toDefault,
       }}
       worklogs={worklogs}
       onSubmit={onWorklogSubmit.bind(null, user.id)}

@@ -1,8 +1,15 @@
-import { AuthUser } from '@/types';
+import { AuthUser, User } from '@/types';
+import { User as PrismaUser } from '@prisma/client';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
 
-export async function upsertUser({ email, name }: AuthUser) {
+const toUser = (user: PrismaUser): User => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+});
+
+export async function upsertUser({ email, name }: AuthUser): Promise<User> {
   return await Sentry.startSpan(
     { name: 'upsertUser', op: 'db.sql.prisma' },
     async () => {
@@ -14,19 +21,19 @@ export async function upsertUser({ email, name }: AuthUser) {
         },
         update: { name },
       });
-      return user;
+      return toUser(user);
     },
   );
 }
 
-export async function getUser(email: string) {
+export async function getUser(email: string): Promise<User | null> {
   return await Sentry.startSpan(
     { name: 'getUser', op: 'db.sql.prisma' },
     async () => {
       const user = await prisma.user.findUnique({
         where: { email },
       });
-      return user;
+      return user ? toUser(user) : null;
     },
   );
 }

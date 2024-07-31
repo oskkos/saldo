@@ -1,6 +1,6 @@
-import { Worklog } from '@prisma/client';
 import WorklogItem from '@/components/worklogItem/worklogItem';
 import { calculateWorklogsSum } from '@/services';
+import { Worklog } from '@/types';
 
 export default function ExistingWorklogs({
   worklogs,

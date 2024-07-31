@@ -8,8 +8,7 @@ import NavbarItems from './navBarItems';
 import { Session } from 'next-auth';
 import QuickAdd from './quickAdd';
 import SaldoBadge from './saldoBadge';
-import { User, Worklog } from '@prisma/client';
-import { Settings } from '@/repository/settingsRepository';
+import { Settings, User, Worklog } from '@/types';
 
 const ThemeSwitcher = dynamic(() => import('./themeSwitcher'), { ssr: false });
 
@@ -57,8 +56,8 @@ export default function Navbar({
                 key="quickAdd"
                 userId={user.id}
                 defaults={{
-                  fromDefault: settings.from_default,
-                  toDefault: settings.to_default,
+                  fromDefault: settings.fromDefault,
+                  toDefault: settings.toDefault,
                 }}
               />,
             ]

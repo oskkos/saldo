@@ -46,3 +46,25 @@ export interface SaldoForDay {
   toString: () => string;
   toBadge: (className?: string) => JSX.Element;
 }
+export interface Worklog {
+  id: number;
+  from: Date;
+  to: Date;
+  subtractLunchBreak: boolean;
+  absence: AbsenceReason | null;
+  comment: string | null;
+}
+export interface Settings {
+  id: number;
+  userId: number;
+  beginDate: Date;
+  initialBalanceHours: number;
+  initialBalanceMins: number;
+  fromDefault: Date_Time;
+  toDefault: Date_Time;
+}
+export interface User {
+  id: number;
+  email: string;
+  name: string | null;
+}

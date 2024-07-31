@@ -1,6 +1,6 @@
 'use client';
 
-import { Settings, User } from '@prisma/client';
+import { Settings, User } from '@/types';
 import { signIn, useSession } from 'next-auth/react';
 import { MdLockOutline } from 'react-icons/md';
 
