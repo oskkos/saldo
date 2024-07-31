@@ -49,7 +49,7 @@ export default function AuthActions({ className }: { className: string }) {
     <MdLogin
       className={`${className} cursor-pointer`}
       onClick={() => {
-        void signIn('google');
+        void signIn();
       }}
       title="Sign in"
     />

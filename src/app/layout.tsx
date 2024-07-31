@@ -34,7 +34,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.className} bg-base-100 text-base-content`}>
-        <AuthProvider>
+        <AuthProvider session={session}>
           <Navbar
             user={user}
             settings={settings}
