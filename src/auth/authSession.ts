@@ -1,3 +1,5 @@
+import 'server-only';
+
 import { getUser } from '@/repository/userRepository';
 import { assertExists } from '@/util/assertionFunctions';
 import { NextAuthOptions, getServerSession } from 'next-auth';
@@ -29,7 +31,10 @@ export async function getSession() {
 }
 export async function getUserFromSession() {
   const session = await getSession();
-  assertExists(session?.user);
+  if (!session) {
+    return null;
+  }
+  assertExists(session.user);
   const user = await getUser(session.user.email ?? '');
   return user;
 }

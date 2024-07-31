@@ -1,7 +1,7 @@
 'use client';
 
 import { DARK_THEME, LIGHT_THEME } from '@/constants';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MdOutlineLightMode } from 'react-icons/md';
 import { MdOutlineDarkMode } from 'react-icons/md';
 
@@ -19,7 +19,13 @@ const alternateThemeInUse = () => {
   return getPrefersDarkMode();
 };
 export default function ThemeSwitcher({ className }: { className: string }) {
-  const initTheme = alternateThemeInUse();
+  // mounted flag to ensure that SSR is not calling window or localStorage bits
+  const [mounted, setMounted] = useState<boolean>(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const initTheme = mounted ? alternateThemeInUse() : false;
   const [alternateTheme, setAlternateTheme] = useState(initTheme);
 
   return (

@@ -1,26 +1,18 @@
 'use client';
 
-import { useSession, signIn, signOut } from 'next-auth/react';
+import type { Session } from 'next-auth';
+import { signIn, signOut } from 'next-auth/react';
 import Image from 'next/image';
 import { MdAccountCircle, MdLogin, MdLogout } from 'react-icons/md';
 
-export default function AuthActions({ className }: { className: string }) {
-  const { data: session, status } = useSession();
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center">
-        <MdAccountCircle className={className} />
-        <MdLogout
-          className={className}
-          onClick={() => {
-            void signOut();
-          }}
-          title="Sign out"
-        />
-      </div>
-    );
-  }
-  if (status === 'authenticated') {
+export default function AuthActions({
+  session,
+  className,
+}: {
+  session: Session | null;
+  className: string;
+}) {
+  if (session) {
     return (
       <div className="flex items-center">
         {session.user?.image ? (

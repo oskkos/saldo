@@ -2,7 +2,7 @@ import { getSettings } from '@/repository/settingsRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { startOfMonth } from '@/util/date';
 import MiniCalendar from '@/components/miniCalendar';
-import { getSession, getUserFromSession } from '@/auth/authSession';
+import { getUserFromSession } from '@/auth/authSession';
 import { assertExists, assertIsYearAndMonth } from '@/util/assertionFunctions';
 import { Date_YearAndMonth } from '@/util/dateFormatter';
 
@@ -11,10 +11,6 @@ export default async function Home({
 }: {
   searchParams: { month: string };
 }) {
-  const session = await getSession();
-  if (!session) {
-    return null;
-  }
   const user = await getUserFromSession();
   if (!user) {
     return null;
