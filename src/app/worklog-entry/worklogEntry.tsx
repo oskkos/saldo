@@ -1,5 +1,5 @@
 'use client';
-import { WorklogFormData, WorklogFormDataEntry } from '@/types';
+import { Worklog, WorklogFormData, WorklogFormDataEntry } from '@/types';
 import { add, subtract, toDate } from '@/util/date';
 import {
   Date_ISODay,
@@ -9,7 +9,6 @@ import {
 } from '@/util/dateFormatter';
 import { useContext, useRef, useState } from 'react';
 import ExistingWorklogs from './existingWorklogs';
-import { Worklog } from '@prisma/client';
 import WorklogInputs from '@/components/worklogInputs';
 import { useRouter } from 'next/navigation';
 import { MdArrowBack, MdArrowForward } from 'react-icons/md';

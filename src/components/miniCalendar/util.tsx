@@ -1,5 +1,5 @@
 import { calculateWorklogsSum } from '@/services';
-import { AbsenceReason, SaldoForDay } from '@/types';
+import { AbsenceReason, SaldoForDay, Worklog } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import {
   add,
@@ -9,7 +9,6 @@ import {
   subtract,
 } from '@/util/date';
 import { toISODay, toWeekday } from '@/util/dateFormatter';
-import { Worklog } from '@prisma/client';
 
 export const CALENDAR_ITEM_CLASS =
   'w-10 sm:w-12 h-12 sm:h-14 sm:text-lg flex justify-center items-center rounded-full';

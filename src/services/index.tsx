@@ -2,7 +2,7 @@ import {
   EXPECTED_HOURS_PER_DAY,
   EXPECTED_MINUTES_LUNCH_BREAK,
 } from '@/constants';
-import { AbsenceReason, SaldoForDay } from '@/types';
+import { AbsenceReason, SaldoForDay, Settings, Worklog } from '@/types';
 import {
   add,
   diffInMinutes,
@@ -10,7 +10,6 @@ import {
   isNonWorkingDay,
   startOfDay,
 } from '@/util/date';
-import { Absence, Settings, Worklog } from '@prisma/client';
 
 function expectedMinutesUntilToday(beginDate: Date) {
   const today = startOfDay();
@@ -55,13 +54,13 @@ export function minutesToSaldoObject(saldoInMinutes: number): SaldoForDay {
 export function worklogMinutes(worklogItem: Worklog) {
   return (
     diffInMinutes(worklogItem.to, worklogItem.from) -
-    (worklogItem.subtract_lunch_break ? EXPECTED_MINUTES_LUNCH_BREAK : 0)
+    (worklogItem.subtractLunchBreak ? EXPECTED_MINUTES_LUNCH_BREAK : 0)
   );
 }
 export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
   const sum = sortWorklogs(worklogs).reduce(
     (acc, worklogItem) => {
-      if (worklogItem.from.getTime() < settings.begin_date.getTime()) {
+      if (worklogItem.from.getTime() < settings.beginDate.getTime()) {
         return acc;
       }
       if (worklogItem.to.getTime() > endOfDay().getTime()) {
@@ -77,9 +76,9 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
       }
       return acc + worklogMinutes(worklogItem);
     },
-    settings.initial_balance_hours * 60 + settings.initial_balance_mins,
+    settings.initialBalanceHours * 60 + settings.initialBalanceMins,
   );
-  const saldoInMinutes = sum - expectedMinutesUntilToday(settings.begin_date);
+  const saldoInMinutes = sum - expectedMinutesUntilToday(settings.beginDate);
   return minutesToSaldoObject(saldoInMinutes);
 }
 
@@ -93,7 +92,7 @@ export function calculateWorklogsSum(worklogs: Worklog[]) {
 export function sortWorklogs(worklogs: Worklog[]) {
   return [...worklogs].sort((a, b) => b.from.getTime() - a.from.getTime());
 }
-export function absenceReasonToString(reason: Absence | AbsenceReason) {
+export function absenceReasonToString(reason: AbsenceReason) {
   return (reason.charAt(0).toUpperCase() + reason.slice(1)).replaceAll(
     '_',
     ' ',

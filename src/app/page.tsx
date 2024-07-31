@@ -31,7 +31,7 @@ export default async function Home({
         date={startOfMonth(
           (searchParams.month as Date_YearAndMonth) || undefined,
         )}
-        beginDate={settings.begin_date}
+        beginDate={settings.beginDate}
         worklogs={worklogs}
       />
     </div>

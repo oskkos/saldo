@@ -1,11 +1,11 @@
 'use client';
-import { Worklog } from '@prisma/client';
 import { MdDelete, MdModeEdit } from 'react-icons/md';
 import WorklogTitle from '@/components/worklogItem/worklogTitle';
 import WorklogDeleteConfirm from './worklogDeleteConfirm';
 import { useEffect, useState } from 'react';
 import WorklogEditModal from './worklogEditModal';
 import { showModal } from '../modal';
+import { Worklog } from '@/types';
 
 export default function WorklogItem({
   worklog,

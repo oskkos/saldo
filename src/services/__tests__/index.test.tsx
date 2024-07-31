@@ -5,8 +5,7 @@ import {
   sortWorklogs,
   absenceReasonToString,
 } from '../index';
-import { Settings, Worklog } from '@prisma/client';
-import { AbsenceReason } from '@/types';
+import { AbsenceReason, Settings, Worklog } from '@/types';
 
 describe('worklog calculator', () => {
   describe('calculateCurrentSaldo', () => {
@@ -15,16 +14,16 @@ describe('worklog calculator', () => {
       jest.setSystemTime(new Date('2023-10-22T10:00:00').getTime());
 
       const settings = {
-        begin_date: new Date('2023-10-14'),
-        initial_balance_hours: 2,
-        initial_balance_mins: 30,
+        beginDate: new Date('2023-10-14'),
+        initialBalanceHours: 2,
+        initialBalanceMins: 30,
       } as Settings;
       const worklogs = [
         {
           // friday before begin date, is ignored
           from: new Date('2023-10-13T08:00:00'),
           to: new Date('2023-10-13T16:00:00'),
-          subtract_lunch_break: true,
+          subtractLunchBreak: true,
         },
         {
           // sat flex hours, is ignored
@@ -41,7 +40,7 @@ describe('worklog calculator', () => {
           // mon 8-16:30 without break (+1 hour)
           from: new Date('2023-10-16T08:00:00'),
           to: new Date('2023-10-16T16:30:00'),
-          subtract_lunch_break: false,
+          subtractLunchBreak: false,
         },
         {
           // tue 8-15:30 without break (+/- 0 hour)
@@ -52,7 +51,7 @@ describe('worklog calculator', () => {
           // wed 7-16:15 with lunch break (+1 hour 15 minutes)
           from: new Date('2023-10-18T07:00:00'),
           to: new Date('2023-10-18T16:15:00'),
-          subtract_lunch_break: true,
+          subtractLunchBreak: true,
         },
         {
           // thu flex day (-7.5 hour)
@@ -76,7 +75,7 @@ describe('worklog calculator', () => {
           // mon in future is ignored
           from: new Date('2023-10-23T08:00:00'),
           to: new Date('2023-10-23T16:30:00'),
-          subtract_lunch_break: false,
+          subtractLunchBreak: false,
         },
       ] as unknown as Worklog[];
       const saldo = calculateCurrentSaldo(settings, worklogs);
@@ -105,7 +104,7 @@ describe('worklog calculator', () => {
         {
           from: new Date('2023-02-03T12:00:00'),
           to: new Date('2023-02-03T13:30:00'),
-          subtract_lunch_break: true,
+          subtractLunchBreak: true,
         },
       ] as unknown as Worklog[];
       const sum = calculateWorklogsSum(worklogs);

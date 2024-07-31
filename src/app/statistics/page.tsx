@@ -5,11 +5,10 @@ import {
   minutesToSaldoObject,
   worklogMinutes,
 } from '@/services';
-import { SaldoForDay } from '@/types';
+import { AbsenceReason, SaldoForDay, Worklog } from '@/types';
 import { assertIsISODay } from '@/util/assertionFunctions';
 import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import WorkMinutesPerDayChart from './workMinutesPerDayChart';
-import { Absence, Worklog } from '@prisma/client';
 import { getSettings } from '@/repository/settingsRepository';
 import { endOfDay, isNonWorkingDay } from '@/util/date';
 
@@ -50,12 +49,11 @@ async function getWorklogData(userId: number, beginDate: Date) {
       if (isNonWorkingDay(x.from)) {
         return acc;
       }
-
       return x.absence
         ? acc.set(x.absence, (acc.get(x.absence) ?? 0) + 1)
         : acc;
     },
-    new Map() as Map<Absence, number>,
+    new Map() as Map<AbsenceReason, number>,
   );
 
   return { totalWorkMinutes, workMinutesPerDay, absenceMap };
@@ -70,7 +68,7 @@ export default async function Statistics() {
   if (!settings) {
     return null;
   }
-  const beginDate = settings.begin_date;
+  const beginDate = settings.beginDate;
 
   const { workMinutesPerDay, absenceMap, totalWorkMinutes } =
     await getWorklogData(user.id, beginDate);

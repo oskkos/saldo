@@ -1,11 +1,10 @@
 'use client';
 import { useContext, useState } from 'react';
 import WorklogInputs from '../worklogInputs';
-import { Worklog } from '@prisma/client';
 import { toISODay, toTime } from '@/util/dateFormatter';
 import { onWorklogEdit } from '@/actions';
 import { toDate } from '@/util/date';
-import { WorklogFormDataEntry } from '@/types';
+import { Worklog, WorklogFormDataEntry } from '@/types';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
@@ -27,7 +26,7 @@ export default function WorklogEditModal({
     from: toTime(worklog.from),
     to: toTime(worklog.to),
     comment: worklog.comment ?? '',
-    subtractLunchBreak: worklog.subtract_lunch_break,
+    subtractLunchBreak: worklog.subtractLunchBreak,
   });
 
   const editWorklog = () => {

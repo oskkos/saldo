@@ -3,7 +3,6 @@ import { useRef } from 'react';
 import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
 import { add, startOfMonth, subtract } from '@/util/date';
 import { toISODay, toMonthAndYear, toYearAndMonth } from '@/util/dateFormatter';
-import { Worklog } from '@prisma/client';
 import useSwipeEvents from 'beautiful-react-hooks/useSwipeEvents';
 import { useRouter } from 'next/navigation';
 import WeekItem from './weekItem';
@@ -13,6 +12,7 @@ import {
   daysForCalendarBuilder,
 } from './util';
 import DayItem from './dayItem';
+import { Worklog } from '@/types';
 
 export default function MiniCalendar({
   date,

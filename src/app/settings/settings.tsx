@@ -10,16 +10,16 @@ import { startOfDay, timeIsGt } from '@/util/date';
 import { Date_Time, toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useContext, useState } from 'react';
-import { Settings as SettingsType } from '@/repository/settingsRepository';
+import { Settings as SettingsType } from '@/types';
 
 export default function Settings({ settings }: { settings: SettingsType }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const [data, setData] = useState<{
-    begin_date: Date | null;
-    initial_balance_hours: number | '';
-    initial_balance_mins: number | '';
-    from_default: Date_Time | null;
-    to_default: Date_Time | null;
+    beginDate: Date | null;
+    initialBalanceHours: number | '';
+    initialBalanceMins: number | '';
+    fromDefault: Date_Time | null;
+    toDefault: Date_Time | null;
   }>(settings);
   const { setMsg } = useContext(ToastContext);
 
@@ -32,26 +32,26 @@ export default function Settings({ settings }: { settings: SettingsType }) {
         <div className="flex items-center">
           <IntegerInput
             label="Hours"
-            value={data.initial_balance_hours}
+            value={data.initialBalanceHours}
             className="w-20"
             placeholder="hh"
             onChange={(val) => {
               setData({
                 ...data,
-                initial_balance_hours: val ?? '',
+                initialBalanceHours: val ?? '',
               });
             }}
           />
           <span className="mx-3">:</span>
           <IntegerInput
             label="Minutes"
-            value={data.initial_balance_mins}
+            value={data.initialBalanceMins}
             className="w-20"
             placeholder="mm"
             onChange={(val) => {
               setData({
                 ...data,
-                initial_balance_mins: val ?? '',
+                initialBalanceMins: val ?? '',
               });
             }}
           />
@@ -59,12 +59,12 @@ export default function Settings({ settings }: { settings: SettingsType }) {
         <div>Begin date</div>
         <div>
           <DateInput
-            value={data.begin_date ? toISODay(data.begin_date) : ''}
+            value={data.beginDate ? toISODay(data.beginDate) : ''}
             className="w-full"
             onChange={(value) => {
               setData({
                 ...data,
-                begin_date: value ? startOfDay(value) : null,
+                beginDate: value ? startOfDay(value) : null,
               });
             }}
           />
@@ -74,26 +74,26 @@ export default function Settings({ settings }: { settings: SettingsType }) {
           <TimeInput
             placeholder="From"
             label="From"
-            value={data.from_default ?? ''}
+            value={data.fromDefault ?? ''}
             className="w-full"
             indicatorClassName="w-full mt-4"
             onChange={(value) => {
               setData({
                 ...data,
-                from_default: value ?? null,
+                fromDefault: value ?? null,
               });
             }}
           />
           <TimeInput
             placeholder="To"
             label="To"
-            value={data.to_default ?? ''}
+            value={data.toDefault ?? ''}
             className="w-full"
             indicatorClassName="w-full mt-4"
             onChange={(value) => {
               setData({
                 ...data,
-                to_default: value ?? null,
+                toDefault: value ?? null,
               });
             }}
           />
@@ -104,19 +104,19 @@ export default function Settings({ settings }: { settings: SettingsType }) {
             className="btn btn-secondary mt-3 w-full"
             onClick={() => {
               const action = () => {
-                assertExists(data.begin_date, 'Begin date is required');
-                assertExists(data.from_default, 'From time is required');
-                assertExists(data.to_default, 'To time is required');
+                assertExists(data.beginDate, 'Begin date is required');
+                assertExists(data.fromDefault, 'From time is required');
+                assertExists(data.toDefault, 'To time is required');
 
-                if (timeIsGt(data.from_default, data.to_default)) {
+                if (timeIsGt(data.fromDefault, data.toDefault)) {
                   throw new Error('From time must be before to time');
                 }
-                return onSettingsUpdate(settings.user_id, {
-                  initialBalanceHours: data.initial_balance_hours || 0,
-                  initialBalanceMins: data.initial_balance_mins || 0,
-                  beginDate: data.begin_date,
-                  fromDefault: data.from_default,
-                  toDefault: data.to_default,
+                return onSettingsUpdate(settings.userId, {
+                  initialBalanceHours: data.initialBalanceHours || 0,
+                  initialBalanceMins: data.initialBalanceMins || 0,
+                  beginDate: data.beginDate,
+                  fromDefault: data.fromDefault,
+                  toDefault: data.toDefault,
                 });
               };
               startTransitionWrapper(action)

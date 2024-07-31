@@ -1,15 +1,23 @@
-import { SettingsData } from '@/types';
+import { Settings, SettingsData } from '@/types';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
-import { Settings as S } from '@prisma/client';
-import { Date_Time } from '@/util/dateFormatter';
+import { Settings as PrismaSettings } from '@prisma/client';
 import { assertIsTime } from '@/util/assertionFunctions';
 
-export interface Settings extends S {
-  from_default: Date_Time;
-  to_default: Date_Time;
-}
-export async function getSettings(userId: number) {
+const toSettings = (settings: PrismaSettings): Settings => {
+  assertIsTime(settings.from_default);
+  assertIsTime(settings.to_default);
+  return {
+    id: settings.id,
+    userId: settings.user_id,
+    beginDate: settings.begin_date,
+    initialBalanceHours: settings.initial_balance_hours,
+    initialBalanceMins: settings.initial_balance_mins,
+    fromDefault: settings.from_default,
+    toDefault: settings.to_default,
+  };
+};
+export async function getSettings(userId: number): Promise<Settings | null> {
   return await Sentry.startSpan(
     { name: 'getSettings', op: 'db.sql.prisma' },
     async () => {
@@ -21,9 +29,7 @@ export async function getSettings(userId: number) {
       if (!s) {
         return null;
       }
-      assertIsTime(s.from_default);
-      assertIsTime(s.to_default);
-      return s as Settings;
+      return toSettings(s);
     },
   );
 }
@@ -36,7 +42,7 @@ export async function insertSettings(
     fromDefault,
     toDefault,
   }: SettingsData,
-) {
+): Promise<Settings> {
   return await Sentry.startSpan(
     { name: 'insertSettings', op: 'db.sql.prisma' },
     async () => {
@@ -54,9 +60,7 @@ export async function insertSettings(
         },
         update: {},
       });
-      assertIsTime(s.from_default);
-      assertIsTime(s.to_default);
-      return s as Settings;
+      return toSettings(s);
     },
   );
 }
@@ -69,7 +73,7 @@ export async function upsertSettings(
     fromDefault,
     toDefault,
   }: SettingsData,
-) {
+): Promise<Settings> {
   return await Sentry.startSpan(
     { name: 'upsertSettings', op: 'db.sql.prisma' },
     async () => {
@@ -93,9 +97,7 @@ export async function upsertSettings(
           to_default: toDefault,
         },
       });
-      assertIsTime(s.from_default);
-      assertIsTime(s.to_default);
-      return s as Settings;
+      return toSettings(s);
     },
   );
 }

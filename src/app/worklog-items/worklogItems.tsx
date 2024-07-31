@@ -1,5 +1,4 @@
 'use client';
-import { Settings, Worklog } from '@prisma/client';
 import WorklogItem from '@/components/worklogItem/worklogItem';
 import { useState } from 'react';
 import {
@@ -15,6 +14,7 @@ import {
   assertIsISODay,
   assertIsYearAndMonth,
 } from '@/util/assertionFunctions';
+import { Settings, Worklog } from '@/types';
 
 function groupWorklogsByDay(worklogs: Worklog[]) {
   return worklogs.reduce((acc: Record<string, Worklog[] | undefined>, x) => {
@@ -138,7 +138,7 @@ export default function WorklogItems({
                   return worklogsOfDayToElements(
                     day,
                     groupedWorklogsByMonth[k]?.[day] ?? [],
-                    settings.begin_date,
+                    settings.beginDate,
                     onWorklogDelete,
                     onWorklogEdit,
                   );
