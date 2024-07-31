@@ -1,6 +1,5 @@
 import 'server-only';
 
-import dynamic from 'next/dynamic';
 import AuthActions from '@/auth/authActions';
 import { MdOutlineMenu } from 'react-icons/md';
 import NavbarItems from './navBarItems';
@@ -8,11 +7,10 @@ import { Session } from 'next-auth';
 import QuickAdd from './quickAdd';
 import SaldoBadge from './saldoBadge';
 import { Settings, User, Worklog } from '@/types';
+import ThemeSwitcher from './themeSwitcher';
 
-const ThemeSwitcher = dynamic(() => import('./themeSwitcher'), { ssr: false });
-
-function items(session: Session | null) {
-  return session ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
+function items(showItems: boolean) {
+  return showItems ? <NavbarItems drawerToggleId="saldo-navbar" /> : [];
 }
 
 export default function Navbar({
@@ -43,7 +41,9 @@ export default function Navbar({
           </div>
           <div className="pr-2 sm:mr-2 lg:ml-4 text-xl">saldo</div>
           <div className="hidden lg:block">
-            <ul className="menu menu-horizontal">{items(session)}</ul>
+            <ul className="menu menu-horizontal">
+              {items(Boolean(user && settings))}
+            </ul>
           </div>
 
           {user && settings ? (
@@ -63,14 +63,16 @@ export default function Navbar({
           ) : (
             <div className="grow" />
           )}
-          <AuthActions className={iconCls} />
+          <AuthActions session={session} className={iconCls} />
           <ThemeSwitcher className={iconCls} />
         </div>
         <div className="overflow-auto">{children}</div>
       </div>
       <div className="drawer-side z-10">
         <label htmlFor="saldo-navbar" className="drawer-overlay"></label>
-        <ul className="menu p-4 w-80 h-full bg-base-200">{items(session)}</ul>
+        <ul className="menu p-4 w-80 h-full bg-base-200">
+          {items(Boolean(user && settings))}
+        </ul>
       </div>
     </div>
   );

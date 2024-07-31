@@ -2,14 +2,10 @@ import { getWorklogs } from '@/repository/worklogRepository';
 import { getSettings } from '@/repository/settingsRepository';
 import WorklogItems from './worklogItems';
 import { sortWorklogs } from '@/services';
-import { getSession, getUserFromSession } from '@/auth/authSession';
+import { getUserFromSession } from '@/auth/authSession';
 import { assertExists } from '@/util/assertionFunctions';
 
 export default async function WorklogItemsPage() {
-  const session = await getSession();
-  if (!session) {
-    return null;
-  }
   const user = await getUserFromSession();
   if (!user) {
     return null;

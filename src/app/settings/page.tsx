@@ -1,13 +1,9 @@
 import { getSettings } from '@/repository/settingsRepository';
 import Settings from './settings';
-import { getSession, getUserFromSession } from '@/auth/authSession';
+import { getUserFromSession } from '@/auth/authSession';
 import { assertExists } from '@/util/assertionFunctions';
 
 export default async function SettingsPage() {
-  const session = await getSession();
-  if (!session) {
-    return null;
-  }
   const user = await getUserFromSession();
   if (!user) {
     return null;
