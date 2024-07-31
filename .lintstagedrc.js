@@ -7,5 +7,5 @@ const buildEslintCommand = (filenames) =>
 
 module.exports = {
   '*.{js,jsx,ts,tsx}': [buildEslintCommand],
-  '*': ['prettier --write'],
+  '*.{js,jsx,ts,tsx}': ['prettier --write'],
 };
