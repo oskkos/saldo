@@ -2,7 +2,6 @@ import 'server-only';
 
 import dynamic from 'next/dynamic';
 import AuthActions from '@/auth/authActions';
-import AuthenticatedContent from '@/auth/authenticatedContent';
 import { MdOutlineMenu } from 'react-icons/md';
 import NavbarItems from './navBarItems';
 import { Session } from 'next-auth';
@@ -67,9 +66,7 @@ export default function Navbar({
           <AuthActions className={iconCls} />
           <ThemeSwitcher className={iconCls} />
         </div>
-        <AuthenticatedContent user={user} settings={settings}>
-          {children}
-        </AuthenticatedContent>
+        <div className="overflow-auto">{children}</div>
       </div>
       <div className="drawer-side z-10">
         <label htmlFor="saldo-navbar" className="drawer-overlay"></label>

@@ -6,6 +6,9 @@ const nextConfig = {
       {
         hostname: '*.googleusercontent.com',
       },
+      {
+        hostname: '*.githubusercontent.com',
+      },
     ],
   },
 };
