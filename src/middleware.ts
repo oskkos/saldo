@@ -13,6 +13,9 @@ export default withAuth(middleware, {
       if (req.nextUrl.pathname === '/signup') {
         return true;
       }
+      if (req.nextUrl.pathname.split('/')[1] === 'img') {
+        return true;
+      }
       if (token) {
         return true;
       }

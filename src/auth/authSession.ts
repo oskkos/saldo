@@ -18,6 +18,9 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
+  theme: {
+    logo: '/img/saldo.png',
+  },
 };
 
 export async function getSession() {
