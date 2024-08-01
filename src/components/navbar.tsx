@@ -59,11 +59,15 @@ export default function Navbar({
                   toDefault: settings.toDefault,
                 }}
               />,
+              <AuthActions
+                key="authActions"
+                session={session}
+                className={iconCls}
+              />,
             ]
           ) : (
             <div className="grow" />
           )}
-          <AuthActions session={session} className={iconCls} />
           <ThemeSwitcher className={iconCls} />
         </div>
         <div className="overflow-auto">{children}</div>
