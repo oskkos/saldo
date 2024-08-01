@@ -5,9 +5,15 @@ import React, { useEffect, useState } from 'react';
 import { MdOutlineLightMode } from 'react-icons/md';
 import { MdOutlineDarkMode } from 'react-icons/md';
 
-const getPrefersDarkMode = () =>
-  window.matchMedia &&
-  window.matchMedia('(prefers-color-scheme: dark)').matches;
+const getPrefersDarkMode = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  return (
+    window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
+};
 
 const ALTERNATE_THEME = getPrefersDarkMode() ? LIGHT_THEME : DARK_THEME;
 
@@ -19,17 +25,30 @@ const alternateThemeInUse = () => {
   return getPrefersDarkMode();
 };
 export default function ThemeSwitcher({ className }: { className: string }) {
-  // mounted flag to ensure that SSR is not calling window or localStorage bits
-  const [mounted, setMounted] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>();
+  // effects run only client-side
+  // so we can detect when the component is hydrated/mounted
+  // @see https://react.dev/reference/react/useEffect
   useEffect(() => {
     setMounted(true);
   }, []);
+  const [alternateTheme, setAlternateTheme] = useState(false);
 
-  const initTheme = mounted ? alternateThemeInUse() : false;
-  const [alternateTheme, setAlternateTheme] = useState(initTheme);
+  if (!mounted) {
+    return <label className={`${className} loading loading-spinner`}></label>;
+  }
+
+  const initTheme = alternateThemeInUse();
+  if (alternateTheme !== initTheme) {
+    setAlternateTheme(initTheme);
+  }
 
   return (
-    <label title="Light/dark mode" className="swap swap-rotate">
+    <label
+      title="Light/dark mode"
+      className="swap swap-rotate"
+      suppressHydrationWarning
+    >
       {/* this hidden checkbox controls the state */}
       <input
         type="checkbox"
