@@ -13,6 +13,7 @@ import {
 } from '@/repository/worklogRepository';
 import { startOfDay } from '@/util/date';
 import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
+import { SignupSchema } from '@/schemas/signupSchema';
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user);
@@ -24,6 +25,23 @@ export async function onAfterSignin(user: AuthUser) {
     toDefault: NEW_WORKLOG_DEFAULT_TO,
   });
   return [u, settings] as const;
+}
+
+export async function onAfterSignup(data: unknown) {
+  await Promise.resolve();
+
+  const result = SignupSchema.safeParse(data);
+  if (!result.success) {
+    const errors = Object.fromEntries(
+      result.error?.issues?.map((issue) => [issue.path[0], issue.message]) ||
+        [],
+    );
+    return { status: 'error', errors: errors };
+  }
+  // TOOD: Implement user creation
+  return {
+    status: 'success',
+  };
 }
 
 export async function onWorklogSubmit(userId: number, data: WorklogFormData) {
