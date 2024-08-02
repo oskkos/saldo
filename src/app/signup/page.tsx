@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 'use client';
 
 import Image from 'next/image';
@@ -21,29 +20,38 @@ export default function Signup() {
     resolver: signupSchemaResolver,
   });
 
+  const onSubmit = async (data: SignupData) => {
+    try {
+      const ret = await onAfterSignup(data);
+      if (ret.status === 'success') {
+        // todo: use toast / redirect to signin...
+        alert('User added');
+      }
+      if (ret.status === 'error') {
+        const errors = ret.errors ?? {};
+        Object.keys(ret.errors ?? {}).forEach((field) => {
+          if (!SignupDataFields[field]) {
+            return;
+          }
+          setError(SignupDataFields[field], {
+            type: 'server',
+            message: errors[field],
+          });
+        });
+      }
+    } catch (e) {
+      if (e instanceof Error) {
+        // todo: handle better :-)
+        alert(e.message);
+      }
+    }
+  };
+
   return (
     <div className="w-full flex items-center justify-center">
       <div className="card card-bordered bg-base-100 w-96 shadow-xl m-6 mb-12">
-        <form
-          onSubmit={handleSubmit(async (data) => {
-            const ret = await onAfterSignup(data);
-            if (ret.status === 'success') {
-              alert('tada');
-            }
-            if (ret.status === 'error') {
-              const errors = ret.errors ?? {};
-              Object.keys(ret.errors ?? {}).forEach((field) => {
-                if (!SignupDataFields[field]) {
-                  return;
-                }
-                setError(SignupDataFields[field], {
-                  type: 'server',
-                  message: errors[field],
-                });
-              });
-            }
-          })}
-        >
+        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises*/}
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="card-body items-center">
             <div className="card-title">
               <Image src="/img/saldo.png" alt="" width={70} height={70}></Image>
