@@ -61,3 +61,27 @@ export async function signupUser({
     },
   );
 }
+
+export async function getUserByEmailAndPassword(
+  email: string,
+  password: string,
+): Promise<User | null> {
+  return await Sentry.startSpan(
+    { name: 'getUserByEmailAndPassword', op: 'db.sql.prisma' },
+    async () => {
+      const user = await prisma.user.findUnique({
+        where: { email },
+      });
+      if (!user) {
+        return null;
+      }
+      if (!password || !user.password) {
+        return null;
+      }
+      if (await bcrypt.compare(password, String(user.password))) {
+        return toUser(user);
+      }
+      return null;
+    },
+  );
+}

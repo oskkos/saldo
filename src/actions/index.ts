@@ -1,7 +1,11 @@
 'use server';
 
 import { AuthUser, SettingsData, WorklogFormData } from '@/types';
-import { signupUser, upsertUser } from '@/repository/userRepository';
+import {
+  getUserByEmailAndPassword,
+  signupUser,
+  upsertUser,
+} from '@/repository/userRepository';
 import {
   insertSettings,
   upsertSettings,
@@ -67,4 +71,11 @@ export async function onWorklogEdit(worklogId: number, data: WorklogFormData) {
 export async function onSettingsUpdate(userId: number, data: SettingsData) {
   const settings = await upsertSettings(userId, data);
   return settings;
+}
+export async function onCredentialsSignin(email: string, password: string) {
+  try {
+    return await getUserByEmailAndPassword(email, password);
+  } catch (e) {
+    return null;
+  }
 }
