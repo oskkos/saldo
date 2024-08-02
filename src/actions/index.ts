@@ -1,7 +1,7 @@
 'use server';
 
 import { AuthUser, SettingsData, WorklogFormData } from '@/types';
-import { upsertUser } from '@/repository/userRepository';
+import { signupUser, upsertUser } from '@/repository/userRepository';
 import {
   insertSettings,
   upsertSettings,
@@ -38,7 +38,13 @@ export async function onAfterSignup(data: unknown) {
     );
     return { status: 'error', errors: errors };
   }
-  // TOOD: Implement user creation
+
+  await signupUser({
+    name: result.data.name,
+    email: result.data.email,
+    password: result.data.password,
+  });
+
   return {
     status: 'success',
   };
