@@ -5,9 +5,29 @@ import { assertExists } from '@/util/assertionFunctions';
 import { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { onCredentialsSignin } from '@/actions';
 
 export const authOptions: NextAuthOptions = {
   providers: [
+    CredentialsProvider({
+      name: 'email & password',
+      credentials: {
+        email: { label: 'Email', type: 'text' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials) {
+          return null;
+        }
+        const user = await onCredentialsSignin(
+          credentials.email,
+          credentials.password,
+        );
+
+        return user ? { email: user.email, id: '', name: user.name } : null;
+      },
+    }),
     GoogleProvider({
       clientId: String(process.env.GOOGLE_CLIENT_ID),
       clientSecret: String(process.env.GOOGLE_CLIENT_SECRET),
