@@ -37,7 +37,7 @@ const Msg = ({
 const successMsg = (
   <>
     <span>User added succesfully!</span>{' '}
-    <a href="/api/auth/signin" className="font-medium hover:underline">
+    <a href="/signin" className="font-medium hover:underline">
       Login here
     </a>
   </>
@@ -151,7 +151,7 @@ export default function Signup() {
 
           <p className="text-sm font-light">
             Already have an account?{' '}
-            <a href="/api/auth/signin" className="font-medium hover:underline">
+            <a href="/signin" className="font-medium hover:underline">
               Login here
             </a>
           </p>
