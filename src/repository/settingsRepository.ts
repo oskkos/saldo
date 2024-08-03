@@ -1,8 +1,11 @@
+import 'server-only';
+
 import { Settings, SettingsData } from '@/types';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
 import { Settings as PrismaSettings } from '@prisma/client';
 import { assertIsTime } from '@/util/assertionFunctions';
+import { assertUserMatchWithSession } from './util';
 
 const toSettings = (settings: PrismaSettings): Settings => {
   assertIsTime(settings.from_default);
@@ -18,6 +21,8 @@ const toSettings = (settings: PrismaSettings): Settings => {
   };
 };
 export async function getSettings(userId: number): Promise<Settings | null> {
+  await assertUserMatchWithSession({ id: userId });
+
   return await Sentry.startSpan(
     { name: 'getSettings', op: 'db.sql.prisma' },
     async () => {
@@ -43,6 +48,8 @@ export async function insertSettings(
     toDefault,
   }: SettingsData,
 ): Promise<Settings> {
+  await assertUserMatchWithSession({ id: userId });
+
   return await Sentry.startSpan(
     { name: 'insertSettings', op: 'db.sql.prisma' },
     async () => {
@@ -74,6 +81,8 @@ export async function upsertSettings(
     toDefault,
   }: SettingsData,
 ): Promise<Settings> {
+  await assertUserMatchWithSession({ id: userId });
+
   return await Sentry.startSpan(
     { name: 'upsertSettings', op: 'db.sql.prisma' },
     async () => {

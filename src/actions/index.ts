@@ -32,8 +32,6 @@ export async function onAfterSignin(user: AuthUser) {
 }
 
 export async function onAfterSignup(data: unknown) {
-  await Promise.resolve();
-
   const result = SignupSchema.safeParse(data);
   if (!result.success) {
     const errors = Object.fromEntries(
