@@ -92,16 +92,16 @@ export default function Signup() {
   return (
     <div className="w-full flex items-center justify-center">
       <div className="card card-bordered bg-base-100 w-96 shadow-xl m-6 mb-12">
-        {/* eslint-disable-next-line @typescript-eslint/no-misused-promises*/}
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="card-body items-center">
-            <div className="card-title">
-              <Image src="/img/saldo.png" alt="" width={64} height={64}></Image>
-              <span className="text-2xl">saldo</span>
-            </div>
-            {msg}
-            <div className="flex flex-col items-center">
-              <div className="text-lg font-bold mt-4">Signup</div>
+        <div className="card-body items-center">
+          <div className="card-title">
+            <Image src="/img/saldo.png" alt="" width={64} height={64}></Image>
+            <span className="text-2xl">saldo</span>
+          </div>
+          {msg}
+          <div className="flex flex-col items-center">
+            <div className="text-lg font-bold mt-4">Signup</div>
+            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises*/}
+            <form onSubmit={handleSubmit(onSubmit)}>
               <TextInput
                 register={register}
                 label="Name"
@@ -144,21 +144,18 @@ export default function Signup() {
               <button type="submit" className="btn btn-primary w-full mt-6">
                 Create an account
               </button>
-            </div>
-
-            <div className="divider divider-primary"></div>
-
-            <p className="text-sm font-light">
-              Already have an account?{' '}
-              <a
-                href="/api/auth/signin"
-                className="font-medium hover:underline"
-              >
-                Login here
-              </a>
-            </p>
+            </form>
           </div>
-        </form>
+
+          <div className="divider divider-primary"></div>
+
+          <p className="text-sm font-light">
+            Already have an account?{' '}
+            <a href="/api/auth/signin" className="font-medium hover:underline">
+              Login here
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );
