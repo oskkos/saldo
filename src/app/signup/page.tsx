@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { TextInput } from './textInput';
+import { TextInput } from '@/components/form/textInput';
 import {
   SignupData,
   SignupDataFields,
@@ -9,6 +9,7 @@ import {
 } from '@/schemas/signupSchema';
 import { useForm } from 'react-hook-form';
 import { onAfterSignup } from '@/actions';
+import { MdLock, MdMail, MdPerson } from 'react-icons/md';
 
 export default function Signup() {
   const {
@@ -57,61 +58,63 @@ export default function Signup() {
               <Image src="/img/saldo.png" alt="" width={64} height={64}></Image>
               <span className="text-2xl">saldo</span>
             </div>
-            <div>
-              <div className="p-6 space-y-4">
-                <h1 className="text-xl font-bold">Create an account</h1>
-                <TextInput
-                  register={register}
-                  label="Name"
-                  type="text"
-                  name="name"
-                  options={{ required: true }}
-                  error={errors.name}
-                />
-                <TextInput
-                  register={register}
-                  label="Email"
-                  type="email"
-                  name="email"
-                  error={errors.email}
-                />
-                <TextInput
-                  register={register}
-                  label="Password"
-                  type="password"
-                  name="password"
-                  options={{
-                    required: true,
-                    minLength: { message: 'min len 8', value: 8 },
-                  }}
-                  error={errors.password}
-                />
-                <TextInput
-                  register={register}
-                  label="Confirm password"
-                  type="password"
-                  name="confirmPassword"
-                  options={{ required: true }}
-                  error={errors.confirmPassword}
-                />
-              </div>
-            </div>
-            <div className="card-actions">
-              <button type="submit" className="btn btn-primary w-full">
+            <div className="flex flex-col items-center">
+              <div className="text-lg font-bold mt-4">Signup</div>
+              <TextInput
+                register={register}
+                label="Name"
+                type="text"
+                name="name"
+                options={{ required: true }}
+                error={errors.name}
+                icon={<MdPerson />}
+              />
+              <TextInput
+                register={register}
+                label="Email"
+                type="email"
+                name="email"
+                error={errors.email}
+                icon={<MdMail />}
+              />
+              <TextInput
+                register={register}
+                label="Password"
+                type="password"
+                name="password"
+                options={{
+                  required: true,
+                  minLength: { message: 'min len 8', value: 8 },
+                }}
+                error={errors.password}
+                icon={<MdLock />}
+              />
+              <TextInput
+                register={register}
+                label="Confirm password"
+                type="password"
+                name="confirmPassword"
+                options={{ required: true }}
+                error={errors.confirmPassword}
+                icon={<MdLock />}
+              />
+
+              <button type="submit" className="btn btn-primary w-full mt-6">
                 Create an account
               </button>
             </div>
-            <div className="mt-6">
-              <p className="text-sm font-light">
-                Already have an account?{' '}
-                <a
-                  href="/api/auth/signin"
-                  className="font-medium hover:underline"
-                >
-                  Login here
-                </a>
-              </p>
-            </div>
+
+            <div className="divider divider-primary"></div>
+
+            <p className="text-sm font-light">
+              Already have an account?{' '}
+              <a
+                href="/api/auth/signin"
+                className="font-medium hover:underline"
+              >
+                Login here
+              </a>
+            </p>
           </div>
         </form>
       </div>

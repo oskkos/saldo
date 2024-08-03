@@ -3,16 +3,27 @@
 import Image from 'next/image';
 import { MdEmail } from 'react-icons/md';
 import { MdLock } from 'react-icons/md';
-import { useState } from 'react';
 import { ErrorMsg, errStringResolver } from './errorHandler';
-import { CredentialsButton, CredentialsInput } from './credentialsComponents';
 import { OAuthButton } from './oauthButton';
+import { useForm } from 'react-hook-form';
+import { signIn } from 'next-auth/react';
+import { TextInput } from '@/components/form/textInput';
+import { SigninData, signinSchemaResolver } from '@/schemas/signinSchema';
 
 export default function Signin({ error }: { error: string | undefined }) {
-  const [credentials, setCredentials] = useState({ email: '', password: '' });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SigninData>({
+    resolver: signinSchemaResolver,
+  });
 
   const errMsg = errStringResolver(error);
 
+  const onSubmit = async (credentials: SigninData) => {
+    await signIn('credentials', { ...credentials });
+  };
   return (
     <div className="w-full flex items-center justify-center">
       <div className="card card-bordered bg-base-100 w-96 shadow-xl m-6 mb-12">
@@ -33,28 +44,29 @@ export default function Signin({ error }: { error: string | undefined }) {
             <div className="text-xs mb-3">
               No Google or GitHub? Sign in with email and password.
             </div>
-            <form>
-              <CredentialsInput
+            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises*/}
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <TextInput
                 label="Email"
                 name="email"
                 type="text"
                 icon={<MdEmail />}
-                value={credentials.email}
-                onChange={(e) => {
-                  setCredentials({ ...credentials, email: e.target.value });
-                }}
+                register={register}
+                options={{ required: true }}
+                error={errors.email}
               />
-              <CredentialsInput
+              <TextInput
                 label="Password"
                 name="password"
                 type="password"
                 icon={<MdLock />}
-                value={credentials.password}
-                onChange={(e) => {
-                  setCredentials({ ...credentials, password: e.target.value });
-                }}
+                register={register}
+                options={{ required: true }}
+                error={errors.password}
               />
-              <CredentialsButton credentials={credentials} />
+              <button type="submit" className="btn btn-primary mt-3 w-full">
+                Sign in
+              </button>
             </form>
           </div>
 
