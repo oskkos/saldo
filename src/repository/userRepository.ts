@@ -81,7 +81,7 @@ export async function getUserByEmailAndPassword(
       if (await bcrypt.compare(password, String(user.password))) {
         return toUser(user);
       }
-      return null;
+      throw new Error('Invalid password');
     },
   );
 }
