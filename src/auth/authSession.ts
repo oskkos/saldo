@@ -25,7 +25,9 @@ export const authOptions: NextAuthOptions = {
           credentials.password,
         );
 
-        return user ? { email: user.email, id: '', name: user.name } : null;
+        return user
+          ? { email: user.email, name: user.name, id: String(user.id) }
+          : null;
       },
     }),
     GoogleProvider({
