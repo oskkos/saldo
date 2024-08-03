@@ -5,7 +5,7 @@ import { Worklog as PrismaWorklog } from '@prisma/client';
 import { Worklog, WorklogFormData } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
-import { assertUserMatchWithSession } from './util';
+import { getUserFromSession } from '@/auth/authSession';
 
 const toAbsenceReason = (absence: string | null) => {
   if (!absence) {
@@ -23,26 +23,25 @@ const toWorklog = (worklog: PrismaWorklog): Worklog => ({
   absence: toAbsenceReason(worklog.absence),
 });
 
-export async function getWorklogs(
-  userId: number,
-  from?: Date,
-  to?: Date,
-): Promise<Worklog[]> {
-  await assertUserMatchWithSession({ id: userId });
+export async function getWorklogs(from?: Date, to?: Date): Promise<Worklog[]> {
+  const user = await getUserFromSession();
+  if (!user) {
+    throw new Error('User not found in session.');
+  }
 
   return await Sentry.startSpan(
     { name: 'getWorklogs', op: 'db.sql.prisma' },
     async (span) => {
       const worklogs = await prisma.worklog.findMany({
         where: {
-          user_id: userId,
+          user_id: user.id,
           from: { gte: from },
           to: { lte: to },
         },
       });
 
       span.setAttributes({
-        userId,
+        userId: user.id,
         from: from?.toISOString() ?? 'beginning',
         to: to?.toISOString() ?? 'end',
         records: worklogs.length,
@@ -53,11 +52,17 @@ export async function getWorklogs(
   );
 }
 
-export async function insertWorklog(
-  userId: number,
-  { from, to, comment, subtractLunchBreak, absence }: WorklogFormData,
-): Promise<Worklog> {
-  await assertUserMatchWithSession({ id: userId });
+export async function insertWorklog({
+  from,
+  to,
+  comment,
+  subtractLunchBreak,
+  absence,
+}: WorklogFormData): Promise<Worklog> {
+  const user = await getUserFromSession();
+  if (!user) {
+    throw new Error('User not found in session.');
+  }
 
   return await Sentry.startSpan(
     { name: 'insertWorklog', op: 'db.sql.prisma' },
@@ -67,7 +72,7 @@ export async function insertWorklog(
           from,
           to,
           comment,
-          user_id: userId,
+          user_id: user.id,
           subtract_lunch_break: subtractLunchBreak,
           absence,
         },
@@ -78,7 +83,6 @@ export async function insertWorklog(
 }
 
 async function getWorklog(worklogId: number) {
-  return { user_id: 1 };
   return await Sentry.startSpan(
     { name: 'getWorklog', op: 'db.sql.prisma' },
     async () => {
@@ -93,8 +97,14 @@ export async function updateWorklog(
   worklogId: number,
   { from, to, comment, subtractLunchBreak }: WorklogFormData,
 ): Promise<Worklog> {
+  const user = await getUserFromSession();
+  if (!user) {
+    throw new Error('User not found in session.');
+  }
   const worklog = await getWorklog(worklogId);
-  await assertUserMatchWithSession({ id: worklog.user_id });
+  if (worklog.user_id !== user.id) {
+    throw new Error('User mismatch.');
+  }
 
   return await Sentry.startSpan(
     { name: 'updateWorklog', op: 'db.sql.prisma' },
@@ -114,8 +124,14 @@ export async function updateWorklog(
 }
 
 export async function deleteWorklog(worklogId: number): Promise<void> {
+  const user = await getUserFromSession();
+  if (!user) {
+    throw new Error('User not found in session.');
+  }
   const worklog = await getWorklog(worklogId);
-  await assertUserMatchWithSession({ id: worklog.user_id });
+  if (worklog.user_id !== user.id) {
+    throw new Error('User mismatch.');
+  }
 
   return await Sentry.startSpan(
     { name: 'deleteWorklog', op: 'db.sql.prisma' },

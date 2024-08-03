@@ -27,20 +27,14 @@ export default async function RootLayout({
         name: session.user.name ?? '',
       })
     : null;
-  const user = data?.[0] ?? null;
   const settings = data?.[1] ?? null;
-  const worklogs = user ? await getWorklogs(user.id) : [];
+  const worklogs = session ? await getWorklogs() : [];
 
   return (
     <html lang="en">
       <body className={`${inter.className} bg-base-100 text-base-content`}>
         <AuthProvider session={session}>
-          <Navbar
-            user={user}
-            settings={settings}
-            session={session}
-            worklogs={worklogs}
-          >
+          <Navbar settings={settings} session={session} worklogs={worklogs}>
             {children}
           </Navbar>
         </AuthProvider>

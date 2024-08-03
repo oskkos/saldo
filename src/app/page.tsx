@@ -2,7 +2,6 @@ import { getSettings } from '@/repository/settingsRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { startOfMonth } from '@/util/date';
 import MiniCalendar from '@/components/miniCalendar';
-import { getUserFromSession } from '@/auth/authSession';
 import { assertExists, assertIsYearAndMonth } from '@/util/assertionFunctions';
 import { Date_YearAndMonth } from '@/util/dateFormatter';
 
@@ -11,12 +10,8 @@ export default async function Home({
 }: {
   searchParams: { month: string };
 }) {
-  const user = await getUserFromSession();
-  if (!user) {
-    return null;
-  }
-  const worklogs = await getWorklogs(user.id);
-  const settings = await getSettings(user.id);
+  const worklogs = await getWorklogs();
+  const settings = await getSettings();
   assertExists(settings);
   if (searchParams.month) {
     assertIsYearAndMonth(searchParams.month);

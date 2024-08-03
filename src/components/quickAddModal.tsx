@@ -13,12 +13,10 @@ import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from './toastContext';
 
 export default function QuickAddWorklogModal({
-  userId,
   modalId,
   defaults,
   onSubmit,
 }: {
-  userId: number;
   modalId: string;
   defaults: { fromDefault: Date_Time; toDefault: Date_Time };
   onSubmit: (worklog: Worklog) => void;
@@ -44,7 +42,7 @@ export default function QuickAddWorklogModal({
         to: toDate(value.day, value.to),
       };
 
-      return onWorklogSubmit(userId, ret);
+      return onWorklogSubmit(ret);
     }, onSubmit)
       .then(() => {
         setMsg({ type: 'success', message: 'Worklog created' });

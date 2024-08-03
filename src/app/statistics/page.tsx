@@ -12,8 +12,8 @@ import WorkMinutesPerDayChart from './workMinutesPerDayChart';
 import { getSettings } from '@/repository/settingsRepository';
 import { endOfDay, isNonWorkingDay } from '@/util/date';
 
-async function getWorklogData(userId: number, beginDate: Date) {
-  const worklogs = await getWorklogs(userId);
+async function getWorklogData(beginDate: Date) {
+  const worklogs = await getWorklogs();
   const { workDayWorklogs, absenceWorklogs } = worklogs.reduce(
     (acc, worklog) => {
       if (worklog.from.getTime() < beginDate.getTime()) {
@@ -64,14 +64,14 @@ export default async function Statistics() {
   if (!user) {
     return null;
   }
-  const settings = await getSettings(user.id);
+  const settings = await getSettings();
   if (!settings) {
     return null;
   }
   const beginDate = settings.beginDate;
 
   const { workMinutesPerDay, absenceMap, totalWorkMinutes } =
-    await getWorklogData(user.id, beginDate);
+    await getWorklogData(beginDate);
   const [minTuple, maxTuple] = getDayWithMinMaxHours(workMinutesPerDay);
   const absences = Array.from(absenceMap).reduce(
     (acc, [absence, count]) => [

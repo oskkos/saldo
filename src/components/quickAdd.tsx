@@ -6,10 +6,8 @@ import { showModal } from './modal';
 import { Date_Time } from '@/util/dateFormatter';
 
 export default function QuickAdd({
-  userId,
   defaults,
 }: {
-  userId: number;
   defaults: { fromDefault: Date_Time; toDefault: Date_Time };
 }) {
   const quickAddWorklogModalId = `worklog-new-worklog-modal`;
@@ -30,7 +28,6 @@ export default function QuickAdd({
         }}
       />
       <QuickAddWorklogModal
-        userId={userId}
         modalId={quickAddWorklogModalId}
         defaults={defaults}
         onSubmit={() => {

@@ -111,7 +111,7 @@ export default function Settings({ settings }: { settings: SettingsType }) {
                 if (timeIsGt(data.fromDefault, data.toDefault)) {
                   throw new Error('From time must be before to time');
                 }
-                return onSettingsUpdate(settings.userId, {
+                return onSettingsUpdate({
                   initialBalanceHours: data.initialBalanceHours || 0,
                   initialBalanceMins: data.initialBalanceMins || 0,
                   beginDate: data.beginDate,
