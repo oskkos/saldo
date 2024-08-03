@@ -40,9 +40,6 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: 'jwt',
   },
-  theme: {
-    logo: '/img/saldo.png',
-  },
   pages: {
     signIn: '/signin',
     signOut: '/auth/signout',
