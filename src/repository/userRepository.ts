@@ -1,8 +1,11 @@
+import 'server-only';
+
 import { AuthUser, User } from '@/types';
 import { User as PrismaUser } from '@prisma/client';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
 import bcrypt from 'bcrypt';
+import { assertUserMatchWithSession } from './util';
 
 const toUser = (user: PrismaUser): User => ({
   id: user.id,
@@ -11,6 +14,8 @@ const toUser = (user: PrismaUser): User => ({
 });
 
 export async function upsertUser({ email, name }: AuthUser): Promise<User> {
+  await assertUserMatchWithSession({ email });
+
   return await Sentry.startSpan(
     { name: 'upsertUser', op: 'db.sql.prisma' },
     async () => {

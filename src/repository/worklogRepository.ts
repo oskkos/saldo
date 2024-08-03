@@ -1,8 +1,11 @@
+import 'server-only';
+
 import { prisma } from './prisma';
 import { Worklog as PrismaWorklog } from '@prisma/client';
 import { Worklog, WorklogFormData } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
+import { assertUserMatchWithSession } from './util';
 
 const toAbsenceReason = (absence: string | null) => {
   if (!absence) {
@@ -25,6 +28,8 @@ export async function getWorklogs(
   from?: Date,
   to?: Date,
 ): Promise<Worklog[]> {
+  await assertUserMatchWithSession({ id: userId });
+
   return await Sentry.startSpan(
     { name: 'getWorklogs', op: 'db.sql.prisma' },
     async (span) => {
@@ -52,6 +57,8 @@ export async function insertWorklog(
   userId: number,
   { from, to, comment, subtractLunchBreak, absence }: WorklogFormData,
 ): Promise<Worklog> {
+  await assertUserMatchWithSession({ id: userId });
+
   return await Sentry.startSpan(
     { name: 'insertWorklog', op: 'db.sql.prisma' },
     async () => {
@@ -70,12 +77,27 @@ export async function insertWorklog(
   );
 }
 
+async function getWorklog(worklogId: number) {
+  return { user_id: 1 };
+  return await Sentry.startSpan(
+    { name: 'getWorklog', op: 'db.sql.prisma' },
+    async () => {
+      return await prisma.worklog.findUniqueOrThrow({
+        where: { id: worklogId },
+      });
+    },
+  );
+}
+
 export async function updateWorklog(
   worklogId: number,
   { from, to, comment, subtractLunchBreak }: WorklogFormData,
 ): Promise<Worklog> {
+  const worklog = await getWorklog(worklogId);
+  await assertUserMatchWithSession({ id: worklog.user_id });
+
   return await Sentry.startSpan(
-    { name: 'updatetWorklog', op: 'db.sql.prisma' },
+    { name: 'updateWorklog', op: 'db.sql.prisma' },
     async () => {
       const worklog = await prisma.worklog.update({
         where: { id: worklogId },
@@ -92,6 +114,9 @@ export async function updateWorklog(
 }
 
 export async function deleteWorklog(worklogId: number): Promise<void> {
+  const worklog = await getWorklog(worklogId);
+  await assertUserMatchWithSession({ id: worklog.user_id });
+
   return await Sentry.startSpan(
     { name: 'deleteWorklog', op: 'db.sql.prisma' },
     async () => {
