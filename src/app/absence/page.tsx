@@ -7,5 +7,5 @@ export default async function AbsencePage() {
     return null;
   }
 
-  return <Absence userId={user.id} />;
+  return <Absence />;
 }

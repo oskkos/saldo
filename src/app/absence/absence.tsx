@@ -11,7 +11,7 @@ import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useContext, useState } from 'react';
 
-export default function Absence({ userId }: { userId: number }) {
+export default function Absence() {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [data, setData] = useState<AbsenceData>({
@@ -122,9 +122,7 @@ export default function Absence({ userId }: { userId: number }) {
                 x = add(x, 1, 'day');
               }
               // TODO: Handle all in one call
-              return Promise.all(
-                worklogs.map((ret) => onWorklogSubmit(userId, ret)),
-              );
+              return Promise.all(worklogs.map((ret) => onWorklogSubmit(ret)));
             };
             startTransitionWrapper(action)
               .then(() => {

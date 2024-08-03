@@ -21,7 +21,7 @@ import { SignupSchema } from '@/schemas/signupSchema';
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user);
-  const settings = await insertSettings(u.id, {
+  const settings = await insertSettings({
     beginDate: startOfDay(),
     initialBalanceHours: 0,
     initialBalanceMins: 0,
@@ -52,8 +52,8 @@ export async function onAfterSignup(data: unknown) {
   };
 }
 
-export async function onWorklogSubmit(userId: number, data: WorklogFormData) {
-  const worklog = await insertWorklog(userId, data);
+export async function onWorklogSubmit(data: WorklogFormData) {
+  const worklog = await insertWorklog(data);
   return worklog;
 }
 
@@ -66,8 +66,8 @@ export async function onWorklogEdit(worklogId: number, data: WorklogFormData) {
   return worklog;
 }
 
-export async function onSettingsUpdate(userId: number, data: SettingsData) {
-  const settings = await upsertSettings(userId, data);
+export async function onSettingsUpdate(data: SettingsData) {
+  const settings = await upsertSettings(data);
   return settings;
 }
 export async function onCredentialsSignin(email: string, password: string) {

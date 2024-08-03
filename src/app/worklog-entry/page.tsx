@@ -2,8 +2,7 @@ import { getWorklogs } from '@/repository/worklogRepository';
 import WorklogEntry from './worklogEntry';
 import { onWorklogSubmit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
-import { getUserFromSession } from '@/auth/authSession';
-import { assertIsISODay } from '@/util/assertionFunctions';
+import { assertExists, assertIsISODay } from '@/util/assertionFunctions';
 import { getSettings } from '@/repository/settingsRepository';
 
 export default async function WorklogEntryPage({
@@ -11,18 +10,11 @@ export default async function WorklogEntryPage({
 }: {
   searchParams: { day: string };
 }) {
-  const user = await getUserFromSession();
-  if (!user) {
-    return null;
-  }
-  const settings = await getSettings(user.id);
-  if (!settings) {
-    return null;
-  }
+  const settings = await getSettings();
+  assertExists(settings);
 
   assertIsISODay(searchParams.day);
   const worklogs = await getWorklogs(
-    user.id,
     startOfDay(searchParams.day),
     endOfDay(searchParams.day),
   );
@@ -35,7 +27,7 @@ export default async function WorklogEntryPage({
         toDefault: settings.toDefault,
       }}
       worklogs={worklogs}
-      onSubmit={onWorklogSubmit.bind(null, user.id)}
+      onSubmit={onWorklogSubmit}
     />
   );
 }

@@ -56,7 +56,6 @@ export interface Worklog {
 }
 export interface Settings {
   id: number;
-  userId: number;
   beginDate: Date;
   initialBalanceHours: number;
   initialBalanceMins: number;
