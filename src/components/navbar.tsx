@@ -46,7 +46,7 @@ export default function Navbar({
             </ul>
           </div>
 
-          {user && settings ? (
+          {user && settings && session ? (
             [
               <div key="saldoBadge" className="grow justify-center">
                 <SaldoBadge settings={settings} worklogs={worklogs} />
