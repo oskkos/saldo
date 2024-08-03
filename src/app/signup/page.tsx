@@ -54,7 +54,7 @@ export default function Signup() {
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="card-body items-center">
             <div className="card-title">
-              <Image src="/img/saldo.png" alt="" width={70} height={70}></Image>
+              <Image src="/img/saldo.png" alt="" width={64} height={64}></Image>
               <span className="text-2xl">saldo</span>
             </div>
             <div>

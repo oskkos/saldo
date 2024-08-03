@@ -43,6 +43,11 @@ export const authOptions: NextAuthOptions = {
   theme: {
     logo: '/img/saldo.png',
   },
+  pages: {
+    signIn: '/signin',
+    signOut: '/auth/signout',
+    error: '/auth/error',
+  },
 };
 
 export async function getSession() {

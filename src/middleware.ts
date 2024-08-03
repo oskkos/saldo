@@ -10,10 +10,11 @@ function middleware() {
 export default withAuth(middleware, {
   callbacks: {
     authorized({ req, token }) {
-      if (req.nextUrl.pathname === '/signup') {
+      const path = req.nextUrl.pathname;
+      if (path === '/signup' || path === '/signin') {
         return true;
       }
-      if (req.nextUrl.pathname.split('/')[1] === 'img') {
+      if (path.split('/')[1] === 'img') {
         return true;
       }
       if (token) {
