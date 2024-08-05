@@ -1,24 +1,26 @@
 'use client';
 
+import { onForgotPassword } from '@/actions';
 import { TextInput } from '@/components/form/textInput';
+import Message from '@/components/message';
 import {
   ForgotPasswordData,
   forgotPasswordSchemaResolver,
 } from '@/schemas/forgotPasswordSchema';
 import Image from 'next/image';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { MdMail } from 'react-icons/md';
 
-/*
-<mail logo> Email Sent
-We will send you an email with instructions to reset your password if the email is valid.
-
-<a>Back to Sign in</a>
-
-*/
+const successTitle = <h3 className="font-bold">Email sent!</h3>;
+const successDescription = (
+  <span className="text-left">
+    We will send you an email with instructions to reset your password if the
+    email is valid.
+  </span>
+);
 
 export function Form() {
-  const msg = '';
   const {
     register,
     handleSubmit,
@@ -27,8 +29,28 @@ export function Form() {
     resolver: forgotPasswordSchemaResolver,
   });
 
-  const onSubmit = (data: ForgotPasswordData) => {
-    console.log(data);
+  const [msg, setMsg] = useState<JSX.Element | null>(null);
+
+  const onSubmit = async (data: ForgotPasswordData) => {
+    try {
+      const ret = await onForgotPassword(data);
+      if (ret.status === 'success') {
+        setMsg(
+          <Message
+            type="success"
+            title={successTitle}
+            description={successDescription}
+            icon={<MdMail />}
+          />,
+        );
+      }
+      if (ret.status === 'error') {
+        // todo: handleFieldErrors(ret.errors ?? {}, setError);
+      }
+    } catch (e) {
+      const err = e instanceof Error ? e.message : 'An error occurred.';
+      setMsg(<Message type="error" title={err} />);
+    }
   };
 
   return (
