@@ -9,14 +9,25 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  email      String    @unique
-  name       String?
-  worklogs   Worklog[]
-  settings   Settings?
-  password   String?
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  name              String?
+  worklogs          Worklog[]
+  settings          Settings?
+  passwordResetData PasswordResetData?
+  password          String?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+}
+
+model PasswordResetData {
+  id         Int      @id @default(autoincrement())
+  user_id    Int      @unique
+  user       User     @relation(fields: [user_id], references: [id])
+  token      String   @unique
+  expires_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
 model Worklog {
