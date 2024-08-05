@@ -99,7 +99,6 @@ export default function Signup() {
           </div>
           {msg}
           <div className="flex flex-col items-center">
-            <div className="text-lg font-bold mt-4">Signup</div>
             {/* eslint-disable-next-line @typescript-eslint/no-misused-promises*/}
             <form onSubmit={handleSubmit(onSubmit)}>
               <TextInput
@@ -152,7 +151,7 @@ export default function Signup() {
           <p className="text-sm font-light">
             Already have an account?{' '}
             <a href="/signin" className="font-medium hover:underline">
-              Login here
+              Sign in
             </a>
           </p>
         </div>

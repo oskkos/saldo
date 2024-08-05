@@ -44,8 +44,11 @@ export default function Signin({ error }: { error: string | undefined }) {
             <div className="text-xs mb-3">
               No Google or GitHub? Sign in with email and password.
             </div>
-            {/* eslint-disable-next-line @typescript-eslint/no-misused-promises*/}
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form
+              // eslint-disable-next-line @typescript-eslint/no-misused-promises
+              onSubmit={handleSubmit(onSubmit)}
+              className="flex items-center flex-col"
+            >
               <TextInput
                 label="Email"
                 name="email"
@@ -67,6 +70,12 @@ export default function Signin({ error }: { error: string | undefined }) {
               <button type="submit" className="btn btn-primary mt-3 w-full">
                 Sign in
               </button>
+              <a
+                href="/forgot-password"
+                className="text-sm mt-2 hover:underline font-medium"
+              >
+                Forgot password?
+              </a>
             </form>
           </div>
 
@@ -75,7 +84,7 @@ export default function Signin({ error }: { error: string | undefined }) {
           <p className="text-sm font-light">
             New to saldo?{' '}
             <a href="/signup" className="font-medium hover:underline">
-              Signup here
+              Sign up
             </a>
           </p>
         </div>
