@@ -6,6 +6,7 @@ import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
 import bcrypt from 'bcrypt';
 import { getSession } from '@/auth/authSession';
+import { add } from '@/util/date';
 
 const toUser = (user: PrismaUser): User => ({
   id: user.id,
@@ -93,6 +94,23 @@ export async function getUserByEmailAndPassword(
         return toUser(user);
       }
       throw new Error('Invalid password');
+    },
+  );
+}
+
+export async function upsertPasswordResetData(
+  userId: number,
+  hashedToken: string,
+) {
+  const expiresAt = add(new Date(), 1, 'hour');
+  return await Sentry.startSpan(
+    { name: 'upsertPasswordResetData', op: 'db.sql.prisma' },
+    async () => {
+      await prisma.passwordResetData.upsert({
+        where: { user_id: userId },
+        create: { user_id: userId, token: hashedToken, expires_at: expiresAt },
+        update: { token: hashedToken, expires_at: expiresAt },
+      });
     },
   );
 }
