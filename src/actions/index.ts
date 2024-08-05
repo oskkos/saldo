@@ -20,7 +20,7 @@ import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { SignupSchema } from '@/schemas/signupSchema';
 
 export async function onAfterSignin(user: AuthUser) {
-  const u = await upsertUser(user);
+  const u = await upsertUser(user.name ?? '');
   const settings = await insertSettings({
     beginDate: startOfDay(),
     initialBalanceHours: 0,
@@ -31,7 +31,7 @@ export async function onAfterSignin(user: AuthUser) {
   return [u, settings] as const;
 }
 
-export async function onAfterSignup(data: unknown) {
+export async function onAfterSignup(data: SignupData) {
   const result = SignupSchema.safeParse(data);
   if (!result.success) {
     const errors = Object.fromEntries(
@@ -70,6 +70,7 @@ export async function onSettingsUpdate(data: SettingsData) {
   const settings = await upsertSettings(data);
   return settings;
 }
+
 export async function onCredentialsSignin(email: string, password: string) {
   try {
     return await getUserByEmailAndPassword(email, password);

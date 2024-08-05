@@ -5,7 +5,7 @@ import { User as PrismaUser } from '@prisma/client';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
 import bcrypt from 'bcrypt';
-import { getUserFromSession } from '@/auth/authSession';
+import { getSession } from '@/auth/authSession';
 
 const toUser = (user: PrismaUser): User => ({
   id: user.id,
@@ -13,24 +13,23 @@ const toUser = (user: PrismaUser): User => ({
   name: user.name,
 });
 
-export async function upsertUser({ email, name }: AuthUser): Promise<User> {
-  const user = await getUserFromSession();
-  if (!user) {
-    throw new Error('User not found in session.');
-  }
-
+export async function upsertUser(name: string): Promise<User> {
   return await Sentry.startSpan(
     { name: 'upsertUser', op: 'db.sql.prisma' },
     async () => {
-      const primaUser = await prisma.user.upsert({
-        where: { id: user.id },
+      const sessionUser = (await getSession())?.user;
+      if (!sessionUser?.email) {
+        throw new Error('User not found in session.');
+      }
+      const prismaUser = await prisma.user.upsert({
+        where: { email: sessionUser.email },
         create: {
-          email,
+          email: sessionUser.email,
           name,
         },
         update: { name },
       });
-      return toUser(primaUser);
+      return toUser(prismaUser);
     },
   );
 }
