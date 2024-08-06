@@ -1,13 +1,13 @@
 import Mailjet from 'node-mailjet';
 import 'server-only';
 
-export function sendResetPasswordMail(recipient: string, token: string) {
+export async function sendResetPasswordMail(recipient: string, token: string) {
   const mailjet = Mailjet.apiConnect(
     process.env.MAILJET_API_KEY as string,
     process.env.MAILJET_SECRET_KEY as string,
   );
 
-  const request = mailjet.post('send', { version: 'v3.1' }).request({
+  await mailjet.post('send', { version: 'v3.1' }).request({
     Messages: [
       {
         From: {
@@ -28,11 +28,4 @@ export function sendResetPasswordMail(recipient: string, token: string) {
       },
     ],
   });
-  request
-    .then((result) => {
-      console.log(result.body);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
 }

@@ -7,6 +7,7 @@ import * as Sentry from '@sentry/nextjs';
 import bcrypt from 'bcrypt';
 import { getSession } from '@/auth/authSession';
 import { add } from '@/util/date';
+import { createHash } from 'node:crypto';
 
 const toUser = (user: PrismaUser): User => ({
   id: user.id,
@@ -98,10 +99,8 @@ export async function getUserByEmailAndPassword(
   );
 }
 
-export async function upsertPasswordResetData(
-  userId: number,
-  hashedToken: string,
-) {
+export async function upsertPasswordResetData(userId: number, token: string) {
+  const hashedToken = createHash('sha256').update(token).digest('hex');
   const expiresAt = add(new Date(), 1, 'hour');
   return await Sentry.startSpan(
     { name: 'upsertPasswordResetData', op: 'db.sql.prisma' },
@@ -113,4 +112,42 @@ export async function upsertPasswordResetData(
       });
     },
   );
+}
+
+export async function getUserByPasswordResetToken(token: string) {
+  const hashedToken = createHash('sha256').update(token).digest('hex');
+
+  return await Sentry.startSpan(
+    { name: 'getUserByPasswordResetToken', op: 'db.sql.prisma' },
+    async () => {
+      const data = await prisma.passwordResetData.findUnique({
+        where: { token: hashedToken, expires_at: { gt: new Date() } },
+        include: { user: true },
+      });
+      return data?.user ? toUser(data.user) : null;
+    },
+  );
+}
+
+export async function updatePasswordByResetToken(
+  token: string,
+  password: string,
+) {
+  const user = await getUserByPasswordResetToken(token);
+  if (!user) {
+    throw new Error('Invalid token');
+  }
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: {
+      password: hashedPassword,
+    },
+  });
+  await prisma.passwordResetData.delete({
+    where: { user_id: user.id },
+  });
 }

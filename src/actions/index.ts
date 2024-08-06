@@ -5,6 +5,7 @@ import {
   getUser,
   getUserByEmailAndPassword,
   signupUser,
+  updatePasswordByResetToken,
   upsertPasswordResetData,
   upsertUser,
 } from '@/repository/userRepository';
@@ -24,8 +25,12 @@ import {
   ForgotPasswordData,
   ForgotPasswordSchema,
 } from '@/schemas/forgotPasswordSchema';
-import { randomBytes, createHash } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { sendResetPasswordMail } from '@/services/forgotPasswordMailSender';
+import {
+  ResetPasswordData,
+  ResetPasswordSchema,
+} from '@/schemas/resetPasswordSchema';
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user.name ?? '');
@@ -97,19 +102,37 @@ export async function onForgotPassword(data: ForgotPasswordData) {
     return { status: 'error', errors: errors };
   }
   const email = result.data.email;
-  const token = randomBytes(32).toString('hex');
-  const hash = createHash('sha256').update(token).digest('hex');
   const user = await getUser(email);
 
   if (!user) {
-    console.log('user not found');
+    console.log(
+      `Tried to reset password with email <${email}> but user not found`,
+    );
     return {
       status: 'success',
     };
   }
 
-  await upsertPasswordResetData(user.id, hash);
-  sendResetPasswordMail(email, token);
+  const token = randomBytes(32).toString('hex');
+  await upsertPasswordResetData(user.id, token);
+  await sendResetPasswordMail(email, token);
+
+  return {
+    status: 'success',
+  };
+}
+
+export async function onResetPassword(data: ResetPasswordData) {
+  const result = ResetPasswordSchema.safeParse(data);
+  if (!result.success) {
+    const errors = Object.fromEntries(
+      result.error?.issues?.map((issue) => [issue.path[0], issue.message]) ||
+        [],
+    );
+    return { status: 'error', errors: errors };
+  }
+  const token = data.token;
+  await updatePasswordByResetToken(token, data.password);
 
   return {
     status: 'success',
