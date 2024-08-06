@@ -3,7 +3,7 @@
 import Image from 'next/image';
 import { signIn } from 'next-auth/react';
 
-export const OAuthButton = ({
+const OAuthButton = ({
   name,
   id,
   imgSrc,
@@ -18,3 +18,12 @@ export const OAuthButton = ({
     <span className="text-xs mt-0">Sign in with {name}</span>
   </button>
 );
+
+export function OAuthSignin() {
+  return (
+    <div className="flex items-center gap-2 mt-4">
+      <OAuthButton name="Google" id="google" imgSrc="/img/google.svg" />
+      <OAuthButton name="GitHub" id="github" imgSrc="/img/github.svg" />
+    </div>
+  );
+}
