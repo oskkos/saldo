@@ -1,11 +1,14 @@
 import { getSession } from '@/auth/authSession';
-import SigninUI from './signin';
 import { redirect } from 'next/navigation';
+import { ErrorMessage } from './errorMessage';
+import { OAuthSignin } from './oauthSignin';
+import { CredentialsSignin } from './credentialsSignin';
+import { Card } from '../card';
+import { SignupPageLink } from './signupPageLink';
 
 export default async function Signin({
   searchParams,
 }: {
-  params: { slug: string };
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
   const session = await getSession();
@@ -13,9 +16,16 @@ export default async function Signin({
     redirect('/');
   }
 
-  const error =
-    searchParams.error instanceof Array
-      ? searchParams.error.join(', ')
-      : searchParams.error;
-  return <SigninUI error={error} />;
+  const content = [
+    <OAuthSignin key="oauth-signin" />,
+    <CredentialsSignin key="credentials-signin" />,
+    <SignupPageLink key="signup-page-link" />,
+  ];
+
+  return (
+    <Card
+      message={<ErrorMessage error={searchParams.error} />}
+      content={content}
+    />
+  );
 }
