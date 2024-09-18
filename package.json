@@ -31,7 +31,7 @@
     "dayjs": "^1.11.11",
     "eslint": "8.57.0",
     "eslint-config-next": "14.2.4",
-    "next": "14.2.4",
+    "next": "14.2.12",
     "next-auth": "^4.24.7",
     "node-mailjet": "^6.0.6",
     "postcss": "8.4.39",
