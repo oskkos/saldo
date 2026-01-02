@@ -1,9 +1,11 @@
+import type { ReactNode } from 'react';
+
 export default function Toast({
   type,
   msg,
 }: {
   type?: 'info' | 'success' | 'warning' | 'error';
-  msg: string | JSX.Element;
+  msg: ReactNode;
 }) {
   const map = {
     info: 'alert-info',

@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { TextInput } from '@/components/form/textInput';
 import {
   ResetPasswordData,
@@ -22,8 +23,8 @@ const successMsg = (
 
 const onSubmit = async (
   data: ResetPasswordData,
-  onSuccess: (msg: string | JSX.Element) => void,
-  onError: (msg: string | JSX.Element) => void,
+  onSuccess: (msg: ReactNode) => void,
+  onError: (msg: ReactNode) => void,
   setError: UseFormSetError<ResetPasswordData>,
 ) => {
   try {
@@ -51,8 +52,8 @@ export function ResetPasswordForm({
   onError,
 }: {
   token: string;
-  onSuccess: (msg: string | JSX.Element) => void;
-  onError: (msg: string | JSX.Element) => void;
+  onSuccess: (msg: ReactNode) => void;
+  onError: (msg: ReactNode) => void;
 }) {
   const {
     register,
@@ -60,7 +61,7 @@ export function ResetPasswordForm({
     formState: { errors },
     setError,
   } = useForm<ResetPasswordData>({
-    resolver: resetPasswordSchemaResolver,
+    resolver: resetPasswordSchemaResolver as any,
   });
 
   return (

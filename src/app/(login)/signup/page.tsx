@@ -1,17 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { SigninPageLink } from './signinPageLink';
 import { Card } from '../card';
 import { SignupForm } from './signupForm';
 import Message from '@/components/message';
 
 export default function Signup() {
-  const [msg, setMsg] = useState<JSX.Element | undefined>(undefined);
-  const onSuccess = (successMsg: string | JSX.Element) => {
+  const [msg, setMsg] = useState<ReactElement | undefined>(undefined);
+  const onSuccess = (successMsg: ReactNode) => {
     setMsg(<Message type="success" title={successMsg} />);
   };
-  const onError = (errorMsg: string | JSX.Element) => {
+  const onError = (errorMsg: ReactNode) => {
     setMsg(<Message type="error" title={errorMsg} />);
   };
 

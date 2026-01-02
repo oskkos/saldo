@@ -1,11 +1,13 @@
 import Image from 'next/image';
 
+import type { ReactElement } from 'react';
+
 export function Card({
   message,
   content,
 }: {
-  message?: JSX.Element;
-  content: JSX.Element[];
+  message?: ReactElement;
+  content: ReactElement[];
 }) {
   return (
     <div className="w-full flex items-center justify-center">
@@ -33,7 +35,7 @@ export function Card({
               );
             }
             return acc;
-          }, [] as JSX.Element[])}
+          }, [] as ReactElement[])}
         </div>
       </div>
     </div>

@@ -2,16 +2,14 @@
 
 import Message from '@/components/message';
 import { useState } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { Card } from '../card';
 import { SigninPageLink } from './signinPageLink';
 import { ResetPasswordForm } from './resetPasswordForm';
 
 export function Page2({ token }: { token: string }) {
-  const [msg, setMsg] = useState<JSX.Element | undefined>(undefined);
-  const onSuccess = (
-    successMsg: string | JSX.Element,
-    successDescription?: string | JSX.Element,
-  ) => {
+  const [msg, setMsg] = useState<ReactElement | undefined>(undefined);
+  const onSuccess = (successMsg: ReactNode, successDescription?: ReactNode) => {
     setMsg(
       <Message
         type="success"
@@ -20,7 +18,7 @@ export function Page2({ token }: { token: string }) {
       />,
     );
   };
-  const onError = (errorMsg: string | JSX.Element) => {
+  const onError = (errorMsg: ReactNode) => {
     setMsg(<Message type="error" title={errorMsg} />);
   };
 

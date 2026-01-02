@@ -9,7 +9,7 @@ import Toast from './toast';
 
 interface ToastMsg {
   type?: 'info' | 'success' | 'warning' | 'error';
-  message: string | JSX.Element;
+  message: ReactNode;
 }
 
 export const ToastContext = createContext<{
@@ -29,7 +29,7 @@ export default function ToastContextWrapper({
 }) {
   const [msg, setMsg] = useState<{
     type?: 'info' | 'success' | 'warning' | 'error';
-    message: string | JSX.Element;
+    message: ReactNode;
   } | null>(null);
 
   if (msg) {

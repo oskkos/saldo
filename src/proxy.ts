@@ -1,6 +1,6 @@
 import { withAuth } from 'next-auth/middleware';
 
-function middleware() {
+function proxy() {
   /*
     placeholder for custom middleware code
     https://nextjs.org/docs/app/building-your-application/routing/middleware
@@ -14,7 +14,7 @@ const unAuthorizedPaths = [
   '/reset-password',
 ];
 
-export default withAuth(middleware, {
+export default withAuth(proxy, {
   callbacks: {
     authorized({ req, token }) {
       const path = req.nextUrl.pathname;

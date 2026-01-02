@@ -44,10 +44,13 @@ export default function WorklogEntry({
   const [wl, setWl] = useState(worklogs);
 
   const ref = useRef<HTMLDivElement>(null);
-  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, {
-    threshold: 80,
-    preventDefault: false,
-  });
+  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(
+    ref as unknown as React.RefObject<HTMLElement>,
+    {
+      threshold: 80,
+      preventDefault: false,
+    },
+  );
   onSwipeLeft(() => {
     router.push(`/worklog-entry?day=${toISODay(add(day, 1, 'day'))}`);
   });

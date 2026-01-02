@@ -11,6 +11,7 @@ import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
 import WorkMinutesPerDayChart from './workMinutesPerDayChart';
 import { getSettings } from '@/repository/settingsRepository';
 import { endOfDay, isNonWorkingDay } from '@/util/date';
+import type { ReactElement } from 'react';
 
 async function getWorklogData(beginDate: Date) {
   const worklogs = await getWorklogs();
@@ -79,7 +80,7 @@ export default async function Statistics() {
       <span key={absence}>{absenceReasonToString(absence)}</span>,
       <span key={`${absence}-${count}`}>{count}</span>,
     ],
-    [] as JSX.Element[],
+    [] as ReactElement[],
   );
   return (
     <div className="flex flex-col flex-nowrap justify-center items-center mt-3">

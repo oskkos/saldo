@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { onAfterSignup } from '@/actions';
 import { TextInput } from '@/components/form/textInput';
 import {
@@ -22,8 +23,8 @@ const successMsg = (
 
 const onSubmit = async (
   data: SignupData,
-  onSuccess: (msg: string | JSX.Element) => void,
-  onError: (msg: string | JSX.Element) => void,
+  onSuccess: (msg: ReactNode) => void,
+  onError: (msg: ReactNode) => void,
   setError: UseFormSetError<SignupData>,
 ) => {
   try {
@@ -44,8 +45,8 @@ export function SignupForm({
   onSuccess,
   onError,
 }: {
-  onSuccess: (msg: string | JSX.Element) => void;
-  onError: (msg: string | JSX.Element) => void;
+  onSuccess: (msg: ReactNode) => void;
+  onError: (msg: ReactNode) => void;
 }) {
   const {
     register,
@@ -53,7 +54,7 @@ export function SignupForm({
     formState: { errors },
     setError,
   } = useForm<SignupData>({
-    resolver: signupSchemaResolver,
+    resolver: signupSchemaResolver as any,
   });
 
   return (
