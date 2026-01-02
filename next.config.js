@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  distDir: 'build', // Avoid permission issues in .next
   images: {
     remotePatterns: [
       {

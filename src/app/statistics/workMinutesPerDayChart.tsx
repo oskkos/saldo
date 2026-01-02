@@ -20,7 +20,9 @@ export const options = {
     tooltip: {
       callbacks: {
         title: function (x: TooltipItem<'line'>[]) {
-          return toDayMonthYear(new Date(x[0].parsed.x));
+          const parsedX = x[0].parsed.x;
+          if (parsedX == null) return '';
+          return toDayMonthYear(new Date(parsedX));
         },
       },
     },
