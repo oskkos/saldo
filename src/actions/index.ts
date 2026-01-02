@@ -54,10 +54,11 @@ export async function onAfterSignup(data: SignupData) {
     return { status: 'error', errors: errors };
   }
 
+  const parsed = result.data as SignupData;
   await signupUser({
-    name: result.data.name,
-    email: result.data.email,
-    password: result.data.password,
+    name: parsed.name,
+    email: parsed.email,
+    password: parsed.password,
   });
 
   return {
@@ -101,7 +102,7 @@ export async function onForgotPassword(data: ForgotPasswordData) {
     );
     return { status: 'error', errors: errors };
   }
-  const email = result.data.email;
+  const email = (result.data as ForgotPasswordData).email;
   const user = await getUser(email);
 
   if (!user) {

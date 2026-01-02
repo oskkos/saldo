@@ -10,7 +10,7 @@ import {
 describe('assertionFunctions module', () => {
   describe('assertIsISODay', () => {
     test('should throw an error for an invalid date', () => {
-      expect(() => assertIsISODay('2023-xx-yy')).toThrowError(
+      expect(() => assertIsISODay('2023-xx-yy')).toThrow(
         'Not a valid ISO day: 2023-xx-yy',
       );
     });
@@ -22,9 +22,7 @@ describe('assertionFunctions module', () => {
 
   describe('assertIsTime', () => {
     test('should throw an error for an invalid time', () => {
-      expect(() => assertIsTime('xx:00')).toThrowError(
-        'Not a valid Time: xx:00',
-      );
+      expect(() => assertIsTime('xx:00')).toThrow('Not a valid Time: xx:00');
     });
 
     test('should not throw an error for a valid time', () => {
@@ -34,7 +32,7 @@ describe('assertionFunctions module', () => {
 
   describe('assertIsYearAndMonth', () => {
     test('should throw an error for an invalid date', () => {
-      expect(() => assertIsYearAndMonth('2023-aa')).toThrowError(
+      expect(() => assertIsYearAndMonth('2023-aa')).toThrow(
         'Not a valid YearAndMonth: 2023-aa',
       );
     });
@@ -46,7 +44,7 @@ describe('assertionFunctions module', () => {
 
   describe('assertExists', () => {
     test('should throw an error for a null value', () => {
-      expect(() => assertExists(null, 'Value should not be null')).toThrowError(
+      expect(() => assertExists(null, 'Value should not be null')).toThrow(
         'Value should not be null',
       );
     });
@@ -54,7 +52,7 @@ describe('assertionFunctions module', () => {
     test('should throw an error for an undefined value', () => {
       expect(() =>
         assertExists(undefined, 'Value should not be undefined'),
-      ).toThrowError('Value should not be undefined');
+      ).toThrow('Value should not be undefined');
     });
 
     test('should not throw an error for a defined value', () => {
@@ -65,7 +63,7 @@ describe('assertionFunctions module', () => {
 
   describe('assertIsAbsenceReason', () => {
     test('should throw an error for an invalid absence reason', () => {
-      expect(() => assertIsAbsenceReason('sick')).toThrowError(
+      expect(() => assertIsAbsenceReason('sick')).toThrow(
         'Not a valid absence reason: sick',
       );
     });

@@ -5,6 +5,7 @@ import type {
   RegisterOptions,
   UseFormRegister,
 } from 'react-hook-form';
+import type { ReactElement } from 'react';
 
 interface TextInputProps<T extends FieldValues> {
   label: string;
@@ -13,7 +14,7 @@ interface TextInputProps<T extends FieldValues> {
   options?: RegisterOptions<T, Path<T>>;
   error?: FieldError | undefined;
   register: UseFormRegister<T>;
-  icon?: JSX.Element;
+  icon?: ReactElement;
   value?: string;
 }
 

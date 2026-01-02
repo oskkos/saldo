@@ -1,5 +1,6 @@
 'use client';
 import { useRef } from 'react';
+import type { RefObject, ReactElement } from 'react';
 import { MdArrowBack, MdArrowForward, MdToday } from 'react-icons/md';
 import { add, startOfMonth, subtract } from '@/util/date';
 import { toISODay, toMonthAndYear, toYearAndMonth } from '@/util/dateFormatter';
@@ -39,10 +40,13 @@ export default function MiniCalendar({
   };
 
   const ref = useRef<HTMLDivElement>(null);
-  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(ref, {
-    threshold: 80,
-    preventDefault: false,
-  });
+  const { onSwipeLeft, onSwipeRight } = useSwipeEvents(
+    ref as unknown as RefObject<HTMLElement>,
+    {
+      threshold: 80,
+      preventDefault: false,
+    },
+  );
   onSwipeLeft(() => {
     toNextMonth();
   });
@@ -89,7 +93,7 @@ export default function MiniCalendar({
         <div key={i}>{x}</div>
       ))}
       {daysForCalendarBuilder(date, worklogsByDay).reduce(
-        (acc: JSX.Element[], day, index) => {
+        (acc: ReactElement[], day, index) => {
           if (index % 7 === 0) {
             acc.push(
               <WeekItem

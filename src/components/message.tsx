@@ -11,6 +11,8 @@ const getIconByType = (type: 'success' | 'error') => {
   }
 };
 
+import type { ReactNode, ReactElement } from 'react';
+
 export default function Message({
   type,
   title,
@@ -18,9 +20,9 @@ export default function Message({
   icon,
 }: {
   type: 'success' | 'error';
-  title: string | JSX.Element;
-  description?: string | JSX.Element;
-  icon?: JSX.Element;
+  title: ReactNode;
+  description?: ReactNode;
+  icon?: ReactElement;
 }) {
   return (
     <div

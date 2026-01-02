@@ -40,11 +40,13 @@ export interface AbsenceData {
   reason?: AbsenceReason;
   comment: string;
 }
+import type { ReactElement } from 'react';
+
 export interface SaldoForDay {
   hours: number;
   minutes: number;
   toString: () => string;
-  toBadge: (className?: string) => JSX.Element;
+  toBadge: (className?: string) => ReactElement;
 }
 export interface Worklog {
   id: number;

@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { onForgotPassword } from '@/actions';
 import { TextInput } from '@/components/form/textInput';
 import {
@@ -21,11 +22,8 @@ const successDescription = (
 
 const onSubmit = async (
   data: ForgotPasswordData,
-  onSuccess: (
-    msg: string | JSX.Element,
-    description?: string | JSX.Element,
-  ) => void,
-  onError: (msg: string | JSX.Element) => void,
+  onSuccess: (msg: ReactNode, description?: ReactNode) => void,
+  onError: (msg: ReactNode) => void,
   setError: UseFormSetError<ForgotPasswordData>,
 ) => {
   try {
@@ -50,11 +48,8 @@ export function ForgotPasswordForm({
   onSuccess,
   onError,
 }: {
-  onSuccess: (
-    msg: string | JSX.Element,
-    description?: string | JSX.Element,
-  ) => void;
-  onError: (msg: string | JSX.Element) => void;
+  onSuccess: (msg: ReactNode, description?: ReactNode) => void;
+  onError: (msg: ReactNode) => void;
 }) {
   const {
     register,
@@ -62,7 +57,7 @@ export function ForgotPasswordForm({
     formState: { errors },
     setError,
   } = useForm<ForgotPasswordData>({
-    resolver: forgotPasswordSchemaResolver,
+    resolver: forgotPasswordSchemaResolver as any,
   });
 
   return (
