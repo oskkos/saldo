@@ -46,7 +46,7 @@ export default function Navbar({
 
           {settings && session ? (
             [
-              <div key="saldoBadge" className="grow justify-center">
+              <div key="saldoBadge" className="flex grow justify-center">
                 <SaldoBadge settings={settings} worklogs={worklogs} />
               </div>,
               <QuickAdd
