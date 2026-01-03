@@ -9,7 +9,7 @@ export default function GlobalError({
 }) {
   return (
     <div className="flex flex-col justify-center items-center">
-      <div className="m-9 p-9 bg-neutral text-neutral-content shadow rounded">
+      <div className="m-9 p-9 bg-neutral text-neutral-content shadow-sm rounded-sm">
         <MdError className="w-16 h-16 text-error" />
         <h3 className="text-xl font-bold">
           Oops, something just went sideways

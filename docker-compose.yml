@@ -32,7 +32,7 @@ services:
   db:
     image: postgres:16
     ports:
-      - "3001:5432"    
+      - "3006:5432"    
     environment:
       POSTGRES_DB: saldo
       POSTGRES_USER: postgres
