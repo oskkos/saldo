@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  distDir: 'build', // Avoid permission issues in .next
+  ...(process.env.VERCEL ? {} : { distDir: 'build' }),
   images: {
     remotePatterns: [
       {
