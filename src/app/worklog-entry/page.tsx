@@ -8,20 +8,21 @@ import { getSettings } from '@/repository/settingsRepository';
 export default async function WorklogEntryPage({
   searchParams,
 }: {
-  searchParams: { day: string };
+  searchParams: Promise<{ day: string }>;
 }) {
   const settings = await getSettings();
   assertExists(settings);
 
-  assertIsISODay(searchParams.day);
+  const params = await searchParams;
+  assertIsISODay(params.day);
   const worklogs = await getWorklogs(
-    startOfDay(searchParams.day),
-    endOfDay(searchParams.day),
+    startOfDay(params.day),
+    endOfDay(params.day),
   );
   return (
     <WorklogEntry
-      key={searchParams.day}
-      day={searchParams.day}
+      key={params.day}
+      day={params.day}
       defaults={{
         fromDefault: settings.fromDefault,
         toDefault: settings.toDefault,

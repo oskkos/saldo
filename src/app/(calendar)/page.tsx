@@ -8,20 +8,19 @@ import { Date_YearAndMonth } from '@/util/dateFormatter';
 export default async function Home({
   searchParams,
 }: {
-  searchParams: { month: string };
+  searchParams: Promise<{ month?: string }>;
 }) {
   const worklogs = await getWorklogs();
   const settings = await getSettings();
   assertExists(settings);
-  if (searchParams.month) {
-    assertIsYearAndMonth(searchParams.month);
+  const params = await searchParams;
+  if (params.month) {
+    assertIsYearAndMonth(params.month);
   }
   return (
     <div className="flex flex-wrap justify-center mt-4">
       <MiniCalendar
-        date={startOfMonth(
-          (searchParams.month as Date_YearAndMonth) || undefined,
-        )}
+        date={startOfMonth((params.month as Date_YearAndMonth) || undefined)}
         beginDate={settings.beginDate}
         worklogs={worklogs}
       />

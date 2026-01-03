@@ -9,7 +9,7 @@ import { SignupPageLink } from './signupPageLink';
 export default async function Signin({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const session = await getSession();
   if (session) {
@@ -22,10 +22,8 @@ export default async function Signin({
     <SignupPageLink key="signup-page-link" />,
   ];
 
+  const params = await searchParams;
   return (
-    <Card
-      message={<ErrorMessage error={searchParams.error} />}
-      content={content}
-    />
+    <Card message={<ErrorMessage error={params.error} />} content={content} />
   );
 }
