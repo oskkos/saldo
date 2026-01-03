@@ -9,9 +9,11 @@ export default async function ResetPassword({
   searchParams,
 }: {
   params: { slug: string };
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  if (!searchParams.token || Array.isArray(searchParams.token)) {
+  const params = await searchParams;
+  const token = params.token;
+  if (!token || Array.isArray(token)) {
     return (
       <Card
         message={<Message type="error" title="Invalid token" />}
@@ -20,7 +22,7 @@ export default async function ResetPassword({
     );
   }
 
-  const user = await getUserByPasswordResetToken(searchParams.token);
+  const user = await getUserByPasswordResetToken(token);
   if (!user) {
     return (
       <Card
@@ -30,5 +32,5 @@ export default async function ResetPassword({
     );
   }
 
-  return <Page2 token={searchParams.token} />;
+  return <Page2 token={token} />;
 }
