@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { AuthUser, User } from '@/types';
-import { User as PrismaUser } from '@prisma/client';
+import { User as PrismaUser } from '@/generated/prisma/client';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
 import bcrypt from 'bcrypt';

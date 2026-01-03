@@ -1,6 +1,9 @@
-@import "tailwindcss";
-@plugin "daisyui" { themes: light, dark --prefersdark; }
-
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes:
+    light,
+    dark --prefersdark;
+}
 
 @theme {
   --breakpoint-*: initial;

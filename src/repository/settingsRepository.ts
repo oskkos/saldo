@@ -3,7 +3,7 @@ import 'server-only';
 import { Settings, SettingsData } from '@/types';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
-import { Settings as PrismaSettings } from '@prisma/client';
+import { Settings as PrismaSettings } from '@/generated/prisma/client';
 import { assertIsTime } from '@/util/assertionFunctions';
 import { getUserFromSession } from '@/auth/authSession';
 

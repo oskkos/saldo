@@ -1,7 +1,7 @@
 import 'server-only';
 
 import { prisma } from './prisma';
-import { Worklog as PrismaWorklog } from '@prisma/client';
+import { Worklog as PrismaWorklog } from '@/generated/prisma/client';
 import { Worklog, WorklogFormData } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
