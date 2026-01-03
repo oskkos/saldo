@@ -14,19 +14,25 @@ export const SignupDataFields: Record<string, keyof SignupData> = {
   password: 'password',
   confirmPassword: 'confirmPassword',
 };
-export const SignupSchema: ZodType<SignupData> = z
+export const SignupSchema = z
   .object({
-    email: z.string().email(),
-    name: z.string().min(1, { message: 'Name is required' }),
+    email: z.email(),
+    name: z.string().min(1, {
+      error: 'Name is required',
+    }),
     password: z
       .string()
-      .min(8, { message: 'Password is too short' })
-      .max(20, { message: 'Password is too long' }),
+      .min(8, {
+        error: 'Password is too short',
+      })
+      .max(20, {
+        error: 'Password is too long',
+      }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
     path: ['confirmPassword'], // path of error
+    error: 'Passwords do not match',
   });
 
 export const signupSchemaResolver = zodResolver(SignupSchema);

@@ -10,9 +10,11 @@ export const SigninDataFields: Record<string, keyof SigninData> = {
   email: 'email',
   password: 'password',
 };
-export const SigninSchema: ZodType<SigninData> = z.object({
-  email: z.string().email(),
-  password: z.string().min(1, { message: 'Password is required' }),
+export const SigninSchema = z.object({
+  email: z.email(),
+  password: z.string().min(1, {
+    error: 'Password is required',
+  }),
 });
 
 export const signinSchemaResolver = zodResolver(SigninSchema);

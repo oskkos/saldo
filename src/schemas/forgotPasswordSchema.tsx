@@ -11,8 +11,8 @@ export const ForgotPasswordDataFields: Record<
 > = {
   email: 'email',
 };
-export const ForgotPasswordSchema: ZodType<ForgotPasswordData> = z.object({
-  email: z.string().email(),
+export const ForgotPasswordSchema = z.object({
+  email: z.email(),
 });
 
 export const forgotPasswordSchemaResolver = zodResolver(ForgotPasswordSchema);

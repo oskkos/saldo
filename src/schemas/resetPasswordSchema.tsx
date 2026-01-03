@@ -13,18 +13,22 @@ export const ResetPasswordDataFields: Record<string, keyof ResetPasswordData> =
     password: 'password',
     confirmPassword: 'confirmPassword',
   };
-export const ResetPasswordSchema: ZodType<ResetPasswordData> = z
+export const ResetPasswordSchema = z
   .object({
     token: z.string().min(1),
     password: z
       .string()
-      .min(8, { message: 'Password is too short' })
-      .max(20, { message: 'Password is too long' }),
+      .min(8, {
+        error: 'Password is too short',
+      })
+      .max(20, {
+        error: 'Password is too long',
+      }),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: 'Passwords do not match',
     path: ['confirmPassword'], // path of error
+    error: 'Passwords do not match',
   });
 
 export const resetPasswordSchemaResolver = zodResolver(ResetPasswordSchema);
