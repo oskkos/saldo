@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   ...(process.env.VERCEL ? {} : { distDir: 'build' }),
+
   images: {
     remotePatterns: [
       {
