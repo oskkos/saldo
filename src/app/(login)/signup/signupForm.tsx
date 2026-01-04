@@ -54,7 +54,7 @@ export function SignupForm({
     formState: { errors },
     setError,
   } = useForm<SignupData>({
-    resolver: signupSchemaResolver as any,
+    resolver: signupSchemaResolver,
   });
 
   return (
