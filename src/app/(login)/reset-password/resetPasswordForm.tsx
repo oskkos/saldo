@@ -61,7 +61,7 @@ export function ResetPasswordForm({
     formState: { errors },
     setError,
   } = useForm<ResetPasswordData>({
-    resolver: resetPasswordSchemaResolver as any,
+    resolver: resetPasswordSchemaResolver,
   });
 
   return (

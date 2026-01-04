@@ -57,7 +57,7 @@ export function ForgotPasswordForm({
     formState: { errors },
     setError,
   } = useForm<ForgotPasswordData>({
-    resolver: forgotPasswordSchemaResolver as any,
+    resolver: forgotPasswordSchemaResolver,
   });
 
   return (
