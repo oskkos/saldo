@@ -11,23 +11,9 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/saldo
       POSTGRES_PRISMA_URL: postgres://postgres:password@db:5432/saldo
       POSTGRES_URL_NON_POOLING: postgres://postgres:password@db:5432/saldo
 
-  prisma-migrate:
-    image: node:20-alpine
-    volumes:
-      - ./:/app
-    working_dir: /app
-    command: sh -c "npm install && npx prisma migrate deploy && exit"
-    depends_on:
-      - db
-      - app
-    environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/saldo
-      POSTGRES_PRISMA_URL: postgres://postgres:password@db:5432/saldo
-      POSTGRES_URL_NON_POOLING: postgres://postgres:password@db:5432/saldo
 
   db:
     image: postgres:16
