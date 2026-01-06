@@ -1,5 +1,6 @@
 import 'server-only';
 
+import Image from 'next/image';
 import AuthActions from '@/auth/authActions';
 import Menu from './menu';
 import { Session } from 'next-auth';
@@ -8,6 +9,7 @@ import SaldoBadge from './saldoBadge';
 import { Settings, Worklog } from '@/types';
 import ThemeSwitcher from './themeSwitcher';
 import Dock from './dock';
+import Link from 'next/link';
 
 export default async function Navbar({
   settings,
@@ -26,7 +28,15 @@ export default async function Navbar({
     <>
       {/* Navbar */}
       <div className="w-full navbar text-primary-content bg-primary p-0">
-        <div className="pr-2 ml-4 text-xl">saldo</div>
+        <Link href="/">
+          <Image
+            src="/img/saldo-with-text.png"
+            alt="saldo"
+            width={96}
+            height={48}
+            priority={true}
+          ></Image>
+        </Link>
         {settings && session ? (
           [
             <Menu key="menu" />,
