@@ -12,6 +12,7 @@ const unAuthorizedPaths = [
   '/signin',
   '/forgot-password',
   '/reset-password',
+  '/manifest.webmanifest',
 ];
 
 export default withAuth(proxy, {

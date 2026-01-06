@@ -15,13 +15,12 @@ export function Card({
         <div className="card-body items-center">
           <div className="card-title">
             <Image
-              src="/img/saldo.png"
-              alt=""
-              width={64}
+              src="/img/saldo-with-text.png"
+              alt="saldo"
+              width={128}
               height={64}
               priority={true}
             ></Image>
-            <span className="text-2xl">saldo</span>
           </div>
           {message}
           {content.reduce((acc, element, index) => {
