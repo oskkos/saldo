@@ -32,6 +32,7 @@ export default async function Navbar({
           <Image
             src="/img/saldo-with-text.png"
             alt="saldo"
+            className="ml-2"
             width={96}
             height={48}
             priority={true}
