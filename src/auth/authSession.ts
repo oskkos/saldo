@@ -6,7 +6,7 @@ import { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { onCredentialsSignin } from '@/actions';
+import { onAfterSignin, onCredentialsSignin } from '@/actions';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -46,6 +46,15 @@ export const authOptions: NextAuthOptions = {
     signIn: '/signin',
     signOut: '/auth/signout',
     error: '/auth/error',
+  },
+  events: {
+    signIn: async ({ user }) => {
+      if (!user.email) return;
+      await onAfterSignin({
+        email: user.email,
+        name: user.name ?? '',
+      });
+    },
   },
 };
 

@@ -33,8 +33,9 @@ import {
 } from '@/schemas/resetPasswordSchema';
 
 export async function onAfterSignin(user: AuthUser) {
-  const u = await upsertUser(user.name ?? '');
+  const u = await upsertUser(user.email, user.name ?? '');
   const settings = await insertSettings({
+    userId: u.id,
     beginDate: startOfDay(),
     initialBalanceHours: 0,
     initialBalanceMins: 0,

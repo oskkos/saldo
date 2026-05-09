@@ -41,26 +41,22 @@ export async function getSettings(): Promise<Settings | null> {
   );
 }
 export async function insertSettings({
+  userId,
   beginDate,
   initialBalanceHours,
   initialBalanceMins,
   fromDefault,
   toDefault,
-}: SettingsData): Promise<Settings> {
-  const user = await getUserFromSession();
-  if (!user) {
-    throw new Error('User not found in session.');
-  }
-
+}: SettingsData & { userId: number }): Promise<Settings> {
   return await Sentry.startSpan(
     { name: 'insertSettings', op: 'db.sql.prisma' },
     async () => {
       const s = await prisma.settings.upsert({
         where: {
-          user_id: user.id,
+          user_id: userId,
         },
         create: {
-          user_id: user.id,
+          user_id: userId,
           begin_date: beginDate,
           initial_balance_hours: initialBalanceHours,
           initial_balance_mins: initialBalanceMins,
