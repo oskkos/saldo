@@ -5,7 +5,7 @@ import { Inter } from 'next/font/google';
 import { AuthProvider } from '@/auth/authProvider';
 import Navbar from '@/components/navbar';
 import { getSession } from '@/auth/authSession';
-import { onAfterSignin } from '@/actions';
+import { getSettings } from '@/repository/settingsRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -21,14 +21,9 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
-  const data = session?.user?.email
-    ? await onAfterSignin({
-        email: session.user.email,
-        name: session.user.name ?? '',
-      })
-    : null;
-  const settings = data?.[1] ?? null;
-  const worklogs = session ? await getWorklogs() : [];
+  const [settings, worklogs] = session
+    ? await Promise.all([getSettings(), getWorklogs()])
+    : [null, []];
 
   return (
     <html lang="en">
