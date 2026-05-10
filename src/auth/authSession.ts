@@ -1,12 +1,12 @@
 import 'server-only';
 
 import { getUser } from '@/repository/userRepository';
-import { assertExists } from '@/util/assertionFunctions';
 import { NextAuthOptions, getServerSession } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import GitHubProvider from 'next-auth/providers/github';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { onAfterSignin, onCredentialsSignin } from '@/actions';
+import type { User } from '@/types';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -47,13 +47,25 @@ export const authOptions: NextAuthOptions = {
     signOut: '/auth/signout',
     error: '/auth/error',
   },
-  events: {
-    signIn: async ({ user }) => {
-      if (!user.email) return;
-      await onAfterSignin({
-        email: user.email,
-        name: user.name ?? '',
-      });
+  callbacks: {
+    jwt: async ({ token, user }) => {
+      if (user?.email) {
+        const [u] = await onAfterSignin({
+          email: user.email,
+          name: user.name ?? '',
+        });
+        token.userId = u.id;
+      } else if (token.userId === undefined && token.email) {
+        const existing = await getUser(token.email);
+        if (existing) token.userId = existing.id;
+      }
+      return token;
+    },
+    session: async ({ session, token }) => {
+      if (session.user && typeof token.userId === 'number') {
+        session.user.id = token.userId;
+      }
+      return session;
     },
   },
 };
@@ -62,12 +74,14 @@ export async function getSession() {
   const session = await getServerSession(authOptions);
   return session;
 }
-export async function getUserFromSession() {
+export async function getUserFromSession(): Promise<User | null> {
   const session = await getSession();
-  if (!session) {
+  if (!session?.user?.email || typeof session.user.id !== 'number') {
     return null;
   }
-  assertExists(session.user);
-  const user = await getUser(session.user.email ?? '');
-  return user;
+  return {
+    id: session.user.id,
+    email: session.user.email,
+    name: session.user.name ?? '',
+  };
 }
