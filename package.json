@@ -20,7 +20,7 @@
     "@hookform/resolvers": "5.2.2",
     "@prisma/adapter-pg": "7.6.0",
     "@prisma/client": "7.6.0",
-    "@sentry/nextjs": "^10.32.1",
+    "@sentry/nextjs": "^10.62.0",
     "@tailwindcss/postcss": "^4.1.18",
     "bcrypt": "6.0.0",
     "beautiful-react-hooks": "^5.0.3",
