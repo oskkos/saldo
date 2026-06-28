@@ -137,12 +137,6 @@ as intended requirements until resolved.
   absence cannot have its reason changed or cleared through editing, and the
   caller gets no error. Intended, or a bug? (See also the saldo spec's
   absence-reason drift question.)
-- **No server-side validation of worklog mutations.** Unlike the auth flows
-  (signup, password reset), the worklog actions perform no Zod validation. The
-  entry UI only asserts that day/time strings are well-*formatted* on the client;
-  nothing enforces that `to` is after `from`, that a worklog has non-zero
-  duration, or that times are within sane bounds. A malformed or zero/negative
-  span would persist and feed straight into the saldo calculation.
 - **Existence check precedes ownership check.** Edit and delete first fetch the
   worklog with `findUniqueOrThrow`, then compare ownership. A request for a
   non-existent id throws a "not found" error, while an existing-but-foreign id

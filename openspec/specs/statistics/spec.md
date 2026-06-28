@@ -95,5 +95,18 @@ defective. They are NOT to be treated as intended requirements until resolved.
   of working days in the window. So a sparse logger sees a high average. Decide
   which denominator the label "Avg hours per day" should mean.
 - **Negative/garbage spans flow through.** Totals use raw worklog minutes, so an
-  entry with `to` before `from` (which nothing currently prevents — see the
-  worklog spec) would skew every figure. Depends on resolving worklog validation.
+  entry with `to` before `from` would skew every figure. This is now mitigated
+  upstream — the worklog spec requires server-side validation rejecting
+  non-positive and multi-day spans — so such entries can no longer be persisted
+  through the actions. Pre-existing rows (if any) remain unguarded here.
+- **`toISODay` buckets days in the local timezone, not UTC.** Per-day grouping
+  (`workMinutesPerDay`, most/least-hours day) keys on `toISODay(worklog.from)`,
+  but `toISODay` formats with plain `dayjs(date)` (local time) rather than
+  `dayjs.tz` — contradicting the project's "all date math is UTC" rule. The day a
+  worklog lands in therefore depends on the runtime timezone: correct on a
+  UTC-deployed server, but shifted near UTC-midnight in other timezones (e.g.
+  local dev), so a worklog can be counted under the wrong day. This is a shared
+  `src/util/dateFormatter.ts` defect that also affects day grouping elsewhere
+  (mini-calendar, worklog lists); it is cross-cutting and out of scope for the
+  validation change that surfaced it. Fixing `toISODay` to use UTC would resolve
+  it globally.
