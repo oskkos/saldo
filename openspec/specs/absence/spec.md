@@ -75,13 +75,6 @@ These are behaviors observed in the code that are ambiguous, inconsistent, or
 potentially defective. They are NOT to be treated as intended requirements until
 resolved.
 
-- **Reason drift between code and tests.** The canonical reasons are
-  `holiday`, `flex_hours`, `sick_leave`, `other` — enforced by both the
-  `AbsenceReason` type and the Prisma `Absence` enum. The saldo service tests
-  instead use `vacation` and `unpaid_leave` (cast through `as unknown` so they
-  never hit the type system or the database). The tests are stale relative to the
-  real reason set; align them, or change the reason set if `vacation`/`unpaid_leave`
-  are actually wanted. (Cross-referenced from the saldo spec.)
 - **Multi-day creation is non-transactional.** Each day is a separate create
   with no surrounding transaction (the code carries a `// TODO: Handle all in one
   call`). A failure partway leaves some days persisted and others not.
