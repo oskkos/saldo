@@ -40,3 +40,9 @@ next-env.d.ts
 .vscode
 
 src/generated/prisma
+
+# Playwright MCP artifacts
+/.playwright-mcp/
+
+# Claude Code local settings (per-machine, not shared)
+.claude/settings.local.json
