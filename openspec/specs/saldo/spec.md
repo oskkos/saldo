@@ -191,11 +191,7 @@ These are behaviors observed in the code that are ambiguous or potentially
 defective. They are documented here deliberately and are NOT to be treated as
 intended requirements until resolved.
 
-- **Absence reason drift.** The `AbsenceReason` enum in `src/types/index.ts`
-  defines `holiday`, `flex_hours`, `sick_leave`, `other`. The saldo tests instead
-  reference `vacation` and `unpaid_leave`, which are not in the enum. The absence
-  entry UI offers only the enum values. Which set is canonical?
-- **Non-flex absence discards stored times.** A vacation/sick/other absence
+- **Non-flex absence discards stored times.** A holiday/sick/other absence
   always credits exactly 7.5h regardless of its stored `from`/`to`. The absence
   UI always writes a fixed full-day range, so this is currently invisible — but
   the calculation would silently ignore a partial-day absence if one were ever

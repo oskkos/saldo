@@ -60,14 +60,14 @@ describe('worklog calculator', () => {
           to: new Date('2023-10-19T16:00:00'),
         },
         {
-          // fri vacation (+/- 0 hour)
-          absence: 'vacation',
+          // fri holiday (+/- 0 hour)
+          absence: 'holiday',
           from: new Date('2023-10-20T08:00:00'),
           to: new Date('2023-10-20T16:00:00'),
         },
         {
-          // sat vacation, is ignored
-          absence: 'vacation',
+          // sat holiday, is ignored
+          absence: 'holiday',
           from: new Date('2023-10-21T08:00:00'),
           to: new Date('2023-10-21T16:00:00'),
         },
@@ -97,7 +97,7 @@ describe('worklog calculator', () => {
           to: new Date('2023-02-01T10:00:00'),
         },
         {
-          absence: 'vacation',
+          absence: 'holiday',
           from: new Date('2023-02-02T08:00:00'),
           to: new Date('2023-02-02T10:00:00'),
         },
@@ -154,23 +154,11 @@ describe('worklog calculator', () => {
 
   describe('absenceReasonToString', () => {
     it('should convert an absence reason to a human-friendly string', () => {
-      const reasons = [
-        'sick_leave',
-        'vacation',
-        'unpaid_leave',
-        'flex_hours',
-        'other',
-      ] as const;
+      const reasons = ['holiday', 'flex_hours', 'sick_leave', 'other'] as const;
       const pretty = reasons.map((r) =>
         absenceReasonToString(r as AbsenceReason),
       );
-      expect(pretty).toEqual([
-        'Sick leave',
-        'Vacation',
-        'Unpaid leave',
-        'Flex hours',
-        'Other',
-      ]);
+      expect(pretty).toEqual(['Holiday', 'Flex hours', 'Sick leave', 'Other']);
     });
   });
 });
