@@ -73,4 +73,42 @@ describe('dateFormatter module', () => {
     assertIsISODay(d);
     expect(dateFormatter.toYearAndMonth(d)).toBe('2023-07');
   });
+
+  // Low-UTC-hour instants that fall on the previous calendar day in negative-
+  // offset timezones (e.g. 02:30Z is 22:30 the day before in America/New_York).
+  // These assert the UTC contract of the formatters. NOTE: on the UTC CI runner
+  // these pass trivially; a regression to local-time formatting would only be
+  // caught when the suite runs under a non-UTC timezone, which requires the
+  // whole suite to be timezone-robust (see the date.ts follow-up in the saldo
+  // spec). They are kept as documentation of the intended UTC output.
+  describe('UTC day boundary', () => {
+    // 02:30Z on 2023-07-01 is 2023-06-30 22:30 in America/New_York.
+    const justAfterUtcMidnight = new Date('2023-07-01T02:30:00.000Z');
+
+    test('day-level formatters use the UTC date', () => {
+      expect(dateFormatter.toISODay(justAfterUtcMidnight)).toBe('2023-07-01');
+      expect(dateFormatter.toDay(justAfterUtcMidnight)).toBe('1');
+      expect(dateFormatter.toDayMonthYear(justAfterUtcMidnight)).toBe(
+        '1.7.2023',
+      );
+      expect(dateFormatter.toWeekday(justAfterUtcMidnight)).toBe(6); // Saturday
+    });
+
+    // 03:00Z on 2023-08-01 is 2023-07-31 23:00 in America/New_York.
+    const justAfterUtcMonthStart = new Date('2023-08-01T03:00:00.000Z');
+
+    test('month-level formatters use the UTC date', () => {
+      expect(dateFormatter.toMonthAndYear(justAfterUtcMonthStart)).toBe(
+        'August 2023',
+      );
+      expect(dateFormatter.toYearAndMonth(justAfterUtcMonthStart)).toBe(
+        '2023-08',
+      );
+      expect(dateFormatter.toISODay(justAfterUtcMonthStart)).toBe('2023-08-01');
+    });
+
+    test('toTime uses the UTC clock', () => {
+      expect(dateFormatter.toTime(justAfterUtcMidnight)).toBe('02:30');
+    });
+  });
 });
