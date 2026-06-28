@@ -52,3 +52,23 @@ Data flows `page/component → action → repository → Prisma`, with `services
 - **Domain types** (`Worklog`, `Settings`, `User`, `AbsenceReason`, form-data shapes) live in `src/types/index.ts`. The Prisma models are mapped into these at the repository boundary — don't leak Prisma types past it.
 - **Path alias:** `@/*` → `src/*` (configured in both tsconfig and jest).
 - Tests live in `__tests__/` dirs next to the code (jsdom environment, Testing Library). `__mocks__/next/navigation.ts` mocks router for component tests.
+
+## OpenSpec workflow (`/opsx:*`)
+
+The `/opsx:apply` and `/opsx:archive` commands **do not touch git** — committing is always a separate manual step. `openspec/` is in `.prettierignore` and lint-staged only runs on `*.{js,jsx,ts,tsx}`, so spec markdown is never reformatted by the pre-commit hook.
+
+### `/opsx:apply` — commits
+- Output is **authored code + `tasks.md` checkbox updates**. Review the diff; never blind-commit.
+- Commit in logical chunks using the enforced Conventional Commit types (commitlint rejects otherwise): `feat(...)`, `fix(...)`, `test(...)`, scoped to the area touched.
+- A single commit is fine for a cohesive change; split by concern when it spans layers.
+- **Do not archive in this step.**
+
+### `/opsx:archive` — commits + timing
+- **Timing:** run it as the **last step before merge, only once the PR is approved.** The sync rewrites canonical `openspec/specs/`, so archiving early would assert behavior that isn't merged yet.
+- When prompted, choose **"Sync now"** before the folder move — otherwise canonical specs drift from the change being archived.
+- **Commit:** one dedicated commit covering **both** the spec sync and the folder move:
+  ```
+  docs(openspec): sync <capability> spec(s) and archive <change-name>
+  ```
+- Commit it **verbatim** — it is generated output (sync deltas + the `mv` to `changes/archive/YYYY-MM-DD-<name>`). Don't hand-edit; if a synced spec looks wrong, fix the delta spec and re-run rather than patching the result.
+- Keep it **isolated from implementation commits** so the folder move renders as a rename and the archive reverts as a unit.
