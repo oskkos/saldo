@@ -31,6 +31,16 @@ import {
   ResetPasswordData,
   ResetPasswordSchema,
 } from '@/schemas/resetPasswordSchema';
+import { WorklogSchema } from '@/schemas/worklogSchema';
+import { SettingsSchema } from '@/schemas/settingsSchema';
+import type { ZodType } from 'zod';
+
+function validateOrThrow(schema: ZodType, data: unknown, fallback: string) {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    throw new Error(result.error.issues[0]?.message ?? fallback);
+  }
+}
 
 export async function onAfterSignin(user: AuthUser) {
   const u = await upsertUser(user.email, user.name ?? '');
@@ -68,6 +78,7 @@ export async function onAfterSignup(data: SignupData) {
 }
 
 export async function onWorklogSubmit(data: WorklogFormData) {
+  validateOrThrow(WorklogSchema, data, 'Invalid worklog');
   const worklog = await insertWorklog(data);
   return worklog;
 }
@@ -77,11 +88,13 @@ export async function onWorklogDelete(worklogId: number) {
 }
 
 export async function onWorklogEdit(worklogId: number, data: WorklogFormData) {
+  validateOrThrow(WorklogSchema, data, 'Invalid worklog');
   const worklog = await updateWorklog(worklogId, data);
   return worklog;
 }
 
 export async function onSettingsUpdate(data: SettingsData) {
+  validateOrThrow(SettingsSchema, data, 'Invalid settings');
   const settings = await upsertSettings(data);
   return settings;
 }

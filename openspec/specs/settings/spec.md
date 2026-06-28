@@ -75,15 +75,6 @@ when saving.
 These are behaviors observed in the code that are ambiguous or potentially
 defective. They are NOT to be treated as intended requirements until resolved.
 
-- **Validation is client-side only.** The from-before-to check and the
-  required-field checks live in the settings UI; `onSettingsUpdate` performs no
-  Zod validation and would persist whatever it receives. Same gap as the worklog
-  capability — a non-UI caller could store an inverted time range or empty
-  begin date.
-- **Initial balance sign and bounds.** Nothing observed constrains the initial
-  balance to non-negative values or any range. A negative starting balance may
-  be a legitimate "starting in deficit" case, but it is unspecified — decide
-  whether it is allowed.
 - **Seed path bypasses the session gate.** `insertSettings` takes an explicit
   `userId` and is not session-gated, unlike every other repository function.
   This is intentional (it runs during sign-in before a session exists), but it
