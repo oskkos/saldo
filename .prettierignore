@@ -3,6 +3,7 @@
 .husky
 .gitignore
 .claude
+CLAUDE.md
 .remember
 openspec
 prisma/migrations
