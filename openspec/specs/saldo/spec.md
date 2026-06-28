@@ -1,0 +1,206 @@
+# saldo Specification
+
+## Purpose
+
+The **saldo** is the running balance between hours a user has actually worked and
+the hours they were expected to work. It is the core domain concept of the
+application. This capability covers how that balance is computed from a user's
+worklogs and settings, how absences affect it, and how the resulting value is
+formatted for display.
+
+This spec was reverse-engineered from the existing implementation in
+`src/services/index.tsx` and its tests in `src/services/__tests__/index.test.tsx`.
+It documents current behavior, not a desired future state. Items that look like
+defects or ambiguities are listed under "Open Questions" rather than written as
+blessed requirements.
+
+Pure calculation only — no database or session access. Inputs are a `Settings`
+object and a list of `Worklog` objects; output is a formatted `SaldoForDay`.
+
+## Requirements
+
+### Requirement: Running balance from begin date
+
+The system SHALL compute the saldo as the sum of counted worked minutes minus
+expected minutes, seeded by the user's configured initial balance, measured from
+the user's `beginDate` up to and including the current day.
+
+#### Scenario: Worked example
+
+- **GIVEN** a user with `beginDate` 2023-10-14 and an initial balance of 2h 30min
+- **AND** the current date is 2023-10-22
+- **AND** the worklogs and absences described by the other requirements below
+- **WHEN** the saldo is calculated
+- **THEN** the result is `-0h 45min`
+
+### Requirement: Initial balance seeds the sum
+
+The system SHALL start the worked-minutes total from the user's configured
+initial balance (`initialBalanceHours * 60 + initialBalanceMins`) before adding
+any worklog contributions.
+
+#### Scenario: Non-zero initial balance
+
+- **GIVEN** settings with `initialBalanceHours = 2` and `initialBalanceMins = 30`
+- **WHEN** the saldo is calculated
+- **THEN** 150 minutes are added to the worked total before worklogs are counted
+
+### Requirement: Expected minutes accrue only on working days
+
+The system SHALL count `EXPECTED_HOURS_PER_DAY` (7.5h = 450 minutes) of expected
+time for each working day from `beginDate` through the current day inclusive, and
+SHALL skip non-working days (weekends and public holidays, as determined by
+`isNonWorkingDay`).
+
+#### Scenario: Weekends and holidays do not raise the expectation
+
+- **GIVEN** a date range that includes Saturdays, Sundays, or public holidays
+- **WHEN** expected minutes are accumulated
+- **THEN** those days contribute 0 expected minutes
+- **AND** only working days contribute 450 minutes each
+
+### Requirement: Worked minutes count on any calendar day
+
+The system SHALL count the actual worked minutes of a regular (non-absence)
+worklog regardless of whether the day is a working day, including weekends and
+public holidays.
+
+#### Scenario: Work logged on a Sunday counts
+
+- **GIVEN** a regular worklog on a Sunday from 10:00 to 12:00
+- **WHEN** the saldo is calculated
+- **THEN** 120 worked minutes are added even though Sunday accrues no expected time
+
+### Requirement: Worked minutes net of lunch break
+
+The system SHALL compute a regular worklog's worked minutes as the difference
+between its `to` and `from` times, minus `EXPECTED_MINUTES_LUNCH_BREAK`
+(30 minutes) when `subtractLunchBreak` is set, and minus nothing otherwise.
+
+#### Scenario: Lunch break subtracted
+
+- **GIVEN** a worklog from 07:00 to 16:15 with `subtractLunchBreak = true`
+- **WHEN** its worked minutes are computed
+- **THEN** the result is 525 minutes (555 minus a 30-minute lunch)
+
+#### Scenario: Lunch break not subtracted
+
+- **GIVEN** a worklog from 08:00 to 16:30 with `subtractLunchBreak = false`
+- **WHEN** its worked minutes are computed
+- **THEN** the result is 510 minutes
+
+### Requirement: Worklogs before the begin date are excluded
+
+The system SHALL ignore any worklog whose `from` time is earlier than the user's
+`beginDate`.
+
+#### Scenario: Entry the day before begin date
+
+- **GIVEN** `beginDate` 2023-10-14 and a worklog on 2023-10-13
+- **WHEN** the saldo is calculated
+- **THEN** that worklog contributes nothing
+
+### Requirement: Future worklogs are excluded
+
+The system SHALL ignore any worklog whose `to` time is later than the end of the
+current day.
+
+#### Scenario: Entry dated tomorrow
+
+- **GIVEN** the current date is 2023-10-22 and a worklog dated 2023-10-23
+- **WHEN** the saldo is calculated
+- **THEN** that worklog contributes nothing
+
+### Requirement: Flex-hours absence draws down the balance
+
+The system SHALL treat a worklog with absence reason `flex_hours` as contributing
+zero worked minutes, while the day still accrues expected time if it is a working
+day. The net effect is to reduce the saldo by a full expected day.
+
+#### Scenario: Flex day on a working day
+
+- **GIVEN** a `flex_hours` absence on a working Thursday
+- **WHEN** the saldo is calculated
+- **THEN** 0 worked minutes are added
+- **AND** 450 expected minutes are still accrued for that day (net -450)
+
+### Requirement: Non-flex absence on a working day is balance-neutral
+
+The system SHALL treat a worklog whose absence reason is anything other than
+`flex_hours`, falling on a working day, as contributing exactly
+`EXPECTED_HOURS_PER_DAY` worked minutes (450), regardless of the worklog's stored
+`from`/`to` times. Because the same day also accrues 450 expected minutes, such a
+day is balance-neutral.
+
+#### Scenario: Vacation on a working Friday
+
+- **GIVEN** a non-flex absence on a working Friday with stored times 08:00–16:00
+- **WHEN** the saldo is calculated
+- **THEN** exactly 450 worked minutes are added (the stored times are not used)
+- **AND** 450 expected minutes are accrued (net 0)
+
+### Requirement: Any absence on a non-working day is ignored
+
+The system SHALL treat any absence (flex or non-flex) falling on a non-working
+day as contributing zero worked minutes; such a day also accrues no expected
+time, so it has no effect on the saldo.
+
+#### Scenario: Vacation on a Saturday
+
+- **GIVEN** a non-flex absence on a Saturday
+- **WHEN** the saldo is calculated
+- **THEN** it contributes 0 worked minutes and 0 expected minutes
+
+### Requirement: Saldo formatted as hours, minutes, string, and badge
+
+The system SHALL format the saldo total minutes into a `SaldoForDay` object
+exposing `hours`, `minutes`, a `toString()`, and a `toBadge()` renderer. A
+non-negative saldo SHALL use floored hours/minutes and a success badge; a
+negative saldo SHALL use ceiled hours/minutes and an error badge.
+
+#### Scenario: Negative saldo formatting
+
+- **GIVEN** a saldo total of -45 minutes
+- **WHEN** it is formatted
+- **THEN** `toString()` returns `-0h 45min`
+- **AND** `toBadge()` renders an error-styled badge
+
+#### Scenario: Positive saldo formatting
+
+- **GIVEN** a positive saldo total
+- **WHEN** it is formatted
+- **THEN** hours and minutes are floored
+- **AND** `toBadge()` renders a success-styled badge
+
+### Requirement: Worklog sum aggregation ignores absence semantics
+
+The system SHALL provide a separate aggregation that sums the raw worked minutes
+(net of lunch break) of a given list of worklogs, without applying the begin-date
+window, the future-entry exclusion, or any absence special-casing. This is a
+display total, distinct from the saldo balance.
+
+#### Scenario: Sum over a mixed list
+
+- **GIVEN** worklogs of 2h, an absence stored as 2h, and a 1.5h entry with a lunch break
+- **WHEN** the worklog sum is calculated
+- **THEN** the result is `5h 0min` (2 + 2 + 1, treating every entry by its raw times)
+
+## Open Questions
+
+These are behaviors observed in the code that are ambiguous or potentially
+defective. They are documented here deliberately and are NOT to be treated as
+intended requirements until resolved.
+
+- **Absence reason drift.** The `AbsenceReason` enum in `src/types/index.ts`
+  defines `holiday`, `flex_hours`, `sick_leave`, `other`. The saldo tests instead
+  reference `vacation` and `unpaid_leave`, which are not in the enum. The absence
+  entry UI offers only the enum values. Which set is canonical?
+- **Non-flex absence discards stored times.** A vacation/sick/other absence
+  always credits exactly 7.5h regardless of its stored `from`/`to`. The absence
+  UI always writes a fixed full-day range, so this is currently invisible — but
+  the calculation would silently ignore a partial-day absence if one were ever
+  created. Intended, or a latent trap?
+- **Today's partial day.** Expected minutes count the current day in full
+  (450 min) as soon as the day begins, so the saldo reads negative during the
+  working day until enough hours are logged. Is mid-day saldo meant to reflect a
+  full expected day, or pro-rated?
