@@ -99,14 +99,3 @@ defective. They are NOT to be treated as intended requirements until resolved.
   upstream — the worklog spec requires server-side validation rejecting
   non-positive and multi-day spans — so such entries can no longer be persisted
   through the actions. Pre-existing rows (if any) remain unguarded here.
-- **`toISODay` buckets days in the local timezone, not UTC.** Per-day grouping
-  (`workMinutesPerDay`, most/least-hours day) keys on `toISODay(worklog.from)`,
-  but `toISODay` formats with plain `dayjs(date)` (local time) rather than
-  `dayjs.tz` — contradicting the project's "all date math is UTC" rule. The day a
-  worklog lands in therefore depends on the runtime timezone: correct on a
-  UTC-deployed server, but shifted near UTC-midnight in other timezones (e.g.
-  local dev), so a worklog can be counted under the wrong day. This is a shared
-  `src/util/dateFormatter.ts` defect that also affects day grouping elsewhere
-  (mini-calendar, worklog lists); it is cross-cutting and out of scope for the
-  validation change that surfaced it. Fixing `toISODay` to use UTC would resolve
-  it globally.

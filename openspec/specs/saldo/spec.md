@@ -200,3 +200,16 @@ intended requirements until resolved.
   (450 min) as soon as the day begins, so the saldo reads negative during the
   working day until enough hours are logged. Is mid-day saldo meant to reflect a
   full expected day, or pro-rated?
+- **The saldo calculation is timezone-dependent (follow-up).** The calc relies on
+  `src/util/date.ts` helpers (`startOfDay`, `endOfDay`, `add`, `isWeekend`,
+  `daysInMonth`, …) that format/compute in the *runtime's local timezone* via
+  plain `dayjs(date)` instead of UTC — the same class of bug fixed in
+  `dateFormatter.ts` by the `normalize-dateformatter-to-utc` change. Discovered
+  while applying that change: pinning the test timezone to a non-UTC zone shifted
+  the saldo result (e.g. `-45min` → `-8h15min`) and broke the `date.ts` tests.
+  This is **latent and production-safe today** because the Vercel server runs in
+  UTC, so it never surfaces for users; it would produce wrong balances only on a
+  non-UTC runtime. Fixing it means normalizing `date.ts` to UTC (e.g. `dayjs.utc`)
+  and making the saldo/date tests timezone-robust — deliberately scoped out of the
+  `dateFormatter` change because it touches the core calculation and warrants its
+  own design with a "UTC-production behavior provably unchanged" verification.

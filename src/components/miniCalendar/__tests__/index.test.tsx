@@ -17,7 +17,7 @@ const { router } = result.current;
 
 describe('MiniCalendar', () => {
   test('should render the calendar', () => {
-    const date = new Date(2023, 0, 1);
+    const date = new Date('2023-01-01T00:00:00Z');
     const beginDate = date;
     const worklogs: Worklog[] = [];
 
@@ -36,7 +36,7 @@ describe('MiniCalendar', () => {
   });
 
   test('should navigate to the previous month', async () => {
-    const date = new Date(2023, 0, 1);
+    const date = new Date('2023-01-01T00:00:00Z');
     const beginDate = date;
     const worklogs: Worklog[] = [];
 
@@ -51,7 +51,7 @@ describe('MiniCalendar', () => {
   });
 
   test('should navigate to the next month', async () => {
-    const date = new Date(2023, 0, 1);
+    const date = new Date('2023-01-01T00:00:00Z');
     const beginDate = date;
     const worklogs: Worklog[] = [];
 
