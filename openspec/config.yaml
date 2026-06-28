@@ -3,11 +3,47 @@ schema: spec-driven
 # Project context (optional)
 # This is shown to AI when creating artifacts.
 # Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Saldo is a work-hours tracking app. Core domain concept: the **saldo** — the
+  running balance between hours actually worked and hours expected
+  (EXPECTED_HOURS_PER_DAY = 7.5). Computed from a user's beginDate forward,
+  skipping non-working days (weekends + public holidays via date-holidays),
+  with a configurable initial balance. Calculation logic lives in
+  src/services/index.tsx.
+
+  Stack: Next.js 16 (App Router) · React 19 · TypeScript (strict) · Prisma 7 +
+  PostgreSQL (pg adapter) · NextAuth 4 · Tailwind 4 + daisyUI · Zod +
+  react-hook-form · Chart.js · dayjs · Sentry.
+
+  Architecture — layered, server-first. Data flows
+  page/component → action → repository → Prisma, with services holding pure
+  business logic. Respect these boundaries:
+  - src/app/ — App Router pages (async server components by default) + NextAuth
+    route handler. Pages call repository functions directly to read data.
+  - src/actions/index.ts — the single 'use server' module. All mutations go
+    here; validate input with Zod, then delegate to repositories. Only place
+    client components may trigger writes.
+  - src/repository/ — server-only data access. Every function calls
+    getUserFromSession() first and enforces per-user ownership. DB calls wrapped
+    in Sentry.startSpan. Mappers translate Prisma snake_case rows into camelCase
+    domain types.
+  - src/services/index.tsx — pure, side-effect-free business logic. No DB or
+    session access.
+  - src/auth/ — NextAuth config (JWT strategy; Credentials + Google + GitHub).
+    getUserFromSession() is the auth gate in server code.
+
+  Key conventions:
+  - Prisma client generated to src/generated/prisma (not node_modules). Import
+    from @/generated/prisma/client. Run prisma generate after schema changes.
+  - Branded date types in src/util/dateFormatter.ts + assertIs* guards in
+    src/util/assertionFunctions.ts. Prefer these over raw strings.
+  - All date math is UTC (src/util/date.ts sets dayjs default to UTC). Use its
+    helpers, not dayjs directly.
+  - Domain types live in src/types/index.ts. Don't leak Prisma types past the
+    repository boundary.
+  - Path alias: @/* → src/*. Tests live in __tests__/ dirs next to the code.
+  - Conventional Commits enforced (commitlint). Husky pre-commit runs
+    lint-staged. Single test run: npm run test:ci. Lint: npm run lint.
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
