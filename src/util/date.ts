@@ -12,6 +12,11 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault('UTC');
 
+// Reinterpret a wall-clock time AS UTC, keeping the clock value (the `true` is
+// keepLocalTime). Used only by toDate for the storage/entry path: an entered
+// 08:00 is persisted as 08:00Z, with no timezone conversion. Do NOT switch this
+// to dayjs.utc() — that would convert the instant and shift stored times by the
+// runtime offset. (Read-side helpers use dayjs.utc, which is the correct dual.)
 function tzWrapper(d: Dayjs) {
   return dayjs(d).tz('UTC', true);
 }
@@ -22,11 +27,11 @@ export function add(
   unit: 'day' | 'month' | 'year' | 'hour',
 ) {
   const d = date instanceof Date ? date : date + 'T00:00:00.000Z';
-  return dayjs(d).add(value, unit).toDate();
+  return dayjs.utc(d).add(value, unit).toDate();
 }
 
 export function daysInMonth(date: Date) {
-  return tzWrapper(dayjs(date)).daysInMonth();
+  return dayjs.utc(date).daysInMonth();
 }
 
 export function diffInMinutes(date1: Date, date2: Date) {
@@ -34,11 +39,11 @@ export function diffInMinutes(date1: Date, date2: Date) {
 }
 
 export function endOfDay(date?: Date_ISODay | Date) {
-  return tzWrapper(dayjs(date).endOf('day')).toDate();
+  return dayjs.utc(date).endOf('day').toDate();
 }
 
 export function endOfMonth(date: Date) {
-  return tzWrapper(dayjs(date).endOf('month')).toDate();
+  return dayjs.utc(date).endOf('month').toDate();
 }
 
 export function sameDay(date1: Date, date2: Date) {
@@ -46,13 +51,18 @@ export function sameDay(date1: Date, date2: Date) {
 }
 
 export function startOfDay(date?: Date_ISODay | Date) {
-  return tzWrapper(dayjs(date).startOf('day')).toDate();
+  return dayjs.utc(date).startOf('day').toDate();
 }
 
 export function startOfMonth(date?: Date_YearAndMonth | Date) {
-  return tzWrapper(dayjs(date).startOf('month')).toDate();
+  return dayjs.utc(date).startOf('month').toDate();
 }
 export function now() {
+  // Like toDate, now() produces a *current wall-clock* value as a UTC instant
+  // (keepLocalTime), NOT the true UTC moment. This keeps it consistent with how
+  // worklogs are stored, so the client mini-calendar highlights the user's local
+  // "today". Do NOT switch this to dayjs.utc() — that highlights the UTC day,
+  // which is wrong for non-UTC browsers near midnight.
   return tzWrapper(dayjs()).toDate();
 }
 
@@ -62,7 +72,7 @@ export function subtract(
   unit: 'day' | 'month' | 'year',
 ) {
   const d = date instanceof Date ? date : date + 'T00:00:00.000Z';
-  return dayjs(d).subtract(value, unit).toDate();
+  return dayjs.utc(d).subtract(value, unit).toDate();
 }
 
 export function toDate(day: Date_ISODay, time: Date_Time) {
@@ -70,7 +80,7 @@ export function toDate(day: Date_ISODay, time: Date_Time) {
 }
 
 export function isWeekend(date: Date) {
-  return date.getDay() === 0 || date.getDay() === 6;
+  return date.getUTCDay() === 0 || date.getUTCDay() === 6;
 }
 
 export function isHoliday(date: Date) {

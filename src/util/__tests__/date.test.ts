@@ -1,4 +1,4 @@
-import { describe, expect, test } from '@jest/globals';
+import { describe, expect, jest, test } from '@jest/globals';
 import * as date from '@/util/date';
 import {
   assertIsISODay,
@@ -95,10 +95,16 @@ describe('date module', () => {
   });
 
   test('now', () => {
+    // now() is the current wall-clock as a UTC instant (keepLocalTime), so it
+    // differs from a real Date by exactly the runtime timezone offset — in any
+    // timezone. This characterizes the keepLocalTime behavior the mini-calendar
+    // relies on. Freeze the clock so both captures are the same instant
+    // (avoids sub-minute truncation flakiness when the offset is non-zero).
+    jest.useFakeTimers().setSystemTime(new Date('2023-07-01T12:00:00.000Z'));
     const d = new Date();
     const now = date.now();
-    const expectedDiff = d.getTimezoneOffset();
-    expect(date.diffInMinutes(d, now)).toBe(expectedDiff);
+    expect(date.diffInMinutes(d, now)).toBe(d.getTimezoneOffset());
+    jest.useRealTimers();
   });
 
   test('same day', () => {

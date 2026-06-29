@@ -87,6 +87,32 @@ describe('worklog calculator', () => {
       });
       expect(saldo.toString()).toBe('-0h 45min');
     });
+
+    it('is timezone-independent for a begin date at the UTC day boundary', () => {
+      // beginDate at UTC midnight is the edge case where local-time day math
+      // mis-counts the working day. With UTC math the result is the same in any
+      // runtime timezone (the suite is pinned to a non-UTC zone). One full
+      // expected day worked → saldo 0; local math would report 7h30.
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2023-10-16T20:00:00.000Z').getTime());
+
+      const settings = {
+        beginDate: new Date('2023-10-16T00:00:00.000Z'), // Monday, UTC midnight
+        initialBalanceHours: 0,
+        initialBalanceMins: 0,
+      } as Settings;
+      const worklogs = [
+        {
+          // Mon 08:00-15:30 UTC, no lunch → 7.5h = exactly one expected day
+          from: new Date('2023-10-16T08:00:00.000Z'),
+          to: new Date('2023-10-16T15:30:00.000Z'),
+          subtractLunchBreak: false,
+        },
+      ] as unknown as Worklog[];
+
+      const saldo = calculateCurrentSaldo(settings, worklogs);
+      expect(saldo.toString()).toBe('0h 0min');
+    });
   });
 
   describe('calculateWorklogsSum', () => {
