@@ -69,3 +69,7 @@ export interface User {
   email: string;
   name: string | null;
 }
+
+export interface ActiveSession {
+  startedAt: Date;
+}
