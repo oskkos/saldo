@@ -15,6 +15,7 @@ model User {
   settings          Settings?
   passwordResetData PasswordResetData?
   password          String?
+  started_at        DateTime?
   created_at        DateTime           @default(now())
   updated_at        DateTime           @updatedAt
 }
