@@ -3,12 +3,12 @@ import { useContext, useState } from 'react';
 import WorklogInputs from '../worklogInputs';
 import { toISODay, toTime } from '@/util/dateFormatter';
 import { onWorklogEdit } from '@/actions';
-import { toDate } from '@/util/date';
 import { Worklog, WorklogFormDataEntry } from '@/types';
-import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from '../toastContext';
+import { toWorklogFormData } from '@/util/worklogFormData';
+import { errorToastMessage } from '../errorToast';
 
 export default function WorklogEditModal({
   worklog,
@@ -30,31 +30,17 @@ export default function WorklogEditModal({
   });
 
   const editWorklog = () => {
-    assertIsISODay(value.day, 'Day is required');
-    assertIsTime(value.from, 'From is required');
-    assertIsTime(value.to, 'To is required');
-    const ret = {
-      ...value,
-      from: toDate(value.day, value.from),
-      to: toDate(value.day, value.to),
-    };
-    startTransitionWrapper(() => onWorklogEdit(worklog.id, ret), onEdit)
+    startTransitionWrapper(
+      () => onWorklogEdit(worklog.id, toWorklogFormData(value)),
+      onEdit,
+    )
       .then(() => {
         setMsg({ type: 'success', message: 'Worklog updated' });
       })
       .catch((e) => {
-        const errorMsg =
-          e instanceof Error ? (
-            <div className="text-sm">{e.message}</div>
-          ) : null;
         setMsg({
           type: 'error',
-          message: (
-            <div>
-              <div>Failed to update worklog</div>
-              {errorMsg}
-            </div>
-          ),
+          message: errorToastMessage('Failed to update worklog', e),
         });
       });
   };

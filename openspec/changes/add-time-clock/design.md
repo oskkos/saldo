@@ -59,7 +59,7 @@ valid worklog).
 - `ClockCard` on the home screen (fills the currently-empty space below the
   calendar): start button when idle; live elapsed (client `setInterval`) +
   clock-out when running.
-- Saldo badge shows a clocked-in indicator (pulsing dot + live elapsed),
+- Saldo badge shows a clocked-in indicator (a pulsing dot),
   tappable to clock out, so the state is visible app-wide. The bottom dock is
   already at five items, so nothing is added there.
 

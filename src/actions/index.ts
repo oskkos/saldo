@@ -33,7 +33,11 @@ import {
 } from '@/schemas/resetPasswordSchema';
 import { WorklogSchema } from '@/schemas/worklogSchema';
 import { SettingsSchema } from '@/schemas/settingsSchema';
-import { clockIn, clearSession } from '@/repository/clockRepository';
+import {
+  clockIn,
+  clearSession,
+  clockOutWithWorklog,
+} from '@/repository/clockRepository';
 import type { ZodType } from 'zod';
 
 function validateOrThrow(schema: ZodType, data: unknown, fallback: string) {
@@ -100,9 +104,7 @@ export async function onClockIn(startedAt: Date) {
 
 export async function onClockOut(data: WorklogFormData) {
   validateOrThrow(WorklogSchema, data, 'Invalid worklog');
-  const worklog = await insertWorklog(data);
-  await clearSession();
-  return worklog;
+  await clockOutWithWorklog(data);
 }
 
 export async function onClockDiscard() {

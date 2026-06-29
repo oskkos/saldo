@@ -23,7 +23,7 @@
 
 ## 5. UI — global badge indicator
 
-- [x] 5.1 Add a clocked-in indicator (pulsing dot + live elapsed) to the saldo badge area in the navbar; tappable to open clock-out. Read active session in the layout/navbar server fetch.
+- [x] 5.1 Add a clocked-in indicator (a pulsing dot) to the saldo badge area in the navbar, linking to the home screen where the user clocks out. Read active session in the layout/navbar server fetch.
 
 ## 6. Verify
 
