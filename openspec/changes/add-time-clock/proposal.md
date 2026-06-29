@@ -24,7 +24,7 @@ makes the app usable in the moment rather than after the fact.
   the user can Discard).
 - Surface the clock state in the UI: a **clock card** on the home screen (start
   button when idle; live elapsed timer + clock-out when running) and a **clocked-in
-  indicator on the saldo badge** (dot + live elapsed) so the running state is
+  indicator on the saldo badge** (a pulsing dot) so the running state is
   visible from any page.
 
 Out of scope (deliberately): background/auto-close of forgotten sessions (no job

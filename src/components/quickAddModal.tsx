@@ -1,16 +1,16 @@
 'use client';
 import { useContext, useState } from 'react';
-import { toDate } from '@/util/date';
 import WorklogInputs from './worklogInputs';
 import { Date_Time, toISODay } from '@/util/dateFormatter';
 import { onWorklogSubmit } from '@/actions';
 import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
-import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import Modal from './modal';
 import DateInput from './form/dateInput';
 import { Worklog, WorklogFormDataEntry } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from './toastContext';
+import { toWorklogFormData } from '@/util/worklogFormData';
+import { errorToastMessage } from './errorToast';
 
 export default function QuickAddWorklogModal({
   modalId,
@@ -32,34 +32,17 @@ export default function QuickAddWorklogModal({
   });
 
   const saveWorklog = () => {
-    startTransitionWrapper(() => {
-      assertIsISODay(value.day, 'Invalid day');
-      assertIsTime(value.from, 'Invalid from time');
-      assertIsTime(value.to, 'Invalid to time');
-      const ret = {
-        ...value,
-        from: toDate(value.day, value.from),
-        to: toDate(value.day, value.to),
-      };
-
-      return onWorklogSubmit(ret);
-    }, onSubmit)
+    startTransitionWrapper(
+      () => onWorklogSubmit(toWorklogFormData(value)),
+      onSubmit,
+    )
       .then(() => {
         setMsg({ type: 'success', message: 'Worklog created' });
       })
       .catch((e) => {
-        const errorMsg =
-          e instanceof Error ? (
-            <div className="text-sm">{e.message}</div>
-          ) : null;
         setMsg({
           type: 'error',
-          message: (
-            <div>
-              <div>Failed to create worklog</div>
-              {errorMsg}
-            </div>
-          ),
+          message: errorToastMessage('Failed to create worklog', e),
         });
       });
   };

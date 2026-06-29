@@ -1,24 +1,63 @@
 import 'server-only';
 
+import { cache } from 'react';
 import { prisma } from './prisma';
-import { ActiveSession } from '@/types';
+import { ActiveSession, WorklogFormData } from '@/types';
 import * as Sentry from '@sentry/nextjs';
 import { getUserFromSession } from '@/auth/authSession';
 
-export async function getActiveSession(): Promise<ActiveSession | null> {
+// Cached per request so the layout (badge) and the home page (clock card) share
+// a single read instead of querying started_at twice.
+export const getActiveSession = cache(
+  async (): Promise<ActiveSession | null> => {
+    const user = await getUserFromSession();
+    if (!user) {
+      throw new Error('User not found in session.');
+    }
+
+    return await Sentry.startSpan(
+      { name: 'getActiveSession', op: 'db.sql.prisma' },
+      async () => {
+        const row = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { started_at: true },
+        });
+        return row?.started_at ? { startedAt: row.started_at } : null;
+      },
+    );
+  },
+);
+
+// Clock out atomically: create the worklog and clear the open session in one
+// transaction, so a failure can't leave a logged worklog with the session still
+// open (which would let a retry double-log).
+export async function clockOutWithWorklog(
+  data: WorklogFormData,
+): Promise<void> {
   const user = await getUserFromSession();
   if (!user) {
     throw new Error('User not found in session.');
   }
 
-  return await Sentry.startSpan(
-    { name: 'getActiveSession', op: 'db.sql.prisma' },
+  await Sentry.startSpan(
+    { name: 'clockOutWithWorklog', op: 'db.sql.prisma' },
     async () => {
-      const row = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { started_at: true },
+      await prisma.$transaction(async (tx) => {
+        await tx.worklog.create({
+          data: {
+            from: data.from,
+            to: data.to,
+            comment: data.comment,
+            user_id: user.id,
+            subtract_lunch_break: data.subtractLunchBreak,
+            absence: data.absence ?? null,
+          },
+        });
+        await tx.user.update({
+          where: { id: user.id },
+          data: { started_at: null },
+        });
       });
-      return row?.started_at ? { startedAt: row.started_at } : null;
     },
   );
 }

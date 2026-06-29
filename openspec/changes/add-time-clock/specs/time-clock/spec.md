@@ -88,8 +88,8 @@ SHALL NOT automatically close or alter open sessions in the background.
 
 The system SHALL present the clock control on the home screen (a start action when
 idle; the live elapsed time and a clock-out action when running) and SHALL
-indicate the clocked-in state with live elapsed time in the always-visible saldo
-badge area, so the running state is discoverable from any page.
+indicate the clocked-in state in the always-visible saldo badge area, so the
+running state is discoverable from any page.
 
 #### Scenario: Idle home screen
 
@@ -100,4 +100,4 @@ badge area, so the running state is discoverable from any page.
 
 - **WHEN** the user is clocked in
 - **THEN** the home screen shows live elapsed time and a clock-out action
-- **AND** the saldo badge area indicates the clocked-in state with live elapsed time
+- **AND** the saldo badge area indicates the clocked-in state
