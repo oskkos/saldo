@@ -81,7 +81,12 @@ export default function ClockOutModal({
         </div>
       ) : null}
       <div className="flex flex-wrap justify-between items-center mt-3">
-        <WorklogInputs value={value} setValue={setValue} />
+        <WorklogInputs
+          value={value}
+          setValue={setValue}
+          anchor={toTime(startedAt)}
+          allowDuration={false}
+        />
       </div>
     </Modal>
   );

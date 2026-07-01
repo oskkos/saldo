@@ -23,6 +23,7 @@ export default function QuickAddWorklogModal({
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
+  const [inputsValid, setInputsValid] = useState(true);
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(),
     comment: '',
@@ -47,7 +48,12 @@ export default function QuickAddWorklogModal({
       });
   };
   return (
-    <Modal id={modalId} confirmLabel="Save" confirmAction={saveWorklog}>
+    <Modal
+      id={modalId}
+      confirmLabel="Save"
+      confirmAction={saveWorklog}
+      confirmDisabled={!inputsValid}
+    >
       <h3 className="font-bold text-lg">Add new worklog</h3>
 
       <div className="flex flex-wrap justify-between items-center m-3">
@@ -59,7 +65,12 @@ export default function QuickAddWorklogModal({
             setValue({ ...value, day: day ?? '' });
           }}
         />
-        <WorklogInputs value={value} setValue={setValue} />
+        <WorklogInputs
+          value={value}
+          setValue={setValue}
+          anchor={defaults.fromDefault}
+          onValidityChange={setInputsValid}
+        />
       </div>
     </Modal>
   );

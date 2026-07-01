@@ -42,6 +42,7 @@ export default function WorklogEntry({
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
   const [wl, setWl] = useState(worklogs);
+  const [inputsValid, setInputsValid] = useState(true);
 
   const ref = useRef<HTMLDivElement>(null);
   const { onSwipeLeft, onSwipeRight } = useSwipeEvents(
@@ -86,9 +87,15 @@ export default function WorklogEntry({
           </div>
         </div>
         <div className="flex flex-wrap justify-between items-center m-3 w-80">
-          <WorklogInputs value={value} setValue={setValue} />
+          <WorklogInputs
+            value={value}
+            setValue={setValue}
+            anchor={defaults.fromDefault}
+            onValidityChange={setInputsValid}
+          />
           <button
             className="btn btn-secondary mt-3 w-full"
+            disabled={!inputsValid}
             onClick={() => {
               const action = () => {
                 assertIsISODay(value.day, 'Invalid day');
