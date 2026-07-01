@@ -45,9 +45,15 @@ _None._
 ## Impact
 
 - **UI:** `src/components/worklogInputs.tsx` (toggle + hours/minutes inputs +
-  anchor plumbing), `src/components/quickAddModal.tsx` and
-  `src/components/worklogItem/worklogEditModal.tsx` (pass the anchor / default
-  start into `WorklogInputs`).
+  anchor plumbing + an `allowDuration` opt-out prop). All four `WorklogInputs`
+  consumers pass the anchor:
+  - `src/components/quickAddModal.tsx` — anchor = `fromDefault`.
+  - `src/app/worklog-entry/worklogEntry.tsx` — the full-page manual entry form;
+    anchor = `fromDefault`, Submit disabled while a duration is invalid.
+  - `src/components/worklogItem/worklogEditModal.tsx` — anchor = the worklog's
+    own `from`.
+  - `src/components/clock/clockOutModal.tsx` — passes `allowDuration={false}` to
+    stay Times-only (the clock-out path has real start/end times).
 - **Conversion:** `src/util/worklogFormData.ts` and/or a small duration helper
   to synthesize `from`/`to` from an anchor + minutes and to compute net minutes
   from an existing worklog.

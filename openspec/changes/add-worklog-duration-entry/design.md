@@ -81,6 +81,18 @@ The existing server-side same-day / positive-duration refinements in
 `worklogSchema.tsx` remain the backstop — without a UI guard they would fire, but
 with the confusing "End time must be after start time" message.
 
+**Decision: A single `allowDuration` opt-out gates the toggle; the clock-out flow
+uses it.** `WorklogInputs` has four consumers, not two: QuickAdd, the full-page
+`worklogEntry` form, the edit modal, and the clock-out modal. The first three are
+manual entry surfaces and get Duration mode; clock-out inherently has real
+start/end times (and its own cross-midnight handling), so it passes
+`allowDuration={false}` and stays Times-only. Defaulting the prop to `true` keeps
+the manual surfaces zero-config.
+
+- *Alternative considered — no opt-out, duration everywhere.* Rejected: it
+  contradicts the clock-out non-goal and would collide with that modal's existing
+  crossesMidnight blanking logic.
+
 **Decision: Edit form opens in Times mode.** It reflects the stored
 representation as-is, so a comment-only edit never rewrites the times. Times are
 only re-synthesized if the user deliberately toggles to Duration. Switching a
@@ -108,5 +120,6 @@ UI change; stored data is identical to what Times mode produces.
 
 ## Open Questions
 
-- Exact copy for the mode toggle (e.g. "Times / Duration" segmented control vs. a
-  checkbox) and the overflow error message — left to implementation.
+- Resolved: the mode switch is a daisyUI toggle (`Times [◯] Duration`, a
+  `toggle toggle-primary` checkbox) rather than a segmented/tab control. The
+  overflow message is "Duration is too long for a start of HH:MM".
