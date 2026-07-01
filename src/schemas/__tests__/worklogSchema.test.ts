@@ -42,6 +42,18 @@ describe('WorklogSchema', () => {
     expect(result.success).toBe(false);
   });
 
+  // Backstop for Duration-mode entry: if the UI overflow guard is bypassed and a
+  // duration that crosses midnight reaches the action, the same-day refinement
+  // must still reject it (anchor + duration landing on the next day).
+  it('rejects a duration-mode overflow that lands on the next day', () => {
+    const result = WorklogSchema.safeParse({
+      ...base,
+      from: new Date('2026-06-28T20:00:00Z'),
+      to: new Date('2026-06-29T03:30:00Z'),
+    });
+    expect(result.success).toBe(false);
+  });
+
   it('rejects an unrecognized absence reason', () => {
     const result = WorklogSchema.safeParse({ ...base, absence: 'vacation' });
     expect(result.success).toBe(false);

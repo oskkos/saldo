@@ -3,12 +3,16 @@ export default function IntegerInput({
   value,
   placeholder,
   className,
+  min,
+  max,
   onChange,
 }: {
   label: string;
   value: number | '';
   placeholder?: string;
   className?: string;
+  min?: number;
+  max?: number;
   onChange?: (val?: number) => void;
 }) {
   const input = (
@@ -17,6 +21,8 @@ export default function IntegerInput({
       className={`input input-bordered ${className ?? ''}`}
       placeholder={placeholder}
       value={value}
+      min={min}
+      max={max}
       onChange={(e) => {
         if (e.target.value !== '') {
           onChange?.(parseInt(e.target.value));

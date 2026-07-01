@@ -21,6 +21,7 @@ export default function WorklogEditModal({
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
+  const [inputsValid, setInputsValid] = useState(true);
   const [value, setValue] = useState<WorklogFormDataEntry>({
     day: toISODay(worklog.from),
     from: toTime(worklog.from),
@@ -45,10 +46,20 @@ export default function WorklogEditModal({
       });
   };
   return (
-    <Modal id={editModalId} confirmLabel="Edit" confirmAction={editWorklog}>
+    <Modal
+      id={editModalId}
+      confirmLabel="Edit"
+      confirmAction={editWorklog}
+      confirmDisabled={!inputsValid}
+    >
       <h3 className="font-bold text-lg">Edit worklog</h3>
       <div className="flex flex-wrap justify-between items-center m-3 sm:w-11/12">
-        <WorklogInputs value={value} setValue={setValue} />
+        <WorklogInputs
+          value={value}
+          setValue={setValue}
+          anchor={toTime(worklog.from)}
+          onValidityChange={setInputsValid}
+        />
       </div>
     </Modal>
   );
