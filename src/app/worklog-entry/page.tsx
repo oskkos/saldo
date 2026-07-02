@@ -4,6 +4,9 @@ import { onWorklogSubmit } from '@/actions';
 import { endOfDay, startOfDay } from '@/util/date';
 import { assertExists, assertIsISODay } from '@/util/assertionFunctions';
 import { getSettings } from '@/repository/settingsRepository';
+import { getExpectedHoursOverrides } from '@/repository/expectedHoursOverrideRepository';
+import { expectedMinutesByDay, resolveExpectedMinutes } from '@/services';
+import { toISODay } from '@/util/dateFormatter';
 
 export default async function WorklogEntryPage({
   searchParams,
@@ -19,6 +22,14 @@ export default async function WorklogEntryPage({
     startOfDay(params.day),
     endOfDay(params.day),
   );
+  const overrides = await getExpectedHoursOverrides();
+  const override =
+    overrides.find((o) => toISODay(o.date) === params.day) ?? null;
+  const expectedMinutes = resolveExpectedMinutes(
+    startOfDay(params.day),
+    settings.expectedMinutesPerDay,
+    expectedMinutesByDay(overrides),
+  );
   return (
     <WorklogEntry
       key={params.day}
@@ -29,6 +40,8 @@ export default async function WorklogEntryPage({
       }}
       worklogs={worklogs}
       onSubmit={onWorklogSubmit}
+      expectedMinutes={expectedMinutes}
+      override={override}
     />
   );
 }
