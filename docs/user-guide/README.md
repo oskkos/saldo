@@ -18,8 +18,10 @@ docs/user-guide/
 
 ## Build / serve locally
 
-This phase builds locally only — there is no hosted deploy. The toolchain is
-Python (mkdocs-material), kept separate from the app's Node dependencies.
+Local `mkdocs serve` is the authoring loop. Publishing is automated: on push to
+`develop`, `.github/workflows/docs.yml` builds the site and deploys it to **GitHub
+Pages** (requires Pages enabled for the repo with Source = GitHub Actions). The
+toolchain is Python (mkdocs-material), kept separate from the app's Node dependencies.
 
 ```bash
 cd docs/user-guide

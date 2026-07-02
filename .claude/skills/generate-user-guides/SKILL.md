@@ -22,6 +22,8 @@ traces back to a requirement.
    `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000` (302/307 = up, needs
    login). If it is down, ask the user to start it (`npm run dev`) — do not start it
    yourself unless they ask.
+   **Local dev credentials** for signing the automation browser in/out:
+   `test@user.com` / `testuser` (email + password). These are local-dev-only.
 3. **The dev account holds representative, presentable data.** v1 has no seeding/clock
    freeze: screenshots reflect live state. If the calendar/statistics look empty or
    embarrassing, warn the user and pause — an empty screenshot is worse than none.
@@ -134,6 +136,15 @@ Then per screen:
 
 Ground the prose on what the screenshot actually shows. Do not describe controls that
 aren't visible. Keep every reference to dates/balances agnostic.
+
+### Login-state ordering (auth pages)
+
+Most pages need the browser **logged in**; the sign-in page needs it **logged out**
+(navigating to `/signin` while authenticated redirects home). So: capture all
+authenticated pages FIRST, then sign out (top-bar **Sign out**) and capture `/signin`
+LAST. To sign back in afterward, use the local dev credentials above on the
+email/password form. Signing out only affects the automation browser, not the user's
+own session.
 
 ## Traceability footer (exact format — the scripts parse this)
 

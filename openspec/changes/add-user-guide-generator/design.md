@@ -115,9 +115,18 @@ Playwright's built-in `toHaveScreenshot` + region masking over hand-rolled pixel
 The generated Markdown + screenshots live under **`docs/user-guide/`** and are surfaced
 as a PR. mkdocs-material renders the site; its nav is the one durable hand-blessed
 artifact (new capabilities get a soft-default slot per D2/proposal, corrected in review).
-The **first phase builds/serves the site locally only** — no hosted deploy (e.g. GitHub
-Pages) until the guide has proven itself. The **initial cold run lands as one PR** for
-the whole guide; subsequent runs are deltas (D4).
+The **initial cold run lands as one PR** for the whole guide; subsequent runs are
+deltas (D4).
+
+### D9 — Publish to GitHub Pages via CI (revises the earlier local-only decision)
+
+A GitHub Actions workflow (`.github/workflows/docs.yml`) builds the site with
+mkdocs-material and deploys it to **GitHub Pages** on push to `develop`, path-filtered
+to `docs/user-guide/**` so it only runs when the guide changes. This **supersedes the
+original "local-only, no hosted deploy" decision** — the guide is useful enough to host.
+Local `mkdocs serve` remains the authoring loop; CI handles publishing. Requires GitHub
+Pages to be enabled for the repo with **Source = GitHub Actions** (a one-time repo
+setting) and the standard `pages: write` / `id-token: write` job permissions.
 
 ## Risks / Trade-offs
 
@@ -156,7 +165,7 @@ Rollback = delete the skill and docs tree; nothing in the app depends on them.
   `docs/user-guide/`.
 - **Manifest format & hash granularity** — per-requirement hash keyed by capability +
   requirement name, embedded in each page's traceability footer (no sidecar). See D4.
-- **mkdocs build/deploy target** — local-only build in the first phase; no hosted deploy.
+- **mkdocs build/deploy target** — ~~local-only build in the first phase~~ **revised (D9): published to GitHub Pages via CI** on push to `develop`; local `mkdocs serve` stays the authoring loop.
 - **Cold run** — lands as one PR covering the whole guide; later runs are deltas.
 
 ## Open Questions
