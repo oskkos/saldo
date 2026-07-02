@@ -68,11 +68,17 @@ durable hand-authored surface down to just the mkdocs nav.
 
 ### D4 — Content-hash manifest + stateful delta regeneration
 
-The skill hashes each requirement a page cites and stores it in a manifest. A default
-run regenerates only pages whose cited requirements changed. This is kept in v1 not
-for cost but for **diff hygiene** — regenerating all prose every run would make every
-PR a wall of reworded paragraphs and destroy the review loop. Hashing is pure text,
-no browser, effectively free.
+The skill hashes each requirement a page cites and records it, so a default run
+regenerates only pages whose cited requirements changed. This is kept in v1 not for
+cost but for **diff hygiene** — regenerating all prose every run would make every PR a
+wall of reworded paragraphs and destroy the review loop. Hashing is pure text, no
+browser, effectively free.
+
+The manifest is **realized as per-requirement hashes embedded directly in each page's
+traceability footer** (keyed by capability + requirement name), not a separate sidecar
+file. The footer already carries the citations (D2), so co-locating the hash keeps
+source and provenance in one reviewable place — the footers collectively *are* the
+manifest, and a page can never drift from its regeneration key.
 
 ### D5 — Scoped runs (fuzzy scope + refresh mode) as the manual drift lever
 
@@ -106,9 +112,12 @@ Playwright's built-in `toHaveScreenshot` + region masking over hand-rolled pixel
 
 ### D8 — mkdocs-material for presentation; committed output; PR is the gate
 
-The generated Markdown + screenshots live in a committed docs tree and are surfaced as
-a PR. mkdocs-material renders the site; its nav is the one durable hand-blessed
+The generated Markdown + screenshots live under **`docs/user-guide/`** and are surfaced
+as a PR. mkdocs-material renders the site; its nav is the one durable hand-blessed
 artifact (new capabilities get a soft-default slot per D2/proposal, corrected in review).
+The **first phase builds/serves the site locally only** — no hosted deploy (e.g. GitHub
+Pages) until the guide has proven itself. The **initial cold run lands as one PR** for
+the whole guide; subsequent runs are deltas (D4).
 
 ## Risks / Trade-offs
 
@@ -140,13 +149,17 @@ Additive tooling only — no runtime migration, no rollback concern for `src/`.
 
 Rollback = delete the skill and docs tree; nothing in the app depends on them.
 
+## Resolved Decisions
+
+- **Invocation name** — the skill is invoked as `/generate-user-guides`.
+- **Docs tree layout** — generated Markdown, screenshots, and `mkdocs.yml` live under
+  `docs/user-guide/`.
+- **Manifest format & hash granularity** — per-requirement hash keyed by capability +
+  requirement name, embedded in each page's traceability footer (no sidecar). See D4.
+- **mkdocs build/deploy target** — local-only build in the first phase; no hosted deploy.
+- **Cold run** — lands as one PR covering the whole guide; later runs are deltas.
+
 ## Open Questions
 
-- **Skill location & invocation name** — confirm the repo's skills directory and the
-  slash-command name (e.g. `/generate-user-guides`).
-- **Docs tree layout** — `docs/user-guide/` vs a separate top-level `user-guide/`; where the
-  manifest and screenshots live relative to `mkdocs.yml`.
-- **Manifest format & hash granularity** — per-requirement hash keyed how (capability +
-  requirement name?); JSON sidecar vs embedded in footers.
-- **mkdocs build/deploy target** — local-only build in v1, or publish (GitHub Pages) later?
-- **Whether cold-run should be one giant PR** or chunked per IA section for reviewability.
+- None outstanding. (Skill/`scripts/` directory location follows the repo's existing
+  Claude Code skills convention.)
