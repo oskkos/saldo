@@ -21,6 +21,10 @@ theme:
     - content.code.copy
     - toc.integrate
 
+# Strip the traceability footers from the rendered site (kept in source as metadata).
+hooks:
+  - hooks/strip_traceability.py
+
 markdown_extensions:
   - admonition
   - attr_list
