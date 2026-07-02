@@ -17,6 +17,7 @@ const toSettings = (settings: PrismaSettings): Settings => {
     initialBalanceMins: settings.initial_balance_mins,
     fromDefault: settings.from_default,
     toDefault: settings.to_default,
+    expectedMinutesPerDay: settings.expected_minutes_per_day,
   };
 };
 export async function getSettings(): Promise<Settings | null> {
@@ -47,6 +48,7 @@ export async function insertSettings({
   initialBalanceMins,
   fromDefault,
   toDefault,
+  expectedMinutesPerDay,
 }: SettingsData & { userId: number }): Promise<Settings> {
   return await Sentry.startSpan(
     { name: 'insertSettings', op: 'db.sql.prisma' },
@@ -62,6 +64,7 @@ export async function insertSettings({
           initial_balance_mins: initialBalanceMins,
           from_default: fromDefault,
           to_default: toDefault,
+          expected_minutes_per_day: expectedMinutesPerDay,
         },
         update: {},
       });
@@ -75,6 +78,7 @@ export async function upsertSettings({
   initialBalanceMins,
   fromDefault,
   toDefault,
+  expectedMinutesPerDay,
 }: SettingsData): Promise<Settings> {
   const user = await getUserFromSession();
   if (!user) {
@@ -95,6 +99,7 @@ export async function upsertSettings({
           initial_balance_mins: initialBalanceMins,
           from_default: fromDefault,
           to_default: toDefault,
+          expected_minutes_per_day: expectedMinutesPerDay,
         },
         update: {
           begin_date: beginDate,
@@ -102,6 +107,7 @@ export async function upsertSettings({
           initial_balance_mins: initialBalanceMins,
           from_default: fromDefault,
           to_default: toDefault,
+          expected_minutes_per_day: expectedMinutesPerDay,
         },
       });
       return toSettings(s);

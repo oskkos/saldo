@@ -7,6 +7,7 @@ const base = {
   initialBalanceMins: 30,
   fromDefault: '08:00',
   toDefault: '16:00',
+  expectedMinutesPerDay: 450,
 };
 
 describe('SettingsSchema', () => {

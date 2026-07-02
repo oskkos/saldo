@@ -22,6 +22,11 @@ export const SettingsSchema = z
       .max(59, { error: 'Minutes must be between 0 and 59' }),
     fromDefault: timeString,
     toDefault: timeString,
+    expectedMinutesPerDay: z
+      .number()
+      .int({ error: 'Expected minutes must be a whole number' })
+      .min(0, { error: 'Expected hours must be between 0 and 24' })
+      .max(24 * 60, { error: 'Expected hours must be between 0 and 24' }),
   })
   .refine(
     (data) =>
