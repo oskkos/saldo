@@ -20,7 +20,17 @@ export default function Settings({ settings }: { settings: SettingsType }) {
     initialBalanceMins: number | '';
     fromDefault: Date_Time | null;
     toDefault: Date_Time | null;
-  }>(settings);
+    expectedHours: number | '';
+    expectedMins: number | '';
+  }>({
+    beginDate: settings.beginDate,
+    initialBalanceHours: settings.initialBalanceHours,
+    initialBalanceMins: settings.initialBalanceMins,
+    fromDefault: settings.fromDefault,
+    toDefault: settings.toDefault,
+    expectedHours: Math.floor(settings.expectedMinutesPerDay / 60),
+    expectedMins: settings.expectedMinutesPerDay % 60,
+  });
   const { setMsg } = useContext(ToastContext);
 
   return (
@@ -99,6 +109,38 @@ export default function Settings({ settings }: { settings: SettingsType }) {
           />
         </div>
 
+        <div>Expected / day</div>
+        <div>
+          <div className="flex items-center mt-4">
+            <IntegerInput
+              label="Hours"
+              value={data.expectedHours}
+              className="w-20"
+              placeholder="hh"
+              min={0}
+              max={24}
+              onChange={(val) => {
+                setData({ ...data, expectedHours: val ?? '' });
+              }}
+            />
+            <span className="mx-3">:</span>
+            <IntegerInput
+              label="Minutes"
+              value={data.expectedMins}
+              className="w-20"
+              placeholder="mm"
+              min={0}
+              max={59}
+              onChange={(val) => {
+                setData({ ...data, expectedMins: val ?? '' });
+              }}
+            />
+          </div>
+          <p className="text-xs opacity-70 mt-1">
+            Changing this recomputes your whole balance.
+          </p>
+        </div>
+
         <div className="col-span-2">
           <button
             className="btn btn-secondary mt-3 w-full"
@@ -117,6 +159,8 @@ export default function Settings({ settings }: { settings: SettingsType }) {
                   beginDate: data.beginDate,
                   fromDefault: data.fromDefault,
                   toDefault: data.toDefault,
+                  expectedMinutesPerDay:
+                    (data.expectedHours || 0) * 60 + (data.expectedMins || 0),
                 });
               };
               startTransitionWrapper(action)
