@@ -46,3 +46,6 @@ src/generated/prisma
 
 # Claude Code local settings (per-machine, not shared)
 .claude/settings.local.json
+# Generated user-guide site build
+docs/user-guide/site/
+docs/user-guide/.venv/

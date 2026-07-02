@@ -8,6 +8,8 @@ module.exports = [
       'build/**',
       'playwright-report/**',
       'node_modules/**',
+      '.claude/**',
+      'docs/user-guide/site/**',
     ],
   },
   ...next,

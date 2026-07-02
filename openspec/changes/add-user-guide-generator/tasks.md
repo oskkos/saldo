@@ -1,8 +1,8 @@
 ## 1. Docs tooling and scaffold
 
-- [ ] 1.1 Add mkdocs-material tooling (Python requirements/config for local build+serve) without touching the app's Node runtime deps
-- [ ] 1.2 Create the docs tree scaffold under `docs/user-guide/`: `mkdocs.yml`, the guide pages directory, a screenshots directory, and a placeholder nav
-- [ ] 1.3 Add a short README documenting how to build/serve the site locally (local-only in this phase; no hosted deploy)
+- [x] 1.1 Add mkdocs-material tooling (Python requirements/config for local build+serve) without touching the app's Node runtime deps
+- [x] 1.2 Create the docs tree scaffold under `docs/user-guide/`: `mkdocs.yml`, the guide pages directory, a screenshots directory, and a placeholder nav
+- [x] 1.3 Add a short README documenting how to build/serve the site locally (local-only in this phase; no hosted deploy)
 
 ## 2. Manifest and helper scripts
 

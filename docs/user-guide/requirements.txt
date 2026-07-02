@@ -1,0 +1,3 @@
+# Docs toolchain for the Saldo user guide (Python, separate from the app's Node deps).
+# Install into a virtualenv — see README.md.
+mkdocs-material

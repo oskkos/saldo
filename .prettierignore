@@ -6,6 +6,8 @@
 CLAUDE.md
 .remember
 openspec
+docs/user-guide/content
+docs/user-guide/site
 prisma/migrations
 *Dockerfile
 docker-compose*
