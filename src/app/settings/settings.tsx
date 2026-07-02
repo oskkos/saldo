@@ -3,6 +3,7 @@
 import { onSettingsUpdate } from '@/actions';
 import DateInput from '@/components/form/dateInput';
 import IntegerInput from '@/components/form/integerInput';
+import ExpectedHoursFields from '@/components/expectedHoursFields';
 import TimeInput from '@/components/form/timeInput';
 import { ToastContext } from '@/components/toastContext';
 import { assertExists } from '@/util/assertionFunctions';
@@ -111,31 +112,12 @@ export default function Settings({ settings }: { settings: SettingsType }) {
 
         <div>Expected / day</div>
         <div>
-          <div className="flex items-center mt-4">
-            <IntegerInput
-              label="Hours"
-              value={data.expectedHours}
-              className="w-20"
-              placeholder="hh"
-              min={0}
-              max={24}
-              onChange={(val) => {
-                setData({ ...data, expectedHours: val ?? '' });
-              }}
-            />
-            <span className="mx-3">:</span>
-            <IntegerInput
-              label="Minutes"
-              value={data.expectedMins}
-              className="w-20"
-              placeholder="mm"
-              min={0}
-              max={59}
-              onChange={(val) => {
-                setData({ ...data, expectedMins: val ?? '' });
-              }}
-            />
-          </div>
+          <ExpectedHoursFields
+            hours={data.expectedHours}
+            mins={data.expectedMins}
+            onHours={(val) => setData({ ...data, expectedHours: val })}
+            onMins={(val) => setData({ ...data, expectedMins: val })}
+          />
           <p className="text-xs opacity-70 mt-1">
             Changing this recomputes your whole balance.
           </p>

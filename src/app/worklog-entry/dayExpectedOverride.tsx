@@ -11,12 +11,12 @@ import Modal, { closeModal, showModal } from '@/components/modal';
 import ExpectedHoursFields from '@/components/expectedHoursFields';
 import { Date_ISODay, toDayMonthYear } from '@/util/dateFormatter';
 import { startOfDay } from '@/util/date';
+import { formatMinutes } from '@/util/duration';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from '@/components/toastContext';
 import { errorToastMessage } from '@/components/errorToast';
 import { MdEdit } from 'react-icons/md';
 
-const formatMinutes = (m: number) => `${Math.floor(m / 60)}h ${m % 60}min`;
 const MODAL_ID = 'expected-override-modal';
 
 export default function DayExpectedOverride({
