@@ -55,20 +55,28 @@ Data flows `page/component → action → repository → Prisma`, with `services
 
 ## OpenSpec workflow (`/opsx:*`)
 
-The `/opsx:apply` and `/opsx:archive` commands **do not touch git** — committing is always a separate manual step. `openspec/` is in `.prettierignore` and lint-staged only runs on `*.{js,jsx,ts,tsx}`, so spec markdown is never reformatted by the pre-commit hook.
+The end-to-end pipeline is **explore → propose → apply → archive**, one PR per change. The `/opsx:*` commands themselves **do not touch git** — I drive all git actions (branch, commit, push, PR) as separate steps at the points below. `openspec/` is in `.prettierignore` and lint-staged only runs on `*.{js,jsx,ts,tsx}`, so spec markdown is never reformatted by the pre-commit hook. All commits use the enforced Conventional Commit types (commitlint rejects otherwise): `feat(...)`, `fix(...)`, `docs(...)`, `refactor(...)`, `test(...)`, scoped to the area touched.
 
-### `/opsx:apply` — commits
-- Output is **authored code + `tasks.md` checkbox updates**. Review the diff; never blind-commit.
-- Commit in logical chunks using the enforced Conventional Commit types (commitlint rejects otherwise): `feat(...)`, `fix(...)`, `test(...)`, scoped to the area touched.
-- A single commit is fine for a cohesive change; split by concern when it spans layers.
+### `/opsx:explore` — think, don't build
+Planning and investigation only. No git actions.
+
+### `/opsx:propose` — branch off fresh develop, then open the PR
+- **Branch first:** `git fetch origin develop`, then create the change branch from `origin/develop` (untracked proposal files carry across the switch).
+- Generate the artifacts (proposal/design/specs/tasks).
+- Once planning is complete, propose: **commit the proposal** (`docs(openspec): propose <change-name>`), **push**, and **open a new PR** against `develop`. The PR exists from the proposal stage; apply commits land on it.
+
+### `/opsx:apply` — commit per task, verify, then push
+- Review the diff; never blind-commit.
+- **Commit once per top-level task group** in `tasks.md` (each commit carries that group's code plus its `tasks.md` checkbox updates). Intermediate commits need not independently build — only the branch tip must be green (tests + lint + typecheck).
+- When apply is done, **pause and ask the user to manually verify** the implementation and for any change suggestions. **Push only once the user gives the OK.**
 - **Do not archive in this step.**
 
-### `/opsx:archive` — commits + timing
-- **Timing:** run it as the **last step before merge, only once the PR is approved.** The sync rewrites canonical `openspec/specs/`, so archiving early would assert behavior that isn't merged yet.
+### `/opsx:archive` — sync + archive while the PR is open
+- **Timing:** run it while the **PR is still open**, once everything is **reconciled and mergeable** (CI green, review addressed) — it does not wait for formal approval.
 - When prompted, choose **"Sync now"** before the folder move — otherwise canonical specs drift from the change being archived.
-- **Commit:** one dedicated commit covering **both** the spec sync and the folder move:
+- **One dedicated commit** covering **both** the spec sync and the folder move:
   ```
   docs(openspec): sync <capability> spec(s) and archive <change-name>
   ```
-- Commit it **verbatim** — it is generated output (sync deltas + the `mv` to `changes/archive/YYYY-MM-DD-<name>`). Don't hand-edit; if a synced spec looks wrong, fix the delta spec and re-run rather than patching the result.
-- Keep it **isolated from implementation commits** so the folder move renders as a rename and the archive reverts as a unit.
+  Commit it **verbatim** — generated output (sync deltas + the `mv` to `changes/archive/YYYY-MM-DD-<name>`). Don't hand-edit; if a synced spec looks wrong, fix the delta spec and re-run. Keep it **isolated from implementation commits** so the move renders as a rename and reverts as a unit.
+- After the archive commit, **push**.
