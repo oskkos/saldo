@@ -6,12 +6,16 @@ site_dir: site
 
 theme:
   name: material
+  logo: assets/saldo.png
+  favicon: assets/saldo.png
   palette:
     - scheme: default
+      primary: custom
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
     - scheme: slate
+      primary: custom
       toggle:
         icon: material/weather-sunny
         name: Switch to light mode
@@ -20,6 +24,9 @@ theme:
     - navigation.top
     - content.code.copy
     - toc.integrate
+
+extra_css:
+  - stylesheets/extra.css
 
 # Strip the traceability footers from the rendered site (kept in source as metadata).
 hooks:
