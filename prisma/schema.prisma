@@ -8,16 +8,17 @@ datasource db {
 }
 
 model User {
-  id                Int                @id @default(autoincrement())
-  email             String             @unique
-  name              String?
-  worklogs          Worklog[]
-  settings          Settings?
-  passwordResetData PasswordResetData?
-  password          String?
-  started_at        DateTime?
-  created_at        DateTime           @default(now())
-  updated_at        DateTime           @updatedAt
+  id                     Int                     @id @default(autoincrement())
+  email                  String                  @unique
+  name                   String?
+  worklogs               Worklog[]
+  settings               Settings?
+  passwordResetData      PasswordResetData?
+  expectedHoursOverrides ExpectedHoursOverride[]
+  password               String?
+  started_at             DateTime?
+  created_at             DateTime                @default(now())
+  updated_at             DateTime                @updatedAt
 }
 
 model PasswordResetData {
@@ -51,14 +52,28 @@ enum Absence {
 }
 
 model Settings {
-  id                    Int      @id @default(autoincrement())
-  user_id               Int      @unique
-  user                  User     @relation(fields: [user_id], references: [id])
-  begin_date            DateTime
-  initial_balance_hours Int
-  initial_balance_mins  Int
-  created_at            DateTime @default(now())
-  updated_at            DateTime @updatedAt
-  from_default          String   @default("08:00")
-  to_default            String   @default("16:00")
+  id                       Int      @id @default(autoincrement())
+  user_id                  Int      @unique
+  user                     User     @relation(fields: [user_id], references: [id])
+  begin_date               DateTime
+  initial_balance_hours    Int
+  initial_balance_mins     Int
+  created_at               DateTime @default(now())
+  updated_at               DateTime @updatedAt
+  from_default             String   @default("08:00")
+  to_default               String   @default("16:00")
+  expected_minutes_per_day Int      @default(450)
+}
+
+model ExpectedHoursOverride {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  user       User     @relation(fields: [user_id], references: [id])
+  date       DateTime
+  minutes    Int
+  label      String?
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([user_id, date])
 }
