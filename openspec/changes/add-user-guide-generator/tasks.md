@@ -9,18 +9,18 @@
 - [x] 2.1 Implement a hashing helper over `openspec/specs/**` that produces a per-requirement hash keyed by capability + requirement name (the values embedded in each page's footer) — `scripts/hash-requirements.mjs`
 - [x] 2.2 Implement a "diff" helper that compares current requirement hashes against the manifest and returns the changed set (backs stateful delta regeneration and status mode) — `scripts/check.mjs`
 - [x] 2.3 Implement a reverse-index resolver: given a scope (page / capability / requirement), return the set of affected pages from the traceability footers — `scripts/resolve-scope.mjs`
-- [ ] 2.4 Document the Playwright-MCP capture procedure + screenshot path/naming convention in `SKILL.md` (no standalone script — WSL cannot launch Windows Edge; capture is MCP-driven by Claude). Completed with group 3.
+- [x] 2.4 Document the Playwright-MCP capture procedure + screenshot path/naming convention in `SKILL.md` (no standalone script — WSL cannot launch Windows Edge; capture is MCP-driven by Claude). Completed with group 3.
 - [x] 2.5 Add page-with-footer and mkdocs-nav templates — `templates/page.md`
 
 ## 3. The generate-user-guides skill
 
-- [ ] 3.1 Scaffold the skill (`SKILL.md` + `scripts/` + `templates/`) at the repo's skills location with the chosen invocation name
-- [ ] 3.2 Encode the IA policy: task-oriented pages, plumbing-exclusion rules, and soft-default placement for new capabilities
-- [ ] 3.3 Encode the spec→UI inference + screenshot-grounded prose procedure, including date-agnostic phrasing
-- [ ] 3.4 Encode stateful default runs (read guide + manifest, regenerate only the delta, leave unchanged pages and screenshots untouched)
-- [ ] 3.5 Encode scoped runs: fuzzy scope argument + refresh mode (`prose` / `screenshots` / `both`), bounding both regeneration and recapture
-- [ ] 3.6 Encode the status/dry-run (`--check`) mode: report staleness, write nothing, no browser
-- [ ] 3.7 Encode the output step: commit generated Markdown + screenshots and open a PR; never merge
+- [x] 3.1 Scaffold the skill (`SKILL.md` + `scripts/` + `templates/`) at the repo's skills location with the chosen invocation name
+- [x] 3.2 Encode the IA policy: task-oriented pages, plumbing-exclusion rules, and soft-default placement for new capabilities
+- [x] 3.3 Encode the spec→UI inference + screenshot-grounded prose procedure, including date-agnostic phrasing
+- [x] 3.4 Encode stateful default runs (read guide + manifest, regenerate only the delta, leave unchanged pages and screenshots untouched)
+- [x] 3.5 Encode scoped runs: fuzzy scope argument + refresh mode (`prose` / `screenshots` / `both`), bounding both regeneration and recapture
+- [x] 3.6 Encode the status/dry-run (`--check`) mode: report staleness, write nothing, no browser
+- [x] 3.7 Encode the output step: commit generated Markdown + screenshots and open a PR; never merge
 
 ## 4. Cold run and verification
 
