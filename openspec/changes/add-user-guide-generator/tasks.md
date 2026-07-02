@@ -24,7 +24,7 @@
 
 ## 4. Cold run and verification
 
-- [ ] 4.1 Ensure the dev environment holds representative (non-empty, presentable) data, then perform the initial cold run to generate the full guide
-- [ ] 4.2 Verify each generated page against its traceability footer's cited requirements and confirm plumbing requirements produced no user-facing pages
-- [ ] 4.3 Verify a scoped run and a `--check` status run behave per spec (scope limits blast radius; status writes nothing)
-- [ ] 4.4 Build the mkdocs-material site locally and confirm nav + screenshots render, then open the guide PR for human review
+- [x] 4.1 Ensure the dev environment holds representative (non-empty, presentable) data, then perform the initial cold run to generate the full guide (7 task pages captured against live dev data)
+- [x] 4.2 Verify each generated page against its traceability footer's cited requirements and confirm plumbing requirements produced no user-facing pages (`check.mjs`: 0 stale/orphaned/no-footer; 22 uncovered = plumbing + out-of-scope "All worklogs" page)
+- [x] 4.3 Verify a scoped run and a `--check` status run behave per spec (scope limits blast radius; status writes nothing) — verified during smoke test + cold run
+- [ ] 4.4 Build the mkdocs-material site locally and confirm nav + screenshots render, then open the guide PR for human review — BLOCKED: pip/venv absent (needs `sudo apt install python3-venv`); PR opens after user verification per workflow

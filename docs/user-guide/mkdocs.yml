@@ -32,3 +32,14 @@ markdown_extensions:
 # task pages here with a soft default; correct placement in PR review.
 nav:
   - Home: index.md
+  - Getting started:
+      - Signing in & your account: signing-in.md
+      - Understanding your saldo: understanding-your-saldo.md
+  - Daily use:
+      - Logging a work day: logging-a-work-day.md
+      - Using the clock: using-the-clock.md
+      - Recording an absence: recording-an-absence.md
+  - Configuration:
+      - Account & expected hours: account-and-expected-hours.md
+  - Insights:
+      - Statistics: statistics.md
