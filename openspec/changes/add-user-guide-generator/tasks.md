@@ -6,11 +6,11 @@
 
 ## 2. Manifest and helper scripts
 
-- [ ] 2.1 Implement a hashing helper over `openspec/specs/**` that produces a per-requirement hash keyed by capability + requirement name (the values embedded in each page's footer)
-- [ ] 2.2 Implement a "diff" helper that compares current requirement hashes against the manifest and returns the changed set (backs stateful delta regeneration and status mode)
-- [ ] 2.3 Implement a reverse-index resolver: given a scope (page / capability / requirement), return the set of affected pages from the traceability footers
-- [ ] 2.4 Implement a Playwright capture helper (driving the Playwright MCP → Windows Edge) that navigates to a route and writes a screenshot to a known path
-- [ ] 2.5 Add page-with-footer and mkdocs-nav templates
+- [x] 2.1 Implement a hashing helper over `openspec/specs/**` that produces a per-requirement hash keyed by capability + requirement name (the values embedded in each page's footer) — `scripts/hash-requirements.mjs`
+- [x] 2.2 Implement a "diff" helper that compares current requirement hashes against the manifest and returns the changed set (backs stateful delta regeneration and status mode) — `scripts/check.mjs`
+- [x] 2.3 Implement a reverse-index resolver: given a scope (page / capability / requirement), return the set of affected pages from the traceability footers — `scripts/resolve-scope.mjs`
+- [ ] 2.4 Document the Playwright-MCP capture procedure + screenshot path/naming convention in `SKILL.md` (no standalone script — WSL cannot launch Windows Edge; capture is MCP-driven by Claude). Completed with group 3.
+- [x] 2.5 Add page-with-footer and mkdocs-nav templates — `templates/page.md`
 
 ## 3. The generate-user-guides skill
 
