@@ -1,9 +1,9 @@
 import IntegerInput from './form/integerInput';
 
-// Shared Hours:Minutes + optional label inputs for an expected-hours value.
-// Used by the settings "Special days" add form and the day-view override modal
-// so the two entry points offer identical fields (the day view fixes the date,
-// so it lives outside this component).
+// Shared Hours:Minutes inputs (with an optional label) for an expected-hours
+// value. Used by the settings default field, the "Special days" add form, and
+// the day-view override modal. The label input is rendered only when `onLabel`
+// is provided (the settings default has no label).
 export default function ExpectedHoursFields({
   hours,
   mins,
@@ -14,10 +14,10 @@ export default function ExpectedHoursFields({
 }: {
   hours: number | '';
   mins: number | '';
-  label: string;
+  label?: string;
   onHours: (val: number | '') => void;
   onMins: (val: number | '') => void;
-  onLabel: (val: string) => void;
+  onLabel?: (val: string) => void;
 }) {
   return (
     <>
@@ -42,14 +42,16 @@ export default function ExpectedHoursFields({
           onChange={(val) => onMins(val ?? '')}
         />
       </div>
-      <input
-        type="text"
-        className="input input-bordered w-full"
-        placeholder="Label (optional)"
-        value={label}
-        maxLength={100}
-        onChange={(e) => onLabel(e.target.value)}
-      />
+      {onLabel ? (
+        <input
+          type="text"
+          className="input input-bordered w-full"
+          placeholder="Label (optional)"
+          value={label ?? ''}
+          maxLength={100}
+          onChange={(e) => onLabel(e.target.value)}
+        />
+      ) : null}
     </>
   );
 }

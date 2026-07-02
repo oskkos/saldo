@@ -4,6 +4,11 @@ import { assertIsTime } from './assertionFunctions';
 
 const MINUTES_IN_DAY = 24 * 60;
 
+// Format a non-negative minute count as "Hh Mmin" (e.g. 300 -> "5h 0min").
+export function formatMinutes(minutes: number) {
+  return `${Math.floor(minutes / 60)}h ${minutes % 60}min`;
+}
+
 export function timeToMinutes(time: Date_Time) {
   const [hours, minutes] = time.split(':').map(Number);
   return hours * 60 + minutes;
