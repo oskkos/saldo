@@ -13,17 +13,23 @@ import {
   daysForCalendarBuilder,
 } from './util';
 import DayItem from './dayItem';
-import { Worklog } from '@/types';
+import { ExpectedHoursOverride, Worklog } from '@/types';
+import { expectedMinutesByDay } from '@/services';
 
 export default function MiniCalendar({
   date,
   beginDate,
   worklogs,
+  expectedMinutesPerDay,
+  overrides,
 }: {
   date: Date;
   beginDate: Date;
   worklogs: Worklog[];
+  expectedMinutesPerDay: number;
+  overrides: ExpectedHoursOverride[];
 }) {
+  const overrideByDay = expectedMinutesByDay(overrides);
   const router = useRouter();
   const toCurrentMonth = () => {
     router.push('/');
@@ -92,30 +98,34 @@ export default function MiniCalendar({
       {['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((x, i) => (
         <div key={i}>{x}</div>
       ))}
-      {daysForCalendarBuilder(date, worklogsByDay).reduce(
-        (acc: ReactElement[], day, index) => {
-          if (index % 7 === 0) {
-            acc.push(
-              <WeekItem
-                key={'w-' + day.date.getTime().toString()}
-                date={day.date}
-              />,
-            );
-          }
+      {daysForCalendarBuilder(
+        date,
+        worklogsByDay,
+        expectedMinutesPerDay,
+        overrideByDay,
+      ).reduce((acc: ReactElement[], day, index) => {
+        if (index % 7 === 0) {
           acc.push(
-            <DayItem
-              key={'d-' + day.date.getTime().toString()}
+            <WeekItem
+              key={'w-' + day.date.getTime().toString()}
               date={day.date}
-              saldo={day.saldo}
-              status={day.status}
-              absence={day.absence}
-              beginDate={beginDate}
             />,
           );
-          return acc;
-        },
-        [],
-      )}
+        }
+        acc.push(
+          <DayItem
+            key={'d-' + day.date.getTime().toString()}
+            date={day.date}
+            saldo={day.saldo}
+            status={day.status}
+            absence={day.absence}
+            beginDate={beginDate}
+            expectedMinutes={day.expectedMinutes}
+            hasOverride={day.hasOverride}
+          />,
+        );
+        return acc;
+      }, [])}
     </div>
   );
 }

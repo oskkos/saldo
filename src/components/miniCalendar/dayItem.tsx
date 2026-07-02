@@ -1,12 +1,5 @@
 import { AbsenceReason } from '@/types';
-import {
-  isHoliday,
-  isNonWorkingDay,
-  isWeekend,
-  now,
-  sameDay,
-  startOfDay,
-} from '@/util/date';
+import { isHoliday, isWeekend, now, sameDay, startOfDay } from '@/util/date';
 import { toDay, toISODay } from '@/util/dateFormatter';
 import Link from 'next/link';
 import CalendarCell from './calendarCell';
@@ -20,15 +13,22 @@ export default function DayItem({
   saldo,
   absence,
   beginDate,
+  expectedMinutes,
+  hasOverride,
 }: {
   date: Date;
   status: string;
   saldo: { hours: number; minutes: number; toString: () => string };
   absence?: AbsenceReason;
   beginDate: Date;
+  expectedMinutes: number;
+  hasOverride: boolean;
 }) {
   const minutes = saldo.hours * 60 + saldo.minutes;
   const hoursCompact = Math.round((minutes * 10) / 60) / 10;
+  // Solid border on normal days; dashed marks a day with a custom expected value.
+  // Color answers "did I meet this day's expected"; style answers "is it special".
+  const style = hasOverride ? 'border-dashed' : 'border-solid';
   const borderClass = () => {
     if (status !== 'current') {
       return '';
@@ -36,19 +36,19 @@ export default function DayItem({
     const beforeBegin = startOfDay(date) < startOfDay(beginDate);
     const inFuture = startOfDay(date) > startOfDay();
     if (beforeBegin || inFuture) {
-      return minutes !== 0 ? 'border-2 border-solid border-base-300' : '';
+      return minutes !== 0 ? `border-2 ${style} border-base-300` : '';
     }
-
-    if (isNonWorkingDay(date)) {
-      return minutes ? 'border-2 border-solid border-info' : '';
+    // Resolved expected of 0 = non-working day (weekend/holiday, no override).
+    if (expectedMinutes === 0) {
+      return minutes ? `border-2 ${style} border-info` : '';
     }
     if (minutes === 0) {
-      return 'border-2 border-solid border-error';
+      return `border-2 ${style} border-error`;
     }
-    if (minutes < 450) {
-      return 'border-2 border-solid border-warning';
+    if (minutes < expectedMinutes) {
+      return `border-2 ${style} border-warning`;
     }
-    return 'border-2 border-solid border-success';
+    return `border-2 ${style} border-success`;
   };
   const sameDayClass = sameDay(date, now())
     ? 'bg-neutral text-neutral-content'

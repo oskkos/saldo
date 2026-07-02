@@ -1,4 +1,4 @@
-import { calculateWorklogsSum } from '@/services';
+import { calculateWorklogsSum, resolveExpectedMinutes } from '@/services';
 import { AbsenceReason, SaldoForDay, Worklog } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import {
@@ -8,7 +8,7 @@ import {
   startOfMonth,
   subtract,
 } from '@/util/date';
-import { toISODay, toWeekday } from '@/util/dateFormatter';
+import { Date_ISODay, toISODay, toWeekday } from '@/util/dateFormatter';
 
 export const CALENDAR_ITEM_CLASS =
   'w-10 sm:w-12 h-12 sm:h-14 sm:text-lg flex justify-center items-center rounded-full';
@@ -18,11 +18,15 @@ const dailyDataForCalendar = (
   date: Date,
   status: string,
   worklogs: Worklog[],
+  defaultMinutes: number,
+  overrideByDay: Map<Date_ISODay, number>,
 ): {
   date: Date;
   status: string;
   saldo: SaldoForDay;
   absence: AbsenceReason | undefined;
+  expectedMinutes: number;
+  hasOverride: boolean;
 } => {
   const absence = worklogs.find((wl) => wl.absence)?.absence;
   if (absence) {
@@ -33,12 +37,20 @@ const dailyDataForCalendar = (
     status,
     saldo: calculateWorklogsSum(worklogs),
     absence: absence ?? undefined,
+    expectedMinutes: resolveExpectedMinutes(
+      date,
+      defaultMinutes,
+      overrideByDay,
+    ),
+    hasOverride: overrideByDay.has(toISODay(date)),
   };
 };
 
 export const daysForCalendarBuilder = (
   d: Date,
   worklogsByDay: Record<string, Worklog[] | undefined>,
+  defaultMinutes: number,
+  overrideByDay: Map<Date_ISODay, number>,
 ) => {
   const startOfMonthDate = startOfMonth(d);
   const prevMonthDateAmount =
@@ -51,6 +63,8 @@ export const daysForCalendarBuilder = (
         prevD,
         'prev',
         worklogsByDay[toISODay(prevD)] ?? [],
+        defaultMinutes,
+        overrideByDay,
       );
     });
 
@@ -62,6 +76,8 @@ export const daysForCalendarBuilder = (
         currentD,
         'current',
         worklogsByDay[toISODay(currentD)] ?? [],
+        defaultMinutes,
+        overrideByDay,
       );
     });
 
@@ -79,6 +95,8 @@ export const daysForCalendarBuilder = (
               nextD,
               'next',
               worklogsByDay[toISODay(nextD)] ?? [],
+              defaultMinutes,
+              overrideByDay,
             );
           });
 

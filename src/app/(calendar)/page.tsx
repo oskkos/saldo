@@ -1,5 +1,6 @@
 import { getSettings } from '@/repository/settingsRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
+import { getExpectedHoursOverrides } from '@/repository/expectedHoursOverrideRepository';
 import { getActiveSession } from '@/repository/clockRepository';
 import { startOfMonth } from '@/util/date';
 import MiniCalendar from '@/components/miniCalendar';
@@ -15,6 +16,7 @@ export default async function Home({
   const worklogs = await getWorklogs();
   const settings = await getSettings();
   assertExists(settings);
+  const overrides = await getExpectedHoursOverrides();
   const activeSession = await getActiveSession();
   const params = await searchParams;
   if (params.month) {
@@ -26,6 +28,8 @@ export default async function Home({
         date={startOfMonth((params.month as Date_YearAndMonth) || undefined)}
         beginDate={settings.beginDate}
         worklogs={worklogs}
+        expectedMinutesPerDay={settings.expectedMinutesPerDay}
+        overrides={overrides}
       />
       <div className="w-full flex justify-center px-4">
         <ClockCard activeSession={activeSession} />

@@ -22,7 +22,13 @@ describe('MiniCalendar', () => {
     const worklogs: Worklog[] = [];
 
     render(
-      <MiniCalendar date={date} beginDate={beginDate} worklogs={worklogs} />,
+      <MiniCalendar
+        date={date}
+        beginDate={beginDate}
+        worklogs={worklogs}
+        expectedMinutesPerDay={450}
+        overrides={[]}
+      />,
     );
 
     expect(screen.getByText('January 2023')).toBeInTheDocument();
@@ -41,7 +47,13 @@ describe('MiniCalendar', () => {
     const worklogs: Worklog[] = [];
 
     render(
-      <MiniCalendar date={date} beginDate={beginDate} worklogs={worklogs} />,
+      <MiniCalendar
+        date={date}
+        beginDate={beginDate}
+        worklogs={worklogs}
+        expectedMinutesPerDay={450}
+        overrides={[]}
+      />,
     );
 
     await userEvent.click(screen.getByText('Previous month'));
@@ -56,7 +68,13 @@ describe('MiniCalendar', () => {
     const worklogs: Worklog[] = [];
 
     render(
-      <MiniCalendar date={date} beginDate={beginDate} worklogs={worklogs} />,
+      <MiniCalendar
+        date={date}
+        beginDate={beginDate}
+        worklogs={worklogs}
+        expectedMinutesPerDay={450}
+        overrides={[]}
+      />,
     );
 
     await userEvent.click(screen.getByText('Next month'));
