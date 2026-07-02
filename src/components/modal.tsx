@@ -6,6 +6,12 @@ export function showModal(modalId: string) {
   ).showModal();
 }
 
+export function closeModal(modalId: string) {
+  (
+    window[modalId as unknown as number] as unknown as { close(): void }
+  ).close();
+}
+
 export default function Modal({
   id,
   children,

@@ -1,5 +1,11 @@
 'use client';
-import { Worklog, WorklogFormData, WorklogFormDataEntry } from '@/types';
+import {
+  ExpectedHoursOverride,
+  Worklog,
+  WorklogFormData,
+  WorklogFormDataEntry,
+} from '@/types';
+import DayExpectedOverride from './dayExpectedOverride';
 import { add, subtract, toDate } from '@/util/date';
 import {
   Date_ISODay,
@@ -25,11 +31,15 @@ export default function WorklogEntry({
   defaults,
   worklogs,
   onSubmit,
+  expectedMinutes,
+  override,
 }: {
   day: Date_ISODay;
   defaults: { fromDefault: Date_Time; toDefault: Date_Time };
   worklogs: Worklog[];
   onSubmit: (value: WorklogFormData) => Promise<Worklog>;
+  expectedMinutes: number;
+  override: ExpectedHoursOverride | null;
 }) {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
@@ -87,6 +97,13 @@ export default function WorklogEntry({
           </div>
         </div>
         <div className="flex flex-wrap justify-between items-center m-3 w-80">
+          <div className="w-full text-center">
+            <DayExpectedOverride
+              day={day}
+              expectedMinutes={expectedMinutes}
+              override={override}
+            />
+          </div>
           <WorklogInputs
             value={value}
             setValue={setValue}
