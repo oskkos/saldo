@@ -175,6 +175,23 @@ NOT merge its own output.
 - **THEN** the changes are committed to the docs tree and opened as a PR, and the
   skill does not merge it
 
+### Requirement: Published to GitHub Pages via CI
+
+The user guide SHALL be built and deployed to GitHub Pages by a CI workflow on push to
+the default branch, triggered only when the guide sources under `docs/user-guide/**`
+change. The published site SHALL be built with the same mkdocs configuration used
+locally, so the rendered output (stripped footers, branding) matches.
+
+#### Scenario: Guide changes trigger a publish
+
+- **WHEN** a change under `docs/user-guide/**` is pushed to the default branch
+- **THEN** CI builds the mkdocs site and deploys it to GitHub Pages
+
+#### Scenario: Unrelated changes do not publish
+
+- **WHEN** a push touches no files under `docs/user-guide/**`
+- **THEN** the publish workflow does not run
+
 ### Requirement: No capture harness in v1
 
 v1 SHALL NOT depend on database seeding or clock-freezing to produce screenshots,

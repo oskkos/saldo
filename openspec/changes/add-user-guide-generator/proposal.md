@@ -35,6 +35,9 @@ reviewing every change through a normal PR.
   gate.
 - Presentation via **mkdocs-material**; the nav is the one durable hand-blessed
   artifact.
+- **Publishing:** a GitHub Actions workflow builds the site and deploys it to **GitHub
+  Pages** on push to `develop` (path-filtered to `docs/user-guide/**`). Local
+  `mkdocs serve` remains the authoring loop.
 - **Output is committed Markdown + screenshots opened as a PR** — human-in-the-loop.
   The skill never merges.
 - **Explicitly out of scope for v1** (deferred to v2, added together when automated
@@ -63,6 +66,9 @@ reviewing every change through a normal PR.
 - **New dev dependency**: mkdocs-material (Python toolchain) for building/serving the
   site. Playwright capture reuses the existing Playwright MCP setup (Windows Edge);
   no new app runtime dependency.
+- **New CI workflow** `.github/workflows/docs.yml` deploying to **GitHub Pages**.
+  Requires Pages enabled for the repo with **Source = GitHub Actions** (one-time repo
+  setting) plus `pages: write` / `id-token: write` permissions on the job.
 - **No changes** to `src/` runtime code, the Prisma schema, or any existing capability's
   behavior. The app is only *driven and read*, never modified, by the pipeline.
 - Depends on a **representative dev environment** at capture time (an unenforced
