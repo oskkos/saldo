@@ -1,6 +1,11 @@
 'use server';
 
-import { AuthUser, SettingsData, WorklogFormData } from '@/types';
+import {
+  AuthUser,
+  ExpectedHoursOverrideData,
+  SettingsData,
+  WorklogFormData,
+} from '@/types';
 import {
   getUser,
   getUserByEmailAndPassword,
@@ -19,7 +24,11 @@ import {
   updateWorklog,
 } from '@/repository/worklogRepository';
 import { startOfDay } from '@/util/date';
-import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
+import {
+  DEFAULT_EXPECTED_MINUTES_PER_DAY,
+  NEW_WORKLOG_DEFAULT_FROM,
+  NEW_WORKLOG_DEFAULT_TO,
+} from '@/constants';
 import { SignupData, SignupSchema } from '@/schemas/signupSchema';
 import {
   ForgotPasswordData,
@@ -33,6 +42,11 @@ import {
 } from '@/schemas/resetPasswordSchema';
 import { WorklogSchema } from '@/schemas/worklogSchema';
 import { SettingsSchema } from '@/schemas/settingsSchema';
+import { ExpectedHoursOverrideSchema } from '@/schemas/expectedHoursOverrideSchema';
+import {
+  deleteExpectedHoursOverride,
+  upsertExpectedHoursOverride,
+} from '@/repository/expectedHoursOverrideRepository';
 import {
   clockIn,
   clearSession,
@@ -56,6 +70,7 @@ export async function onAfterSignin(user: AuthUser) {
     initialBalanceMins: 0,
     fromDefault: NEW_WORKLOG_DEFAULT_FROM,
     toDefault: NEW_WORKLOG_DEFAULT_TO,
+    expectedMinutesPerDay: DEFAULT_EXPECTED_MINUTES_PER_DAY,
   });
   return [u, settings] as const;
 }
@@ -115,6 +130,17 @@ export async function onSettingsUpdate(data: SettingsData) {
   validateOrThrow(SettingsSchema, data, 'Invalid settings');
   const settings = await upsertSettings(data);
   return settings;
+}
+
+export async function onExpectedHoursOverrideUpsert(
+  data: ExpectedHoursOverrideData,
+) {
+  validateOrThrow(ExpectedHoursOverrideSchema, data, 'Invalid override');
+  return await upsertExpectedHoursOverride(data);
+}
+
+export async function onExpectedHoursOverrideDelete(id: number) {
+  await deleteExpectedHoursOverride(id);
 }
 
 export async function onCredentialsSignin(email: string, password: string) {
