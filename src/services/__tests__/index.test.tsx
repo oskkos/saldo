@@ -1,11 +1,19 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import {
   calculateCurrentSaldo,
   calculateWorklogsSum,
   sortWorklogs,
   absenceReasonToString,
+  resolveExpectedMinutes,
+  expectedMinutesByDay,
 } from '../index';
-import { AbsenceReason, Settings, Worklog } from '@/types';
+import {
+  AbsenceReason,
+  ExpectedHoursOverride,
+  Settings,
+  Worklog,
+} from '@/types';
+import { Date_ISODay } from '@/util/dateFormatter';
 
 describe('worklog calculator', () => {
   describe('calculateCurrentSaldo', () => {
@@ -17,6 +25,7 @@ describe('worklog calculator', () => {
         beginDate: new Date('2023-10-14'),
         initialBalanceHours: 2,
         initialBalanceMins: 30,
+        expectedMinutesPerDay: 450,
       } as Settings;
       const worklogs = [
         {
@@ -78,7 +87,7 @@ describe('worklog calculator', () => {
           subtractLunchBreak: false,
         },
       ] as unknown as Worklog[];
-      const saldo = calculateCurrentSaldo(settings, worklogs);
+      const saldo = calculateCurrentSaldo(settings, worklogs, []);
       expect(saldo).toEqual({
         hours: -0,
         minutes: -45,
@@ -100,6 +109,7 @@ describe('worklog calculator', () => {
         beginDate: new Date('2023-10-16T00:00:00.000Z'), // Monday, UTC midnight
         initialBalanceHours: 0,
         initialBalanceMins: 0,
+        expectedMinutesPerDay: 450,
       } as Settings;
       const worklogs = [
         {
@@ -110,7 +120,7 @@ describe('worklog calculator', () => {
         },
       ] as unknown as Worklog[];
 
-      const saldo = calculateCurrentSaldo(settings, worklogs);
+      const saldo = calculateCurrentSaldo(settings, worklogs, []);
       expect(saldo.toString()).toBe('0h 0min');
     });
   });
@@ -185,6 +195,105 @@ describe('worklog calculator', () => {
         absenceReasonToString(r as AbsenceReason),
       );
       expect(pretty).toEqual(['Holiday', 'Flex hours', 'Sick leave', 'Other']);
+    });
+  });
+
+  describe('resolveExpectedMinutes', () => {
+    const mk = (dateStr: string, minutes: number): ExpectedHoursOverride => ({
+      id: 1,
+      date: new Date(dateStr),
+      minutes,
+      label: null,
+    });
+
+    it('returns the default on a working day with no override', () => {
+      const map = new Map<Date_ISODay, number>();
+      expect(resolveExpectedMinutes(new Date('2023-10-16'), 450, map)).toBe(
+        450,
+      );
+    });
+
+    it('returns 0 on a non-working day with no override', () => {
+      const map = new Map<Date_ISODay, number>();
+      expect(resolveExpectedMinutes(new Date('2023-10-14'), 450, map)).toBe(0);
+    });
+
+    it('returns the override value when present', () => {
+      const map = expectedMinutesByDay([mk('2023-10-16', 300)]);
+      expect(resolveExpectedMinutes(new Date('2023-10-16'), 450, map)).toBe(
+        300,
+      );
+    });
+
+    it('lets an override win over the weekend rule', () => {
+      const map = expectedMinutesByDay([mk('2023-10-14', 300)]);
+      expect(resolveExpectedMinutes(new Date('2023-10-14'), 450, map)).toBe(
+        300,
+      );
+    });
+  });
+
+  describe('calculateCurrentSaldo with expected-hours configuration', () => {
+    const monday = '2023-10-16T00:00:00.000Z';
+    const settings = (expectedMinutesPerDay: number) =>
+      ({
+        beginDate: new Date(monday),
+        initialBalanceHours: 0,
+        initialBalanceMins: 0,
+        expectedMinutesPerDay,
+      }) as Settings;
+    const override = (minutes: number): ExpectedHoursOverride => ({
+      id: 1,
+      date: new Date(monday),
+      minutes,
+      label: null,
+    });
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.setSystemTime(new Date('2023-10-16T20:00:00.000Z').getTime());
+    });
+
+    it('nets to zero when a short-day override is worked in full', () => {
+      const worklogs = [
+        {
+          // 08:00-13:00 UTC = 5h = 300min, no lunch
+          from: new Date('2023-10-16T08:00:00.000Z'),
+          to: new Date('2023-10-16T13:00:00.000Z'),
+          subtractLunchBreak: false,
+        },
+      ] as unknown as Worklog[];
+      const saldo = calculateCurrentSaldo(settings(450), worklogs, [
+        override(300),
+      ]);
+      expect(saldo.toString()).toBe('0h 0min');
+    });
+
+    it('keeps an absence on an overridden day balance-neutral', () => {
+      const worklogs = [
+        {
+          absence: 'holiday',
+          from: new Date('2023-10-16T08:00:00.000Z'),
+          to: new Date('2023-10-16T16:00:00.000Z'),
+        },
+      ] as unknown as Worklog[];
+      const saldo = calculateCurrentSaldo(settings(450), worklogs, [
+        override(300),
+      ]);
+      expect(saldo.toString()).toBe('0h 0min');
+    });
+
+    it('accrues the configurable default instead of a fixed 7.5h', () => {
+      const worklogs = [
+        {
+          // 6h worked against a 6h default → net 0
+          from: new Date('2023-10-16T08:00:00.000Z'),
+          to: new Date('2023-10-16T14:00:00.000Z'),
+          subtractLunchBreak: false,
+        },
+      ] as unknown as Worklog[];
+      const saldo = calculateCurrentSaldo(settings(360), worklogs, []);
+      expect(saldo.toString()).toBe('0h 0min');
     });
   });
 });
