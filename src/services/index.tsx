@@ -1,8 +1,11 @@
+import { EXPECTED_MINUTES_LUNCH_BREAK } from '@/constants';
 import {
-  EXPECTED_HOURS_PER_DAY,
-  EXPECTED_MINUTES_LUNCH_BREAK,
-} from '@/constants';
-import { AbsenceReason, SaldoForDay, Settings, Worklog } from '@/types';
+  AbsenceReason,
+  ExpectedHoursOverride,
+  SaldoForDay,
+  Settings,
+  Worklog,
+} from '@/types';
 import {
   add,
   diffInMinutes,
@@ -10,20 +13,50 @@ import {
   isNonWorkingDay,
   startOfDay,
 } from '@/util/date';
+import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 
-function expectedMinutesUntilToday(beginDate: Date) {
+// Index the per-date overrides by UTC calendar day for O(1) lookup.
+export function expectedMinutesByDay(
+  overrides: ExpectedHoursOverride[],
+): Map<Date_ISODay, number> {
+  return overrides.reduce((acc, o) => {
+    acc.set(toISODay(o.date), o.minutes);
+    return acc;
+  }, new Map<Date_ISODay, number>());
+}
+
+// The single source of truth for how many minutes are expected on a given day:
+// a per-date override wins, otherwise a non-working day expects 0, otherwise the
+// user's configurable default. Used by the balance accrual, the absence credit,
+// and the mini-calendar coloring.
+export function resolveExpectedMinutes(
+  date: Date,
+  defaultMinutes: number,
+  overrideByDay: Map<Date_ISODay, number>,
+): number {
+  const override = overrideByDay.get(toISODay(date));
+  if (override !== undefined) {
+    return override;
+  }
+  if (isNonWorkingDay(date)) {
+    return 0;
+  }
+  return defaultMinutes;
+}
+
+function expectedMinutesUntilToday(
+  beginDate: Date,
+  defaultMinutes: number,
+  overrideByDay: Map<Date_ISODay, number>,
+) {
   const today = startOfDay();
   let d = beginDate;
-  let workDays = 0;
+  let total = 0;
   while (d.getTime() <= today.getTime()) {
-    const nonWorkingDay = isNonWorkingDay(d);
+    total += resolveExpectedMinutes(d, defaultMinutes, overrideByDay);
     d = add(d, 1, 'day');
-    if (nonWorkingDay) {
-      continue;
-    }
-    workDays++;
   }
-  return workDays * 60 * EXPECTED_HOURS_PER_DAY;
+  return total;
 }
 export function minutesToSaldoObject(saldoInMinutes: number): SaldoForDay {
   if (saldoInMinutes < 0) {
@@ -57,7 +90,12 @@ export function worklogMinutes(worklogItem: Worklog) {
     (worklogItem.subtractLunchBreak ? EXPECTED_MINUTES_LUNCH_BREAK : 0)
   );
 }
-export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
+export function calculateCurrentSaldo(
+  settings: Settings,
+  worklogs: Worklog[],
+  overrides: ExpectedHoursOverride[],
+) {
+  const overrideByDay = expectedMinutesByDay(overrides);
   const sum = sortWorklogs(worklogs).reduce(
     (acc, worklogItem) => {
       if (worklogItem.from.getTime() < settings.beginDate.getTime()) {
@@ -70,15 +108,28 @@ export function calculateCurrentSaldo(settings: Settings, worklogs: Worklog[]) {
         return acc;
       }
       if (worklogItem.absence) {
-        return isNonWorkingDay(worklogItem.from)
-          ? acc
-          : acc + EXPECTED_HOURS_PER_DAY * 60;
+        // Credit exactly the day's resolved expected so the day nets to zero:
+        // 0 on a non-working day (no override), the resolved value otherwise.
+        return (
+          acc +
+          resolveExpectedMinutes(
+            worklogItem.from,
+            settings.expectedMinutesPerDay,
+            overrideByDay,
+          )
+        );
       }
       return acc + worklogMinutes(worklogItem);
     },
     settings.initialBalanceHours * 60 + settings.initialBalanceMins,
   );
-  const saldoInMinutes = sum - expectedMinutesUntilToday(settings.beginDate);
+  const saldoInMinutes =
+    sum -
+    expectedMinutesUntilToday(
+      settings.beginDate,
+      settings.expectedMinutesPerDay,
+      overrideByDay,
+    );
   return minutesToSaldoObject(saldoInMinutes);
 }
 

@@ -26,6 +26,19 @@ export interface SettingsData {
   initialBalanceMins: number;
   fromDefault: Date_Time;
   toDefault: Date_Time;
+  expectedMinutesPerDay: number;
+}
+
+export interface ExpectedHoursOverride {
+  id: number;
+  date: Date;
+  minutes: number;
+  label: string | null;
+}
+export interface ExpectedHoursOverrideData {
+  date: Date;
+  minutes: number;
+  label?: string;
 }
 
 export enum AbsenceReason {
@@ -63,6 +76,7 @@ export interface Settings {
   initialBalanceMins: number;
   fromDefault: Date_Time;
   toDefault: Date_Time;
+  expectedMinutesPerDay: number;
 }
 export interface User {
   id: number;
