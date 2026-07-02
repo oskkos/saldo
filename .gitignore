@@ -49,3 +49,4 @@ src/generated/prisma
 # Generated user-guide site build
 docs/user-guide/site/
 docs/user-guide/.venv/
+docs/user-guide/hooks/__pycache__/

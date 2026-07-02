@@ -157,6 +157,10 @@ The footer IS the manifest — it is load-bearing. If it's malformed or missing,
 treats the page as "regenerate". Requirement names must match the spec headings exactly
 (that's how hashes are keyed).
 
+The footer is **source-only metadata**: a build hook (`hooks/strip_traceability.py`,
+wired in `mkdocs.yml`) removes the whole block from the rendered site, so readers never
+see it. Keep writing it into every page regardless — the hook handles hiding it.
+
 ## Guardrails
 
 - Specs are the source of truth; never invent behavior not in a requirement.
