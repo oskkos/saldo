@@ -1,0 +1,11 @@
+/* Match the Saldo app's brand purple for the mkdocs-material header/accents.
+   Targets the `primary: custom` attribute selector (set in mkdocs.yml) so it wins
+   over the theme's scheme-scoped defaults — a plain :root override does not. */
+[data-md-color-primary="custom"] {
+  --md-primary-fg-color: #422ad5;
+  --md-primary-fg-color--light: #5a45e0;
+  --md-primary-fg-color--dark: #3421ab;
+  /* Text/icons drawn on top of the primary color (the header). */
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: rgba(255, 255, 255, 0.7);
+}
