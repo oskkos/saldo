@@ -58,6 +58,10 @@ Relay the report. Interpret `uncovered` with judgment: a user-facing requirement
 by no page is a **gap**; an internal/plumbing requirement being uncovered is **expected**
 (see plumbing list below). Write nothing.
 
+If the report shows pages that would be **added or renamed**, note that generation will
+also reconcile the home-page card grid in `content/index.md` (see Step 4). A brand-new
+nav section additionally needs a hand-written card heading and description.
+
 ### Generation (default, or with a scope)
 
 **Step 1 — Determine the work set.**
@@ -79,6 +83,23 @@ by no page is a **gap**; an internal/plumbing requirement being uncovered is **e
 
 **Step 4 — Update the mkdocs nav** in `docs/user-guide/mkdocs.yml` for any new/renamed
 pages (soft default — see IA). The nav is the one hand-blessed artifact.
+
+**Also reconcile the home-page card grid** in `content/index.md`, which mirrors the nav
+sections (the `## Where to start` grid). Whenever this run changed the nav:
+
+- **Page added** → add `[:octicons-arrow-right-24: <nav title>](<file>.md)` to that
+  section's card, in nav order.
+- **Page renamed / moved** → update the link text and href (move it to the new
+  section's card if the section changed).
+- **Page removed** → delete its link.
+- **New nav section** → add a new card: draft a short editorial heading and one-line
+  description in the voice of the existing cards (do NOT reuse the nav's literal title),
+  and pick a fitting `:material-*:` icon.
+
+**Preserve every existing card's heading, description, and icon verbatim** — only the
+per-page links change, unless a section was added or removed. Leave the hero/intro above
+the grid untouched. The `--strict` build in Step 5 fails on any link that doesn't
+resolve, so it catches a wrong href.
 
 **Step 5 — Build locally to verify** the site renders:
 ```

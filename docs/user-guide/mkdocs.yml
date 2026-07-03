@@ -38,6 +38,10 @@ markdown_extensions:
   - md_in_html
   - toc:
       permalink: true
+  # Material/Octicon icons for the home-page card grid.
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 # The nav below is the one durable hand-blessed artifact. The generator slots new
 # task pages here with a soft default; correct placement in PR review.
