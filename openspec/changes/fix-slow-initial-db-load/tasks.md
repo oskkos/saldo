@@ -15,7 +15,7 @@
 
 ## 4. Parallelize the home page reads
 
-- [ ] 4.1 In `src/app/(calendar)/page.tsx`, convert the sequential `await`s (worklogs, settings, overrides, active session) into a single `Promise.all`, preserving the existing `assertExists(settings)` and `searchParams` handling.
+- [x] 4.1 In `src/app/(calendar)/page.tsx`, convert the sequential `await`s (worklogs, settings, overrides, active session) into a single `Promise.all`, preserving the existing `assertExists(settings)` and `searchParams` handling.
 
 ## 5. Request-duration safety net
 

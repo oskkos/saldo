@@ -13,12 +13,17 @@ export default async function Home({
 }: {
   searchParams: Promise<{ month?: string }>;
 }) {
-  const worklogs = await getWorklogs();
-  const settings = await getSettings();
+  // These reads are independent, so dispatch them together and let their
+  // latencies overlap instead of summing (matters most on a Neon cold start).
+  const [worklogs, settings, overrides, activeSession, params] =
+    await Promise.all([
+      getWorklogs(),
+      getSettings(),
+      getExpectedHoursOverrides(),
+      getActiveSession(),
+      searchParams,
+    ]);
   assertExists(settings);
-  const overrides = await getExpectedHoursOverrides();
-  const activeSession = await getActiveSession();
-  const params = await searchParams;
   if (params.month) {
     assertIsYearAndMonth(params.month);
   }
