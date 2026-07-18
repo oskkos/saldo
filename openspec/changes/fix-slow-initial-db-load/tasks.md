@@ -23,5 +23,5 @@
 
 ## 6. Verify
 
-- [ ] 6.1 Run `npm run test:ci` and `npm run lint`; fix any regressions (type/lint/tests).
+- [x] 6.1 Run `npm run test:ci` and `npm run lint`; fix any regressions (type/lint/tests). — 122/122 tests pass; `tsc --noEmit` clean; changed files pass eslint + prettier. (`npm run lint` reports one pre-existing error in the gitignored local `docs/user-guide/.venv` mkdocs virtualenv, which is absent in CI and unrelated to this change.)
 - [ ] 6.2 Post-deploy validation: idle past Neon autosuspend, load `/`, capture a cold Sentry trace, and confirm the ~8s serialized cold load drops toward ~2s with reads overlapping and no duplicate `getSettings`/`getWorklogs`/`getExpectedHoursOverrides` spans. If connect latency re-emerges as dominant, open a follow-up change for the `@neondatabase/serverless` driver swap.
