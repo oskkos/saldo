@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: dev.Dockerfile
+    user: node
     volumes:
       - ./:/app
       - /app/node_modules/
