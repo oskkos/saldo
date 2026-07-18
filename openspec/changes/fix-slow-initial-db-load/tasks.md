@@ -1,11 +1,11 @@
 ## 1. Precondition: confirm pooled endpoint
 
-- [ ] 1.1 Verify `POSTGRES_PRISMA_URL` in the Vercel project points at the Neon **pooled** endpoint (host contains `-pooler`, typically `pgbouncer=true`). Record the finding. If it is the **direct** endpoint, stop and reassess before widening the pool.
+- [x] 1.1 Verify `POSTGRES_PRISMA_URL` in the Vercel project points at the Neon **pooled** endpoint (host contains `-pooler`, typically `pgbouncer=true`). Record the finding. If it is the **direct** endpoint, stop and reassess before widening the pool. — **Confirmed: `-pooler` endpoint in use; safe to widen the pool.**
 
 ## 2. Widen the connection pool
 
-- [ ] 2.1 In `src/repository/prisma.ts`, raise `pg.Pool` `max` from `1` to `10` and add `connectionTimeoutMillis` (e.g. `5000`).
-- [ ] 2.2 Confirm the `globalForPrisma` singleton pattern still holds (pool + client cached on `globalThis`) so the wider pool is reused across invocations within a warm instance.
+- [x] 2.1 In `src/repository/prisma.ts`, raise `pg.Pool` `max` from `1` to `10` and add `connectionTimeoutMillis` (e.g. `5000`).
+- [x] 2.2 Confirm the `globalForPrisma` singleton pattern still holds (pool + client cached on `globalThis`) so the wider pool is reused across invocations within a warm instance.
 
 ## 3. Deduplicate shared reads per request
 
