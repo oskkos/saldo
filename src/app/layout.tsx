@@ -16,6 +16,14 @@ export const metadata = {
   description: 'Logging work hours made easy',
 };
 
+// This layout renders on every route and performs the Navbar's DB reads
+// (settings/worklogs/active session, plus overrides via the saldo badge), so a
+// Neon cold start can hit any route's first load — not just `/`. Set the
+// duration guard here, at the root segment, so every nested route inherits the
+// headroom to finish a cold wake instead of being killed at the platform
+// default.
+export const maxDuration = 30;
+
 export default async function RootLayout({
   children,
 }: {

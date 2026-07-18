@@ -19,7 +19,7 @@
 
 ## 5. Request-duration safety net
 
-- [x] 5.1 Add `export const maxDuration = 30` to the affected route(s) (home page; extend to other DB-backed pages if trivially applicable), so a cold wake degrades to slow-but-successful rather than a killed 504. — Set on the `/` home route (the confirmed symptom route); its segment config covers the whole render including the layout's Navbar reads. Other DB-backed pages can take the same one-liner if they exhibit the issue.
+- [x] 5.1 Add `export const maxDuration = 30` to the affected route(s) (home page; extend to other DB-backed pages if trivially applicable), so a cold wake degrades to slow-but-successful rather than a killed 504. — Set on the **root `layout.tsx`** (not just `/`): the layout runs the Navbar's DB reads on every route, so a cold start can hit any route's first load. Root-segment config is inherited by all nested routes, covering the app in one place.
 
 ## 6. Verify
 

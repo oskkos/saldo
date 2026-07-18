@@ -17,8 +17,11 @@ const pool =
     // cold-start latency on the initial page load. Allow independent reads to
     // overlap instead.
     max: 10,
-    // Fail a stalled cold-start connect fast (and retryably) instead of hanging
-    // until the serverless function is killed at its maxDuration.
+    // Bound client acquisition (the new-client handshake, and queueing when all
+    // `max` connections are busy) so it can't hang indefinitely. Note: on the
+    // pooled endpoint the Neon cold-start *wake* surfaces as query latency, not
+    // connect latency, so that path is governed by the route `maxDuration`, not
+    // this timeout. There is no automatic retry — a breached timeout rejects.
     connectionTimeoutMillis: 5000,
   });
 const adapter = new PrismaPg(pool);
