@@ -8,6 +8,11 @@ import ClockCard from '@/components/clock/clockCard';
 import { assertExists, assertIsYearAndMonth } from '@/util/assertionFunctions';
 import { Date_YearAndMonth } from '@/util/dateFormatter';
 
+// Give a Neon cold start room to complete rather than being killed at the
+// platform's default limit. Applies to the whole `/` render, including the
+// root layout's Navbar reads.
+export const maxDuration = 30;
+
 export default async function Home({
   searchParams,
 }: {

@@ -19,7 +19,7 @@
 
 ## 5. Request-duration safety net
 
-- [ ] 5.1 Add `export const maxDuration = 30` to the affected route(s) (home page; extend to other DB-backed pages if trivially applicable), so a cold wake degrades to slow-but-successful rather than a killed 504.
+- [x] 5.1 Add `export const maxDuration = 30` to the affected route(s) (home page; extend to other DB-backed pages if trivially applicable), so a cold wake degrades to slow-but-successful rather than a killed 504. — Set on the `/` home route (the confirmed symptom route); its segment config covers the whole render including the layout's Navbar reads. Other DB-backed pages can take the same one-liner if they exhibit the issue.
 
 ## 6. Verify
 
