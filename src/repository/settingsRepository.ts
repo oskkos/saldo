@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { cache } from 'react';
 import { Settings, SettingsData } from '@/types';
 import { prisma } from './prisma';
 import * as Sentry from '@sentry/nextjs';
@@ -20,7 +21,9 @@ const toSettings = (settings: PrismaSettings): Settings => {
     expectedMinutesPerDay: settings.expected_minutes_per_day,
   };
 };
-export async function getSettings(): Promise<Settings | null> {
+// Cached per request so the root layout (Navbar) and the page share a single
+// read instead of querying settings twice.
+export const getSettings = cache(async (): Promise<Settings | null> => {
   const user = await getUserFromSession();
   if (!user) {
     throw new Error('User not found in session.');
@@ -40,7 +43,7 @@ export async function getSettings(): Promise<Settings | null> {
       return toSettings(s);
     },
   );
-}
+});
 export async function insertSettings({
   userId,
   beginDate,
