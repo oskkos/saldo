@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { cache } from 'react';
 import { prisma } from './prisma';
 import { ExpectedHoursOverride as PrismaOverride } from '@/generated/prisma/client';
 import { ExpectedHoursOverride, ExpectedHoursOverrideData } from '@/types';
@@ -14,25 +15,27 @@ const toOverride = (o: PrismaOverride): ExpectedHoursOverride => ({
   label: o.label,
 });
 
-export async function getExpectedHoursOverrides(): Promise<
-  ExpectedHoursOverride[]
-> {
-  const user = await getUserFromSession();
-  if (!user) {
-    throw new Error('User not found in session.');
-  }
+// Cached per request so the saldo badge (in the Navbar) and the page share a
+// single read instead of querying overrides twice.
+export const getExpectedHoursOverrides = cache(
+  async (): Promise<ExpectedHoursOverride[]> => {
+    const user = await getUserFromSession();
+    if (!user) {
+      throw new Error('User not found in session.');
+    }
 
-  return await Sentry.startSpan(
-    { name: 'getExpectedHoursOverrides', op: 'db.sql.prisma' },
-    async () => {
-      const overrides = await prisma.expectedHoursOverride.findMany({
-        where: { user_id: user.id },
-        orderBy: { date: 'asc' },
-      });
-      return overrides.map(toOverride);
-    },
-  );
-}
+    return await Sentry.startSpan(
+      { name: 'getExpectedHoursOverrides', op: 'db.sql.prisma' },
+      async () => {
+        const overrides = await prisma.expectedHoursOverride.findMany({
+          where: { user_id: user.id },
+          orderBy: { date: 'asc' },
+        });
+        return overrides.map(toOverride);
+      },
+    );
+  },
+);
 
 export async function upsertExpectedHoursOverride({
   date,

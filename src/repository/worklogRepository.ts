@@ -1,5 +1,6 @@
 import 'server-only';
 
+import { cache } from 'react';
 import { prisma } from './prisma';
 import { Worklog as PrismaWorklog } from '@/generated/prisma/client';
 import { Worklog, WorklogFormData } from '@/types';
@@ -23,34 +24,39 @@ const toWorklog = (worklog: PrismaWorklog): Worklog => ({
   absence: toAbsenceReason(worklog.absence),
 });
 
-export async function getWorklogs(from?: Date, to?: Date): Promise<Worklog[]> {
-  const user = await getUserFromSession();
-  if (!user) {
-    throw new Error('User not found in session.');
-  }
+// Cached per request (keyed on from/to) so callers sharing the same range —
+// e.g. the root layout (Navbar) and the home page — read once instead of twice.
+// Distinct ranges get distinct cache entries.
+export const getWorklogs = cache(
+  async (from?: Date, to?: Date): Promise<Worklog[]> => {
+    const user = await getUserFromSession();
+    if (!user) {
+      throw new Error('User not found in session.');
+    }
 
-  return await Sentry.startSpan(
-    { name: 'getWorklogs', op: 'db.sql.prisma' },
-    async (span) => {
-      const worklogs = await prisma.worklog.findMany({
-        where: {
-          user_id: user.id,
-          from: { gte: from },
-          to: { lte: to },
-        },
-      });
+    return await Sentry.startSpan(
+      { name: 'getWorklogs', op: 'db.sql.prisma' },
+      async (span) => {
+        const worklogs = await prisma.worklog.findMany({
+          where: {
+            user_id: user.id,
+            from: { gte: from },
+            to: { lte: to },
+          },
+        });
 
-      span.setAttributes({
-        userId: user.id,
-        from: from?.toISOString() ?? 'beginning',
-        to: to?.toISOString() ?? 'end',
-        records: worklogs.length,
-      });
+        span.setAttributes({
+          userId: user.id,
+          from: from?.toISOString() ?? 'beginning',
+          to: to?.toISOString() ?? 'end',
+          records: worklogs.length,
+        });
 
-      return worklogs.map(toWorklog);
-    },
-  );
-}
+        return worklogs.map(toWorklog);
+      },
+    );
+  },
+);
 
 export async function insertWorklog({
   from,

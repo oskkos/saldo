@@ -9,9 +9,9 @@
 
 ## 3. Deduplicate shared reads per request
 
-- [ ] 3.1 Wrap `getSettings` in `src/repository/settingsRepository.ts` with React `cache()`, matching the `getActiveSession` pattern in `src/repository/clockRepository.ts:11`.
-- [ ] 3.2 Wrap `getWorklogs` in `src/repository/worklogRepository.ts` with `cache()`; confirm the optional `from`/`to` args are preserved so distinct ranges are not incorrectly shared.
-- [ ] 3.3 Wrap `getExpectedHoursOverrides` in `src/repository/expectedHoursOverrideRepository.ts` with `cache()`.
+- [x] 3.1 Wrap `getSettings` in `src/repository/settingsRepository.ts` with React `cache()`, matching the `getActiveSession` pattern in `src/repository/clockRepository.ts:11`.
+- [x] 3.2 Wrap `getWorklogs` in `src/repository/worklogRepository.ts` with `cache()`; confirm the optional `from`/`to` args are preserved so distinct ranges are not incorrectly shared.
+- [x] 3.3 Wrap `getExpectedHoursOverrides` in `src/repository/expectedHoursOverrideRepository.ts` with `cache()`.
 
 ## 4. Parallelize the home page reads
 
