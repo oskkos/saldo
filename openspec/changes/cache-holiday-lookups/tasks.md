@@ -1,8 +1,8 @@
 ## 1. Cache holiday lookups per year
 
-- [ ] 1.1 In `src/util/date.ts`, construct `new Holidays('FI')` once at module scope and add a `Map<number, Set<Date_ISODay>>` cache. Add a helper that, for a given year, computes `getHolidays(year)` once, keeps only `type === 'public'`, and stores a `Set` of their UTC calendar days (`toISODay`).
-- [ ] 1.2 Rewrite `isHoliday(date)` to resolve the date's year Set and return `set.has(toISODay(date))`, preserving the exact current semantics (public-type only, UTC day). Keep `isHoliday`/`isNonWorkingDay` signatures unchanged.
-- [ ] 1.3 Confirm the existing `src/util/__tests__/date.test.ts` holiday assertions pass **unchanged** (New Year, Christmas Eve/Day/Boxing Day, Dec 31, and the Midsummer boundary 2022-06-24/25/26). Do not edit these tests to fit — they are the acceptance guard.
+- [x] 1.1 In `src/util/date.ts`, construct `new Holidays('FI')` once at module scope and add a `Map<number, Set<Date_ISODay>>` cache. Add a helper that, for a given year, computes `getHolidays(year)` once, keeps only `type === 'public'`, and stores a `Set` of their UTC calendar days (`toISODay`).
+- [x] 1.2 Rewrite `isHoliday(date)` to resolve the date's year Set and return `set.has(toISODay(date))`, preserving the exact current semantics (public-type only, UTC day). Keep `isHoliday`/`isNonWorkingDay` signatures unchanged.
+- [x] 1.3 Confirm the existing `src/util/__tests__/date.test.ts` holiday assertions pass **unchanged** (New Year, Christmas Eve/Day/Boxing Day, Dec 31, and the Midsummer boundary 2022-06-24/25/26). Do not edit these tests to fit — they are the acceptance guard.
 
 ## 2. Revert the warm-up
 

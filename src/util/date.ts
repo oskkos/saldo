@@ -3,7 +3,12 @@ import isoWeek from 'dayjs/plugin/isoWeek';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import { Date_ISODay, Date_Time, Date_YearAndMonth } from './dateFormatter';
+import {
+  Date_ISODay,
+  Date_Time,
+  Date_YearAndMonth,
+  toISODay,
+} from './dateFormatter';
 import Holidays from 'date-holidays';
 
 dayjs.extend(isoWeek);
@@ -83,10 +88,29 @@ export function isWeekend(date: Date) {
   return date.getUTCDay() === 0 || date.getUTCDay() === 6;
 }
 
+// Constructing `new Holidays('FI')` and resolving holidays per call is ~1ms —
+// done once per day across the beginDate→today saldo loop, it dominated render
+// time (O(days)). Build the instance once and memoize each year's public
+// holidays as a Set of UTC day strings, so a per-day check is an O(1) lookup.
+const finHolidays = new Holidays('FI');
+const publicHolidaysByYear = new Map<number, Set<string>>();
+
+function publicHolidaysForYear(year: number): Set<string> {
+  const cached = publicHolidaysByYear.get(year);
+  if (cached) {
+    return cached;
+  }
+  const set = new Set(
+    (finHolidays.getHolidays(year) || [])
+      .filter((h) => h.type === 'public')
+      .map((h) => h.date.slice(0, 10)),
+  );
+  publicHolidaysByYear.set(year, set);
+  return set;
+}
+
 export function isHoliday(date: Date) {
-  const finHolidays = new Holidays('FI');
-  const holidays = finHolidays.isHoliday(date) || [];
-  return holidays.some((h) => h.type === 'public');
+  return publicHolidaysForYear(date.getUTCFullYear()).has(toISODay(date));
 }
 
 export function isNonWorkingDay(date: Date) {
