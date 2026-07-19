@@ -1,6 +1,6 @@
 ## 1. Warm-up helper
 
-- [ ] 1.1 Add a `server-only` `warmUpDb()` helper in `src/repository/` that runs `prisma.$queryRaw` `SELECT 1`, wrapped in a `Sentry.startSpan` (op `db.sql.prisma`, name `warmUpDb`) so the compute wake is visible in traces. No session/ownership check needed — it reads no user data.
+- [x] 1.1 Add a `server-only` `warmUpDb()` helper in `src/repository/` that runs `prisma.$queryRaw` `SELECT 1`, wrapped in a `Sentry.startSpan` (op `db.sql.prisma`, name `warmUpDb`) so the compute wake is visible in traces. No session/ownership check needed — it reads no user data.
 
 ## 2. Wire into the root layout
 
