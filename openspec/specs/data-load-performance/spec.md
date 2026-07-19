@@ -56,22 +56,17 @@ Server-rendered routes that perform database work SHALL declare a request-durati
 - **WHEN** the initial page load triggers a database cold start that takes several seconds
 - **THEN** the request completes and renders rather than being killed by the platform's default duration limit
 
-### Requirement: Database compute is warmed once before concurrent reads
+### Requirement: Repeated holiday lookups over a date range are cached
 
-Before dispatching a page's concurrent database reads, the app SHALL issue a single lightweight warm-up query and await it, so that a database cold start is incurred once per request rather than once per concurrent connection. The warm-up SHALL run only when the request will perform database reads (i.e. an authenticated request).
+Computing whether days are non-working over a date range (e.g. the `beginDate → today` saldo accrual) SHALL NOT re-initialize the holiday dataset or recompute holidays per day. Public holidays SHALL be resolved through a cache keyed by year, so the cost of a range computation is bounded by the number of distinct years spanned, not the number of days.
 
-#### Scenario: Cold start on initial load
+#### Scenario: Saldo accrual over a long date range
 
-- **WHEN** a request begins rendering against a database compute that has scaled to zero (suspended)
-- **THEN** a single warm-up query wakes the compute before the page's concurrent reads are dispatched
-- **AND** those reads then execute against a warm compute and overlap, rather than each paying the cold-start connection cost
+- **WHEN** the saldo is computed over a range spanning many days across a few years
+- **THEN** each year's public holidays are computed at most once and reused for every day in that year
+- **AND** the per-day non-working check is a constant-time lookup, so render cost does not scale linearly with the number of days
 
-#### Scenario: Warm compute adds negligible latency
+#### Scenario: Holiday classification is unchanged
 
-- **WHEN** the database compute is already awake
-- **THEN** the warm-up query completes quickly and does not meaningfully increase the request's latency
-
-#### Scenario: No warm-up without database work
-
-- **WHEN** a request has no authenticated session and therefore performs no database reads
-- **THEN** no warm-up query is issued
+- **WHEN** any given date is checked for being a public holiday
+- **THEN** the result is identical to computing it directly (only public-type holidays count), for every date the existing tests assert
