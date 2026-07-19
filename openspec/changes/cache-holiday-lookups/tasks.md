@@ -6,8 +6,8 @@
 
 ## 2. Revert the warm-up
 
-- [ ] 2.1 Delete `src/repository/warmup.ts`.
-- [ ] 2.2 In `src/app/layout.tsx`, remove the `warmUpDb` import and the `await warmUpDb()` call, restoring the prior session-gated flow.
+- [x] 2.1 Delete `src/repository/warmup.ts`.
+- [x] 2.2 In `src/app/layout.tsx`, remove the `warmUpDb` import and the `await warmUpDb()` call, restoring the prior session-gated flow.
 
 ## 3. Attribution instrumentation
 
