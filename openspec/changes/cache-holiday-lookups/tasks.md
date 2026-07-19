@@ -11,7 +11,7 @@
 
 ## 3. Attribution instrumentation
 
-- [ ] 3.1 Wrap the `calculateCurrentSaldo` invocation in a `Sentry.startSpan` so the post-deploy trace attributes this CPU directly. Prefer the call site (`src/components/saldoBadge.tsx`) to keep `src/services/index.tsx` free of Sentry imports; op `function`, name `calculateCurrentSaldo`.
+- [x] 3.1 Wrap the `calculateCurrentSaldo` invocation in a `Sentry.startSpan` so the post-deploy trace attributes this CPU directly. Prefer the call site (`src/components/saldoBadge.tsx`) to keep `src/services/index.tsx` free of Sentry imports; op `function`, name `calculateCurrentSaldo`.
 
 ## 4. Verify
 
