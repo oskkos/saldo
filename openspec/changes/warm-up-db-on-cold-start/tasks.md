@@ -4,7 +4,7 @@
 
 ## 2. Wire into the root layout
 
-- [ ] 2.1 In `src/app/layout.tsx`, `await warmUpDb()` before the existing session-gated `Promise.all([...])`, gated on the same session condition so it runs only when the request will perform DB reads. Preserve current behavior for the unauthenticated branch (no warm-up).
+- [x] 2.1 In `src/app/layout.tsx`, `await warmUpDb()` before the existing session-gated `Promise.all([...])`, gated on the same session condition so it runs only when the request will perform DB reads. Preserve current behavior for the unauthenticated branch (no warm-up).
 
 ## 3. Verify
 

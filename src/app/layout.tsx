@@ -8,6 +8,7 @@ import { getSession } from '@/auth/authSession';
 import { getSettings } from '@/repository/settingsRepository';
 import { getWorklogs } from '@/repository/worklogRepository';
 import { getActiveSession } from '@/repository/clockRepository';
+import { warmUpDb } from '@/repository/warmup';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +31,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await getSession();
+  // Wake the Neon compute once before the concurrent reads below, so a cold
+  // start is paid a single time rather than raced by each read's connection.
+  if (session) {
+    await warmUpDb();
+  }
   const [settings, worklogs, activeSession] = session
     ? await Promise.all([getSettings(), getWorklogs(), getActiveSession()])
     : [null, [], null];
