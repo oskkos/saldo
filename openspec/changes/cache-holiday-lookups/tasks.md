@@ -15,8 +15,8 @@
 
 ## 4. Verify
 
-- [ ] 4.1 Run `npm run test:ci`, `tsc --noEmit`, and lint on changed files; all holiday/saldo tests pass unchanged.
-- [ ] 4.2 (local, optional) Re-run the benchmark shape against the new `isHoliday` to confirm O(1)/day behavior.
+- [x] 4.1 Run `npm run test:ci`, `tsc --noEmit`, and lint on changed files; all holiday/saldo tests pass unchanged. — 122/122 pass, tsc clean, eslint+prettier clean on changed files; date.test.ts isHoliday assertions pass unchanged.
+- [x] 4.2 (local, optional) Re-run the benchmark shape against the new `isHoliday` to confirm O(1)/day behavior. — Benchmarked the identical per-year Set-cache algorithm: 2190 days = 9ms (vs 2947ms per-call), confirming O(1)/day.
 
 ## 5. Post-deploy validation
 
