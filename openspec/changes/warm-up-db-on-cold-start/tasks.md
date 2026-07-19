@@ -8,7 +8,7 @@
 
 ## 3. Verify
 
-- [ ] 3.1 Run `npm run test:ci`, `npm run lint`, and `tsc --noEmit`; fix any regressions.
+- [x] 3.1 Run `npm run test:ci`, `npm run lint`, and `tsc --noEmit`; fix any regressions. — 122/122 tests pass; `tsc --noEmit` clean; changed files pass eslint + prettier. Runtime-checked `prisma.$queryRaw` `SELECT 1` against local DB → returns `[{"?column?":1}]` (no `void` deserialization issue). (`npm run lint` still reports the pre-existing gitignored `docs/user-guide/.venv` error, absent in CI.)
 
 ## 4. Post-deploy validation
 
