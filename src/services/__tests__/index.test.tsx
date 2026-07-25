@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { render } from '@testing-library/react';
 import {
   calculateCurrentSaldo,
   calculateWorklogsSum,
@@ -6,6 +7,8 @@ import {
   absenceReasonToString,
   resolveExpectedMinutes,
   expectedMinutesByDay,
+  minutesToSaldoObject,
+  worklogMinutes,
 } from '../index';
 import {
   AbsenceReason,
@@ -304,5 +307,230 @@ describe('worklog calculator', () => {
       const saldo = calculateCurrentSaldo(settings(360), worklogs, []);
       expect(saldo.toString()).toBe('0h 0min');
     });
+  });
+});
+
+describe('saldo specification scenarios', () => {
+  // All dates are UTC; the suite runs in a non-UTC zone on purpose.
+  const MONDAY = '2023-10-16T00:00:00.000Z';
+  const settingsFor = (
+    beginDate: string,
+    initialBalanceHours = 0,
+    initialBalanceMins = 0,
+  ) =>
+    ({
+      beginDate: new Date(beginDate),
+      initialBalanceHours,
+      initialBalanceMins,
+      expectedMinutesPerDay: 450,
+    }) as Settings;
+
+  const worklog = (props: Partial<Worklog> & { from: Date; to: Date }) =>
+    props as unknown as Worklog;
+
+  const at = (iso: string) => {
+    jest.useFakeTimers();
+    jest.setSystemTime(new Date(iso).getTime());
+  };
+
+  // @scenario saldo/Non-zero initial balance
+  it('adds the initial balance to the worked total before worklogs count', () => {
+    at(MONDAY);
+
+    const withoutBalance = calculateCurrentSaldo(
+      settingsFor(MONDAY),
+      [],
+      [],
+    ).toString();
+    const withBalance = calculateCurrentSaldo(
+      settingsFor(MONDAY, 2, 30),
+      [],
+      [],
+    ).toString();
+
+    // One working day accrues 450 expected. 2h30 of initial balance is 150
+    // minutes of credit against it: -450 becomes -300.
+    expect(withoutBalance).toBe('-7h 30min');
+    expect(withBalance).toBe('-5h 0min');
+  });
+
+  // @scenario saldo/Weekends and holidays do not raise the expectation
+  it('accrues the default on working days and nothing on the weekend', () => {
+    at(MONDAY);
+
+    // Fri 13th and Mon 16th accrue 450 each; Sat 14th and Sun 15th accrue 0.
+    const saldo = calculateCurrentSaldo(
+      settingsFor('2023-10-13T00:00:00.000Z'),
+      [],
+      [],
+    );
+
+    expect(saldo.toString()).toBe('-15h 0min');
+  });
+
+  // @scenario saldo/Work logged on a Sunday counts
+  it('counts work logged on a Sunday even though Sunday accrues nothing', () => {
+    at('2023-10-15T20:00:00.000Z');
+
+    const saldo = calculateCurrentSaldo(
+      settingsFor('2023-10-15T00:00:00.000Z'),
+      [
+        worklog({
+          from: new Date('2023-10-15T10:00:00.000Z'),
+          to: new Date('2023-10-15T12:00:00.000Z'),
+          subtractLunchBreak: false,
+        }),
+      ],
+      [],
+    );
+
+    expect(saldo.toString()).toBe('2h 0min');
+  });
+
+  // @scenario saldo/Lunch break subtracted
+  it('nets a 30-minute lunch break out of the worked minutes', () => {
+    expect(
+      worklogMinutes(
+        worklog({
+          from: new Date('2023-10-16T07:00:00.000Z'),
+          to: new Date('2023-10-16T16:15:00.000Z'),
+          subtractLunchBreak: true,
+        }),
+      ),
+    ).toBe(525);
+  });
+
+  // @scenario saldo/Lunch break not subtracted
+  it('keeps the whole span when no lunch break is subtracted', () => {
+    expect(
+      worklogMinutes(
+        worklog({
+          from: new Date('2023-10-16T08:00:00.000Z'),
+          to: new Date('2023-10-16T16:30:00.000Z'),
+          subtractLunchBreak: false,
+        }),
+      ),
+    ).toBe(510);
+  });
+
+  // @scenario saldo/Entry the day before begin date
+  it('ignores a worklog dated before the begin date', () => {
+    at(MONDAY);
+    const settings = settingsFor('2023-10-14T00:00:00.000Z');
+    const dayBefore = worklog({
+      from: new Date('2023-10-13T08:00:00.000Z'),
+      to: new Date('2023-10-13T16:00:00.000Z'),
+      subtractLunchBreak: false,
+    });
+
+    const withEntry = calculateCurrentSaldo(settings, [dayBefore], []);
+
+    // Sat and Sun accrue nothing, Mon accrues 450, and the 13th contributes
+    // nothing at all — so the entry leaves the balance where it was.
+    expect(withEntry.toString()).toBe('-7h 30min');
+    expect(withEntry.toString()).toBe(
+      calculateCurrentSaldo(settings, [], []).toString(),
+    );
+  });
+
+  // @scenario saldo/Entry dated tomorrow
+  it('ignores a worklog dated after today', () => {
+    at('2023-10-22T10:00:00.000Z');
+    const settings = settingsFor('2023-10-22T00:00:00.000Z');
+    const tomorrow = worklog({
+      from: new Date('2023-10-23T08:00:00.000Z'),
+      to: new Date('2023-10-23T16:00:00.000Z'),
+      subtractLunchBreak: false,
+    });
+
+    const withEntry = calculateCurrentSaldo(settings, [tomorrow], []);
+
+    // Sunday accrues nothing and the future entry contributes nothing.
+    expect(withEntry.toString()).toBe('0h 0min');
+    expect(withEntry.toString()).toBe(
+      calculateCurrentSaldo(settings, [], []).toString(),
+    );
+  });
+
+  // @scenario saldo/Flex day on a working day
+  it('draws the balance down by a full day for a flex-hours absence', () => {
+    at('2023-10-19T20:00:00.000Z');
+
+    const saldo = calculateCurrentSaldo(
+      settingsFor('2023-10-19T00:00:00.000Z'),
+      [
+        worklog({
+          absence: AbsenceReason.flex_hours,
+          from: new Date('2023-10-19T08:00:00.000Z'),
+          to: new Date('2023-10-19T16:00:00.000Z'),
+        }),
+      ],
+      [],
+    );
+
+    // 0 worked against 450 expected on a working Thursday.
+    expect(saldo.toString()).toBe('-7h 30min');
+  });
+
+  // @scenario saldo/Vacation on a working Friday
+  it('keeps a non-flex absence on a working day balance-neutral', () => {
+    at('2023-10-20T20:00:00.000Z');
+
+    const saldo = calculateCurrentSaldo(
+      settingsFor('2023-10-20T00:00:00.000Z'),
+      [
+        worklog({
+          absence: AbsenceReason.holiday,
+          from: new Date('2023-10-20T08:00:00.000Z'),
+          to: new Date('2023-10-20T16:00:00.000Z'),
+        }),
+      ],
+      [],
+    );
+
+    // The stored 08:00-16:00 span is 480 minutes; crediting it would leave
+    // +30. Netting to zero is what proves the resolved 450 was credited.
+    expect(saldo.toString()).toBe('0h 0min');
+  });
+
+  // @scenario saldo/Vacation on a Saturday
+  it('ignores an absence that falls on a non-working day', () => {
+    at('2023-10-21T20:00:00.000Z');
+
+    const saldo = calculateCurrentSaldo(
+      settingsFor('2023-10-21T00:00:00.000Z'),
+      [
+        worklog({
+          absence: AbsenceReason.holiday,
+          from: new Date('2023-10-21T08:00:00.000Z'),
+          to: new Date('2023-10-21T16:00:00.000Z'),
+        }),
+      ],
+      [],
+    );
+
+    // Neither worked nor expected minutes accrue on the Saturday.
+    expect(saldo.toString()).toBe('0h 0min');
+  });
+
+  // @scenario saldo/Negative saldo formatting
+  it('formats a negative saldo with an error badge', () => {
+    const saldo = minutesToSaldoObject(-45);
+
+    expect(saldo.toString()).toBe('-0h 45min');
+    const { container } = render(saldo.toBadge());
+    expect(container.firstChild).toHaveClass('badge-error');
+    expect(container.firstChild).toHaveTextContent('-0h 45min');
+  });
+
+  // @scenario saldo/Positive saldo formatting
+  it('floors a positive saldo and renders a success badge', () => {
+    const saldo = minutesToSaldoObject(125);
+
+    expect(saldo.hours).toBe(2);
+    expect(saldo.minutes).toBe(5);
+    expect(saldo.toString()).toBe('2h 5min');
+    const { container } = render(saldo.toBadge());
+    expect(container.firstChild).toHaveClass('badge-success');
   });
 });
