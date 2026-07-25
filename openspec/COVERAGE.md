@@ -34,8 +34,8 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | absence | 4 | 4 | 0 | 0 |
 | auth | 8 | 1 | 0 | 7 |
 | data-load-performance | 4 | 0 | 0 | 4 |
-| expected-hours | 2 | 0 | 2 | 0 |
-| saldo | 13 | 0 | 0 | 13 |
+| expected-hours | 2 | 1 | 1 | 0 |
+| saldo | 13 | 11 | 0 | 2 |
 | settings | 5 | 5 | 0 | 0 |
 | spec-test-traceability | 11 | 0 | 0 | 11 |
 | statistics | 7 | 7 | 0 | 0 |
@@ -57,17 +57,6 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 - `data-load-performance/Server request duration guards against premature termination`
 - `data-load-performance/Repeated holiday lookups over a date range are cached`
 - `saldo/Running balance from begin date`
-- `saldo/Initial balance seeds the sum`
-- `saldo/Expected minutes accrue only on working days`
-- `saldo/Worked minutes count on any calendar day`
-- `saldo/Worked minutes net of lunch break`
-- `saldo/Worklogs before the begin date are excluded`
-- `saldo/Future worklogs are excluded`
-- `saldo/Flex-hours absence draws down the balance`
-- `saldo/Non-flex absence on a working day is balance-neutral`
-- `saldo/Any absence on a non-working day is ignored`
-- `saldo/Saldo formatted as hours, minutes, string, and badge`
-- `saldo/Worklog sum aggregation ignores absence semantics`
 - `saldo/Saldo calculation is timezone-independent`
 - `spec-test-traceability/Tests declare covered scenarios by annotation`
 - `spec-test-traceability/Scenario identity is capability and title`
@@ -86,7 +75,6 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 
 | Requirement | Category | Reason | Covered at |
 | --- | --- | --- | --- |
-| expected-hours/Expected minutes are resolved per date | `harness-cost` | Resolution only becomes observable in the browser once an override exists, and the panel that creates one cannot be driven (see the sibling exemption). The default and non-working-day branches are asserted as pure logic; the settings suite separately proves a changed default moves the saldo on screen. | `src/services/__tests__/index.test.tsx` |
 | expected-hours/Per-date expected-hours overrides | `harness-cost` | The only UI that creates an override is the "Special days" panel on /settings, a daisyUI <details> collapse whose fields never become visible to Playwright — not by clicking the summary, and not by forcing the element open. Driving it would mean reworking the component for testability, which is a change to production markup this change does not make. | `src/repository/__tests__/expectedHoursOverrideRepository.test.ts` |
 
 ## absence
@@ -137,7 +125,7 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | --- | --- | --- | --- |
 | Default working day | Expected minutes are resolved per date | `dad40b25133d` | `src/services/__tests__/index.test.tsx` — returns the default on a working day with no override |
 | Non-working day | Expected minutes are resolved per date | `86e1c201157c` | `src/services/__tests__/index.test.tsx` — returns 0 on a non-working day with no override |
-| Override takes precedence over the weekend rule | Expected minutes are resolved per date | `352a8c061380` | `src/services/__tests__/index.test.tsx` — lets an override win over the weekend rule |
+| Override takes precedence over the weekend rule | Expected minutes are resolved per date | `352a8c061380` | `src/services/__tests__/index.test.tsx` — lets an override win over the weekend rule<br>`e2e/saldo.spec.ts` — an override replaces the expectation a day would otherwise have |
 | Create an override | Per-date expected-hours overrides | `2fb496f2ec6c` | `src/repository/__tests__/expectedHoursOverrideRepository.test.ts` — persists an override for the session user and date |
 | One override per date | Per-date expected-hours overrides | `15c9c14d4fc4` | `src/repository/__tests__/expectedHoursOverrideRepository.test.ts` — updates the existing row for a date rather than adding a second |
 | Non-owner mutation rejected | Per-date expected-hours overrides | `59f7a19beec5` | `src/repository/__tests__/expectedHoursOverrideRepository.test.ts` — rejects deleting an override owned by someone else<br>`src/repository/__tests__/expectedHoursOverrideRepository.test.ts` — does not let an upsert reach another user's row |
@@ -148,21 +136,21 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | Scenario | Requirement | Hash | Covered by |
 | --- | --- | --- | --- |
 | Worked example | Running balance from begin date | `76c637c559c9` | `src/services/__tests__/index.test.tsx` — should calculate the current saldo correctly |
-| Non-zero initial balance | Initial balance seeds the sum | `928e16fbeca5` | `src/services/__tests__/index.test.tsx` — adds the initial balance to the worked total before worklogs count |
-| Weekends and holidays do not raise the expectation | Expected minutes accrue only on working days | `b607f6ce87d6` | `src/services/__tests__/index.test.tsx` — accrues the default on working days and nothing on the weekend |
-| A short day accrues its overridden expectation | Expected minutes accrue only on working days | `d5bc021af7d8` | `src/services/__tests__/index.test.tsx` — returns the override value when present |
-| Work logged on a Sunday counts | Worked minutes count on any calendar day | `713c3ebe5f54` | `src/services/__tests__/index.test.tsx` — counts work logged on a Sunday even though Sunday accrues nothing |
-| Lunch break subtracted | Worked minutes net of lunch break | `6ffe3fd2dbf7` | `src/services/__tests__/index.test.tsx` — nets a 30-minute lunch break out of the worked minutes |
-| Lunch break not subtracted | Worked minutes net of lunch break | `3072bf446241` | `src/services/__tests__/index.test.tsx` — keeps the whole span when no lunch break is subtracted |
-| Entry the day before begin date | Worklogs before the begin date are excluded | `4d64224bdcb6` | `src/services/__tests__/index.test.tsx` — ignores a worklog dated before the begin date |
-| Entry dated tomorrow | Future worklogs are excluded | `74896960f3dd` | `src/services/__tests__/index.test.tsx` — ignores a worklog dated after today |
-| Flex day on a working day | Flex-hours absence draws down the balance | `45aba0e65ec3` | `src/services/__tests__/index.test.tsx` — draws the balance down by a full day for a flex-hours absence |
-| Vacation on a working Friday | Non-flex absence on a working day is balance-neutral | `e8c33127b6c1` | `src/services/__tests__/index.test.tsx` — keeps a non-flex absence on a working day balance-neutral |
+| Non-zero initial balance | Initial balance seeds the sum | `928e16fbeca5` | `src/services/__tests__/index.test.tsx` — adds the initial balance to the worked total before worklogs count<br>`e2e/saldo.spec.ts` — the initial balance is added to the running total |
+| Weekends and holidays do not raise the expectation | Expected minutes accrue only on working days | `b607f6ce87d6` | `src/services/__tests__/index.test.tsx` — accrues the default on working days and nothing on the weekend<br>`e2e/saldo.spec.ts` — a weekend accrues no expected time while a working day accrues the default |
+| A short day accrues its overridden expectation | Expected minutes accrue only on working days | `d5bc021af7d8` | `src/services/__tests__/index.test.tsx` — returns the override value when present<br>`e2e/saldo.spec.ts` — an override replaces the expectation a day would otherwise have |
+| Work logged on a Sunday counts | Worked minutes count on any calendar day | `713c3ebe5f54` | `src/services/__tests__/index.test.tsx` — counts work logged on a Sunday even though Sunday accrues nothing<br>`e2e/saldo.spec.ts` — work logged on a Sunday still counts towards the balance |
+| Lunch break subtracted | Worked minutes net of lunch break | `6ffe3fd2dbf7` | `src/services/__tests__/index.test.tsx` — nets a 30-minute lunch break out of the worked minutes<br>`e2e/saldo.spec.ts` — worked minutes are net of the lunch break when it is set |
+| Lunch break not subtracted | Worked minutes net of lunch break | `3072bf446241` | `src/services/__tests__/index.test.tsx` — keeps the whole span when no lunch break is subtracted<br>`e2e/saldo.spec.ts` — worked minutes are net of the lunch break when it is set |
+| Entry the day before begin date | Worklogs before the begin date are excluded | `4d64224bdcb6` | `src/services/__tests__/index.test.tsx` — ignores a worklog dated before the begin date<br>`e2e/saldo.spec.ts` — a worklog before the begin date contributes nothing |
+| Entry dated tomorrow | Future worklogs are excluded | `74896960f3dd` | `src/services/__tests__/index.test.tsx` — ignores a worklog dated after today<br>`e2e/saldo.spec.ts` — a worklog dated tomorrow contributes nothing |
+| Flex day on a working day | Flex-hours absence draws down the balance | `45aba0e65ec3` | `src/services/__tests__/index.test.tsx` — draws the balance down by a full day for a flex-hours absence<br>`e2e/saldo.spec.ts` — a flex-hours absence draws the balance down by a full day |
+| Vacation on a working Friday | Non-flex absence on a working day is balance-neutral | `e8c33127b6c1` | `src/services/__tests__/index.test.tsx` — keeps a non-flex absence on a working day balance-neutral<br>`e2e/saldo.spec.ts` — a non-flex absence on a working day is balance-neutral |
 | Vacation on an overridden short day | Non-flex absence on a working day is balance-neutral | `c6c447923a5b` | `src/services/__tests__/index.test.tsx` — keeps an absence on an overridden day balance-neutral |
-| Vacation on a Saturday | Any absence on a non-working day is ignored | `471b24e277fa` | `src/services/__tests__/index.test.tsx` — ignores an absence that falls on a non-working day |
-| Negative saldo formatting | Saldo formatted as hours, minutes, string, and badge | `06bdab945b56` | `src/services/__tests__/index.test.tsx` — formats a negative saldo with an error badge |
-| Positive saldo formatting | Saldo formatted as hours, minutes, string, and badge | `880927017bc1` | `src/services/__tests__/index.test.tsx` — floors a positive saldo and renders a success badge |
-| Sum over a mixed list | Worklog sum aggregation ignores absence semantics | `4b07d24c4eeb` | `src/services/__tests__/index.test.tsx` — should calculate the sum of all worklogs correctly |
+| Vacation on a Saturday | Any absence on a non-working day is ignored | `471b24e277fa` | `src/services/__tests__/index.test.tsx` — ignores an absence that falls on a non-working day<br>`e2e/saldo.spec.ts` — an absence on a non-working day is ignored entirely |
+| Negative saldo formatting | Saldo formatted as hours, minutes, string, and badge | `06bdab945b56` | `src/services/__tests__/index.test.tsx` — formats a negative saldo with an error badge<br>`e2e/saldo.spec.ts` — the badge is styled by the sign of the balance |
+| Positive saldo formatting | Saldo formatted as hours, minutes, string, and badge | `880927017bc1` | `src/services/__tests__/index.test.tsx` — floors a positive saldo and renders a success badge<br>`e2e/saldo.spec.ts` — the badge is styled by the sign of the balance |
+| Sum over a mixed list | Worklog sum aggregation ignores absence semantics | `4b07d24c4eeb` | `src/services/__tests__/index.test.tsx` — should calculate the sum of all worklogs correctly<br>`e2e/saldo.spec.ts` — the day total sums raw worklog times, absences included |
 | Same saldo regardless of runtime timezone | Saldo calculation is timezone-independent | `6570e2dac07d` | _Exempt: Comparing two runtime timezones needs two processes: Node caches the zone at startup, so a runtime TZ change has no effect. The suite is instead parameterized by TZ (jest.config.mjs pins a non-UTC zone; TZ=UTC npm run test:ci runs it again), and 'Begin date at the UTC day boundary' covers the mechanism that makes the result invariant._ |
 | Begin date at the UTC day boundary | Saldo calculation is timezone-independent | `e9095716e3b8` | `src/services/__tests__/index.test.tsx` — is timezone-independent for a begin date at the UTC day boundary |
 

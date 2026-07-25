@@ -93,9 +93,9 @@ export function utcDay(offsetDays = 0): Date {
 // holiday is left out of the statistics tally, for instance. Tests cannot hard-
 // code a weekday, so they ask for offsets that are known to be working days on
 // the day the suite happens to run.
-export function pastWorkingDayOffsets(count: number): number[] {
+export function pastWorkingDayOffsets(count: number, from = -1): number[] {
   const offsets: number[] = [];
-  for (let offset = -1; offset > -60; offset--) {
+  for (let offset = from; offset > -60; offset--) {
     if (!isNonWorkingDay(utcDay(offset))) {
       offsets.push(offset);
       if (offsets.length === count) return offsets;
@@ -104,11 +104,19 @@ export function pastWorkingDayOffsets(count: number): number[] {
   throw new Error(`Could not find ${count} working days in the last 60 days`);
 }
 
-export function pastNonWorkingDayOffset(): number {
-  for (let offset = -1; offset > -60; offset--) {
+export function pastNonWorkingDayOffset(from = -1): number {
+  for (let offset = from; offset > -60; offset--) {
     if (isNonWorkingDay(utcDay(offset))) return offset;
   }
   throw new Error('Could not find a non-working day in the last 60 days');
+}
+
+/** The most recent Sunday, for the scenarios that name one specifically. */
+export function pastSundayOffset(from = -1): number {
+  for (let offset = from; offset > -60; offset--) {
+    if (utcDay(offset).getUTCDay() === 0) return offset;
+  }
+  throw new Error('Could not find a Sunday in the last 60 days');
 }
 
 /** A UTC instant at `hours:minutes` on the day `offsetDays` from today. */

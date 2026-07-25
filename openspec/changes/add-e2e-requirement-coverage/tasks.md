@@ -59,19 +59,32 @@
 - [x] 8.3 Cover the per-day chart rendering, and the empty/no-settings state rendering nothing
 - [x] 8.4 Annotate the suite and confirm `statistics`' 6 journey requirements report end-to-end coverage
 
-## 9. Exemption decisions
+## 9. Saldo end-to-end suite
 
-- [ ] 9.1 Write the `no-ui` exemptions (the coverage tool's own requirements, pool and duration configuration, row mapping, JWT internals)
-- [ ] 9.2 Write the `unit-appropriate` exemptions (saldo arithmetic, the two timezone-invariance requirements)
-- [ ] 9.3 Write the `external-dependency` exemption for OAuth sign-in
-- [ ] 9.4 Write the `harness-cost` exemptions for the remaining auth requirements, each naming the suite that does cover it in `coveredAt`
-- [ ] 9.5 Regenerate the map and confirm every requirement is either covered or exempt
+Not in the original plan, which assumed the whole saldo capability was
+unit-appropriate. It is not: most of it is observable in the badge, and a
+comparison of two begin dates isolates a single day's contribution without
+needing control of the server clock.
 
-## 10. Enable enforcement and document
+- [x] 9.1 Add a day-contribution helper that reads the badge with and without a day in the accrual window, so the expected side of a scenario can be asserted and not just the worked side
+- [x] 9.2 Cover the worked-minutes rules: initial balance, lunch break both ways, work on a Sunday, and the begin-date and future-entry exclusions
+- [x] 9.3 Cover the absence rules: flex draws down a full day, non-flex is balance-neutral, and any absence on a non-working day is ignored
+- [x] 9.4 Cover expectation accrual and overrides, taking `expected-hours/Expected minutes are resolved per date` to end-to-end coverage and dropping its exemption
+- [x] 9.5 Cover badge styling by sign and the day-total aggregation, and confirm `saldo` reports 11 of 13 requirements end-to-end covered
 
-- [ ] 10.1 Run `/opsx:sync` to promote the delta into `openspec/specs/`, so the new requirements are canonical before the gate is switched on
-- [ ] 10.2 Annotate the tool's new Jest tests with the `spec-test-traceability` scenarios they assert
-- [ ] 10.3 Add `no-ui` end-to-end exemptions for the capability's own new requirements
-- [ ] 10.4 Turn on requirement-level enforcement under `--strict` and confirm `npm run spec:coverage:ci` passes with no workflow change
-- [ ] 10.5 Document the requirement-level rule, the four categories and the `coveredAt` field in `CLAUDE.md` and `e2e/README.md`
-- [ ] 10.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
+## 10. Exemption decisions
+
+- [ ] 10.1 Write the `no-ui` exemptions (the coverage tool's own requirements, pool and duration configuration, row mapping, JWT internals)
+- [ ] 10.2 Write the `unit-appropriate` exemptions (the two timezone-invariance requirements and the saldo worked example, now that the rest of saldo is covered)
+- [ ] 10.3 Write the `external-dependency` exemption for OAuth sign-in
+- [ ] 10.4 Write the `harness-cost` exemptions for the remaining auth requirements, each naming the suite that does cover it in `coveredAt`
+- [ ] 10.5 Regenerate the map and confirm every requirement is either covered or exempt
+
+## 11. Enable enforcement and document
+
+- [ ] 11.1 Run `/opsx:sync` to promote the delta into `openspec/specs/`, so the new requirements are canonical before the gate is switched on
+- [ ] 11.2 Annotate the tool's new Jest tests with the `spec-test-traceability` scenarios they assert
+- [ ] 11.3 Add `no-ui` end-to-end exemptions for the capability's own new requirements
+- [ ] 11.4 Turn on requirement-level enforcement under `--strict` and confirm `npm run spec:coverage:ci` passes with no workflow change
+- [ ] 11.5 Document the requirement-level rule, the four categories and the `coveredAt` field in `CLAUDE.md` and `e2e/README.md`
+- [ ] 11.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
