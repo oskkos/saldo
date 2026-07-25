@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
   resetClockState,
   setOpenSession,
@@ -8,10 +8,18 @@ import {
 } from './db';
 
 // Each scenario below maps to a requirement in openspec/specs/time-clock/spec.md.
-// The clocked-in badge (navbar) carries title="Clocked in"; the finalize step is
-// a <dialog> with "Save" (confirm), "Discard" (secondary) and "Cancel" buttons.
+// The clocked-in badge (navbar) carries title="Clocked in". The finalize step is
+// the <dialog id="clock-out-modal">; scope its buttons to it because "Save",
+// "Cancel" and "Discard" are generic labels shared by other modals in the app.
 
 const clockInButton = (name = 'Clock in') => ({ name });
+
+// The finalize dialog. Native <dialog> renders in the top layer without hiding
+// the page behind it, so tests must assert on the dialog itself (its heading
+// appearing/disappearing) rather than on background content.
+const finalizeModal = (page: Page) => page.locator('#clock-out-modal');
+const finalizeHeading = (page: Page) =>
+  finalizeModal(page).getByRole('heading', { name: 'Finish work session' });
 
 test.beforeEach(async () => {
   await resetClockState();
@@ -78,12 +86,11 @@ test('save creates a worklog spanning the session and clears it', async ({
   await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
   await page.getByRole('button', { name: 'Clock out' }).click();
 
-  await expect(
-    page.getByRole('heading', { name: 'Finish work session' }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Save' }).click();
+  await expect(finalizeHeading(page)).toBeVisible();
+  await finalizeModal(page).getByRole('button', { name: 'Save' }).click();
 
-  // Session cleared, back to idle.
+  // Dialog closed and back to idle before asserting on the DB.
+  await expect(finalizeHeading(page)).toBeHidden();
   await expect(page.getByRole('button', clockInButton())).toBeVisible();
   expect(await getStartedAt()).toBeNull();
 
@@ -101,13 +108,14 @@ test('cancel keeps the session open and logs nothing', async ({ page }) => {
 
   await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
   await page.getByRole('button', { name: 'Clock out' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Finish work session' }),
-  ).toBeVisible();
+  await expect(finalizeHeading(page)).toBeVisible();
 
-  await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await finalizeModal(page)
+    .getByRole('button', { name: 'Cancel', exact: true })
+    .click();
 
-  // Still clocked in, nothing logged.
+  // Cancel closed the dialog and started no save; still clocked in, nothing logged.
+  await expect(finalizeHeading(page)).toBeHidden();
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
   expect(await getStartedAt()).not.toBeNull();
   expect(await getWorklogs()).toHaveLength(0);
@@ -120,14 +128,13 @@ test('discard clears the session without logging', async ({ page }) => {
 
   await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
   await page.getByRole('button', { name: 'Clock out' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Finish work session' }),
-  ).toBeVisible();
+  await expect(finalizeHeading(page)).toBeVisible();
 
   // The discard confirmation is a window.confirm.
   page.once('dialog', (dialog) => dialog.accept());
-  await page.getByRole('button', { name: 'Discard' }).click();
+  await finalizeModal(page).getByRole('button', { name: 'Discard' }).click();
 
+  await expect(finalizeHeading(page)).toBeHidden();
   await expect(page.getByRole('button', clockInButton())).toBeVisible();
   expect(await getStartedAt()).toBeNull();
   expect(await getWorklogs()).toHaveLength(0);
@@ -145,13 +152,18 @@ test('overnight session must be corrected or discarded before saving', async ({
   await page.clock.setFixedTime(new Date('2026-07-26T00:30:00Z'));
   await page.getByRole('button', { name: 'Clock out' }).click();
 
-  await expect(page.getByText(/crossed midnight/i)).toBeVisible();
+  await expect(
+    finalizeModal(page).getByText(/crossed midnight/i),
+  ).toBeVisible();
   // Save is blocked until a same-day end time is entered.
-  await expect(page.getByRole('button', { name: 'Save' })).toBeDisabled();
+  await expect(
+    finalizeModal(page).getByRole('button', { name: 'Save' }),
+  ).toBeDisabled();
 
   // The user may instead discard.
   page.once('dialog', (dialog) => dialog.accept());
-  await page.getByRole('button', { name: 'Discard' }).click();
+  await finalizeModal(page).getByRole('button', { name: 'Discard' }).click();
+  await expect(finalizeHeading(page)).toBeHidden();
   await expect(page.getByRole('button', clockInButton())).toBeVisible();
   expect(await getStartedAt()).toBeNull();
   expect(await getWorklogs()).toHaveLength(0);
