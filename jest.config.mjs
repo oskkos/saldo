@@ -29,7 +29,11 @@ const config = {
     '^server-only$': '<rootDir>/__mocks__/empty.ts',
   },
 
-  collectCoverageFrom: ['src/**/*.{ts,tsx}'],
+  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/generated/**'],
+
+  // The e2e/ suite is Playwright's (its *.spec.ts would otherwise be picked up
+  // by Jest's default testMatch and fail on @playwright/test imports).
+  testPathIgnorePatterns: ['/node_modules/', '<rootDir>/e2e/'],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
