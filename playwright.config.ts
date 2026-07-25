@@ -1,11 +1,26 @@
 import { defineConfig, devices } from '@playwright/test';
-import dotenv from 'dotenv';
 import path from 'node:path';
 import { STORAGE_STATE } from './e2e/constants';
 
 // Load the e2e env (dedicated test DB, NextAuth secret) before anything reads
 // process.env — global setup, the DB helpers, and the app server all rely on it.
-dotenv.config({ path: path.join(__dirname, '.env.e2e') });
+// Missing file is fine: CI provides these vars directly. loadEnvFile does not
+// override variables already set in the environment.
+try {
+  process.loadEnvFile(path.join(__dirname, '.env.e2e'));
+} catch {
+  // no .env.e2e present (e.g. CI) — fall through to the guard below
+}
+
+// Fail fast rather than silently run against the developer's own database: if
+// POSTGRES_PRISMA_URL is missing or not the test DB, migrations and resets would
+// hit dev data. All e2e writes are scoped to the test user, but a clear error
+// beats a puzzling one.
+if (!process.env.POSTGRES_PRISMA_URL?.includes('saldo_test')) {
+  throw new Error(
+    'e2e: POSTGRES_PRISMA_URL must point at saldo_test — copy .env.e2e.example to .env.e2e',
+  );
+}
 
 // A dedicated port (not Next's default 3000) so the e2e app never collides with
 // another dev server the developer already has running on 3000.
@@ -56,12 +71,13 @@ export default defineConfig({
   ],
 
   webServer: {
-    // Prod build in CI for fidelity; the dev server locally for a fast loop.
-    command: process.env.CI ? 'npm run build && npm run start' : 'npm run dev',
+    // In CI the build runs as its own step (so a build failure is reported as a
+    // build failure, not an opaque webServer timeout); here we only start it.
+    // Locally the dev server gives a fast loop.
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
     url: baseURL,
     reuseExistingServer: !process.env.CI,
-    // Generous: in CI the command builds the app before starting it.
-    timeout: 300_000,
+    timeout: 120_000,
     env: serverEnv,
   },
 });
