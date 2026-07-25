@@ -17,6 +17,7 @@ import { Date_ISODay } from '@/util/dateFormatter';
 
 describe('worklog calculator', () => {
   describe('calculateCurrentSaldo', () => {
+    // @scenario saldo/Worked example
     it('should calculate the current saldo correctly', () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date('2023-10-22T10:00:00').getTime());
@@ -97,6 +98,7 @@ describe('worklog calculator', () => {
       expect(saldo.toString()).toBe('-0h 45min');
     });
 
+    // @scenario saldo/Begin date at the UTC day boundary
     it('is timezone-independent for a begin date at the UTC day boundary', () => {
       // beginDate at UTC midnight is the edge case where local-time day math
       // mis-counts the working day. With UTC math the result is the same in any
@@ -126,6 +128,7 @@ describe('worklog calculator', () => {
   });
 
   describe('calculateWorklogsSum', () => {
+    // @scenario saldo/Sum over a mixed list
     it('should calculate the sum of all worklogs correctly', () => {
       const worklogs = [
         {
@@ -189,6 +192,7 @@ describe('worklog calculator', () => {
   });
 
   describe('absenceReasonToString', () => {
+    // @scenario absence/Label formatting
     it('should convert an absence reason to a human-friendly string', () => {
       const reasons = ['holiday', 'flex_hours', 'sick_leave', 'other'] as const;
       const pretty = reasons.map((r) =>
@@ -206,6 +210,7 @@ describe('worklog calculator', () => {
       label: null,
     });
 
+    // @scenario expected-hours/Default working day
     it('returns the default on a working day with no override', () => {
       const map = new Map<Date_ISODay, number>();
       expect(resolveExpectedMinutes(new Date('2023-10-16'), 450, map)).toBe(
@@ -213,11 +218,13 @@ describe('worklog calculator', () => {
       );
     });
 
+    // @scenario expected-hours/Non-working day
     it('returns 0 on a non-working day with no override', () => {
       const map = new Map<Date_ISODay, number>();
       expect(resolveExpectedMinutes(new Date('2023-10-14'), 450, map)).toBe(0);
     });
 
+    // @scenario saldo/A short day accrues its overridden expectation
     it('returns the override value when present', () => {
       const map = expectedMinutesByDay([mk('2023-10-16', 300)]);
       expect(resolveExpectedMinutes(new Date('2023-10-16'), 450, map)).toBe(
@@ -225,6 +232,7 @@ describe('worklog calculator', () => {
       );
     });
 
+    // @scenario expected-hours/Override takes precedence over the weekend rule
     it('lets an override win over the weekend rule', () => {
       const map = expectedMinutesByDay([mk('2023-10-14', 300)]);
       expect(resolveExpectedMinutes(new Date('2023-10-14'), 450, map)).toBe(
@@ -269,6 +277,7 @@ describe('worklog calculator', () => {
       expect(saldo.toString()).toBe('0h 0min');
     });
 
+    // @scenario saldo/Vacation on an overridden short day
     it('keeps an absence on an overridden day balance-neutral', () => {
       const worklogs = [
         {
