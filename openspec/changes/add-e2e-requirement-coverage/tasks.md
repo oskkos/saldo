@@ -82,9 +82,9 @@ needing control of the server clock.
 
 ## 11. Enable enforcement and document
 
-- [ ] 11.1 Run `/opsx:sync` to promote the delta into `openspec/specs/`, so the new requirements are canonical before the gate is switched on
-- [ ] 11.2 Annotate the tool's new Jest tests with the `spec-test-traceability` scenarios they assert
-- [ ] 11.3 Add `no-ui` end-to-end exemptions for the capability's own new requirements
-- [ ] 11.4 Turn on requirement-level enforcement under `--strict` and confirm `npm run spec:coverage:ci` passes with no workflow change
-- [ ] 11.5 Document the requirement-level rule, the four categories and the `coveredAt` field in `CLAUDE.md` and `e2e/README.md`
-- [ ] 11.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
+- [x] 11.1 Sync the delta into `openspec/specs/`, so the new requirements are canonical before the gate is switched on
+- [x] 11.2 Annotate the tool's new Jest tests with the `spec-test-traceability` scenarios they assert
+- [x] 11.3 Add `no-ui` end-to-end exemptions for the capability's own new requirements
+- [x] 11.4 Turn on requirement-level enforcement under `--strict` and confirm `npm run spec:coverage:ci` passes with no workflow change
+- [x] 11.5 Document the requirement-level rule, the four categories and the `coveredAt` field in `CLAUDE.md` and `e2e/README.md`
+- [x] 11.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
