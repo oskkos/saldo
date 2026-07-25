@@ -74,11 +74,11 @@ needing control of the server clock.
 
 ## 10. Exemption decisions
 
-- [ ] 10.1 Write the `no-ui` exemptions (the coverage tool's own requirements, pool and duration configuration, row mapping, JWT internals)
-- [ ] 10.2 Write the `unit-appropriate` exemptions (the two timezone-invariance requirements and the saldo worked example, now that the rest of saldo is covered)
-- [ ] 10.3 Write the `external-dependency` exemption for OAuth sign-in
-- [ ] 10.4 Write the `harness-cost` exemptions for the remaining auth requirements, each naming the suite that does cover it in `coveredAt`
-- [ ] 10.5 Regenerate the map and confirm every requirement is either covered or exempt
+- [x] 10.1 Write the `no-ui` exemptions (the coverage tool's own requirements, pool and duration configuration, row mapping, JWT internals)
+- [x] 10.2 Write the `unit-appropriate` exemptions (the two timezone-invariance requirements and the saldo worked example, now that the rest of saldo is covered)
+- [x] 10.3 Write the `external-dependency` exemption for OAuth sign-in
+- [x] 10.4 Write the `harness-cost` exemptions for the remaining auth requirements, each naming the suite that does cover it in `coveredAt`
+- [x] 10.5 Regenerate the map and confirm every requirement is either covered or exempt
 
 ## 11. Enable enforcement and document
 
