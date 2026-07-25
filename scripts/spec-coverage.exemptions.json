@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "scenario": "user-guide-generation/*",
+    "reason": "Describes the Claude skill workflow that writes the user guide, not application behaviour. There is no app code path to assert; the guide's own traceability footers and status mode are the check."
+  },
+  {
+    "scenario": "data-load-performance/Layout and page read the same data",
+    "reason": "React's per-request cache() only dedupes inside a real request scope. The Jest harness mocks cache() to an identity function so server modules can load under jsdom, so request-scoped memoization cannot be observed there."
+  },
+  {
+    "scenario": "data-load-performance/Distinct requests are not shared",
+    "reason": "Requires two separate request scopes to observe that memoization does not leak between them. Jest has no request boundary, and the e2e layer cannot see per-request query counts."
+  }
+]
