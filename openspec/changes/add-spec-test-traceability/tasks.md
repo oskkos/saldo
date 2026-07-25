@@ -28,9 +28,9 @@
 
 ## 4. Close worklog and saldo gaps
 
-- [ ] 4.1 Write the missing tests for uncovered `worklog` scenarios and annotate them
-- [ ] 4.2 Write the missing tests for uncovered `saldo` scenarios and annotate them
-- [ ] 4.3 Regenerate the map and confirm both capabilities report zero uncovered scenarios
+- [x] 4.1 Write the missing tests for uncovered `worklog` scenarios and annotate them
+- [x] 4.2 Write the missing tests for uncovered `saldo` scenarios and annotate them
+- [x] 4.3 Regenerate the map and confirm both capabilities report zero uncovered scenarios
 
 ## 5. Close settings, expected-hours and absence gaps
 

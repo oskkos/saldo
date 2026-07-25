@@ -64,6 +64,22 @@ describe('WorklogInputs', () => {
     expect(screen.queryByPlaceholderText('Hours')).not.toBeInTheDocument();
   });
 
+  // @scenario worklog/Edit opens in times mode
+  test('edit opens in Times mode showing the stored times, unmodified', () => {
+    renderInputs(
+      { from: time('09:15'), to: time('16:45'), subtractLunchBreak: false },
+      '09:15',
+    );
+
+    // Times mode is the initial mode, and it shows what was stored.
+    expect(modeToggle()).not.toBeChecked();
+    expect(screen.getByPlaceholderText('From')).toHaveValue('09:15');
+    expect(screen.getByPlaceholderText('To')).toHaveValue('16:45');
+    // Merely opening the form leaves the stored values alone.
+    expect(screen.getByTestId('from')).toHaveTextContent('09:15');
+    expect(screen.getByTestId('to')).toHaveTextContent('16:45');
+  });
+
   // @scenario worklog/Duration is net worked time, not span
   test('switching to Duration prefills net minutes and hides the lunch toggle', () => {
     renderInputs({}, '08:00');
@@ -77,6 +93,7 @@ describe('WorklogInputs', () => {
   });
 
   // @scenario worklog/Duration is net worked time, not span
+  // @scenario worklog/New entry from duration uses the default start
   test('duration is net time: lunch is folded in and the flag cleared', () => {
     renderInputs({}, '08:00');
     toDuration();
@@ -104,6 +121,7 @@ describe('WorklogInputs', () => {
     expect(screen.getByTestId('to')).toHaveTextContent('17:15');
   });
 
+  // @scenario worklog/Duration crossing midnight is rejected
   test('rejects a duration that overflows past midnight', () => {
     renderInputs(
       { from: time('20:00'), to: time('21:00'), subtractLunchBreak: false },
@@ -120,6 +138,7 @@ describe('WorklogInputs', () => {
     expect(screen.getByTestId('to')).toHaveTextContent('');
   });
 
+  // @scenario worklog/Non-positive duration is rejected
   test('rejects a zero duration', () => {
     renderInputs(
       { from: time('08:00'), to: time('08:00'), subtractLunchBreak: false },

@@ -4,6 +4,10 @@
     "reason": "Describes the Claude skill workflow that writes the user guide, not application behaviour. There is no app code path to assert; the guide's own traceability footers and status mode are the check."
   },
   {
+    "scenario": "saldo/Same saldo regardless of runtime timezone",
+    "reason": "Comparing two runtime timezones needs two processes: Node caches the zone at startup, so a runtime TZ change has no effect. The suite is instead parameterized by TZ (jest.config.mjs pins a non-UTC zone; TZ=UTC npm run test:ci runs it again), and 'Begin date at the UTC day boundary' covers the mechanism that makes the result invariant."
+  },
+  {
     "scenario": "data-load-performance/Layout and page read the same data",
     "reason": "React's per-request cache() only dedupes inside a real request scope. The Jest harness mocks cache() to an identity function so server modules can load under jsdom, so request-scoped memoization cannot be observed there."
   },

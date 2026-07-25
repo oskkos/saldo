@@ -18,6 +18,7 @@ describe('duration module', () => {
   });
 
   describe('durationToTimeRange', () => {
+    // @scenario worklog/New entry from duration uses the default start
     test('adds the duration to the default-start anchor', () => {
       expect(durationToTimeRange(t('08:00'), 450)).toEqual({
         from: '08:00',
