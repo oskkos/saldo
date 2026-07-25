@@ -32,50 +32,51 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | Capability | Requirements | End-to-end | Exempt | Missing |
 | --- | --- | --- | --- | --- |
 | absence | 4 | 4 | 0 | 0 |
-| auth | 8 | 1 | 0 | 7 |
-| data-load-performance | 4 | 0 | 0 | 4 |
+| auth | 8 | 1 | 7 | 0 |
+| data-load-performance | 4 | 0 | 4 | 0 |
 | expected-hours | 2 | 1 | 1 | 0 |
-| saldo | 13 | 11 | 0 | 2 |
+| saldo | 13 | 11 | 2 | 0 |
 | settings | 5 | 5 | 0 | 0 |
-| spec-test-traceability | 11 | 0 | 0 | 11 |
+| spec-test-traceability | 11 | 0 | 11 | 0 |
 | statistics | 7 | 7 | 0 | 0 |
 | time-clock | 7 | 7 | 0 | 0 |
 | user-guide-generation | 0 | 0 | 0 | 0 |
-| worklog | 9 | 8 | 0 | 1 |
+| worklog | 9 | 8 | 1 | 0 |
 
 ## Requirements without end-to-end coverage
 
-- `auth/OAuth sign-in`
-- `auth/JWT session with user id`
-- `auth/Server-side auth gate`
-- `auth/First sign-in provisions user and seeds settings`
-- `auth/Sign-up with validated credentials`
-- `auth/Forgot-password does not reveal account existence`
-- `auth/Reset password with a valid token`
-- `data-load-performance/Independent reads execute concurrently`
-- `data-load-performance/Connection attempts fail fast`
-- `data-load-performance/Server request duration guards against premature termination`
-- `data-load-performance/Repeated holiday lookups over a date range are cached`
-- `saldo/Running balance from begin date`
-- `saldo/Saldo calculation is timezone-independent`
-- `spec-test-traceability/Tests declare covered scenarios by annotation`
-- `spec-test-traceability/Scenario identity is capability and title`
-- `spec-test-traceability/Scenario content hash surfaces wording drift`
-- `spec-test-traceability/Generated coverage map is a committed artifact`
-- `spec-test-traceability/Exemptions are declared as data with a reason`
-- `spec-test-traceability/Exemptions cannot rot`
-- `spec-test-traceability/Dangling and malformed annotations fail loudly`
-- `spec-test-traceability/Coverage tool runs in generate and check modes`
-- `spec-test-traceability/CI gates every scenario on coverage`
-- `spec-test-traceability/Coverage tooling adds no dependencies`
-- `spec-test-traceability/Generated map is the single traceability source`
-- `worklog/Map storage rows to the domain type`
+None — every requirement has end-to-end coverage or a stated exemption.
 
 ## End-to-end exemptions
 
 | Requirement | Category | Reason | Covered at |
 | --- | --- | --- | --- |
+| auth/OAuth sign-in | `external-dependency` | Completing a Google or GitHub sign-in means driving a third-party authorization server from the browser. Stubbing it would leave the test asserting the stub rather than the provider wiring, which is the only part this requirement is about. | — |
+| auth/JWT session with user id | `no-ui` | The numeric id on the session token has no representation on screen. Every authenticated page in the e2e suite depends on it to load the right user's data, but no assertion can distinguish "the id is on the session" from "the page rendered", so a browser test would not be evidence for this requirement. | — |
+| auth/Server-side auth gate | `harness-cost` | The gate is only observable from an unauthenticated request, and the whole Playwright suite runs behind one shared signed-in storage state. Exercising it needs a second project with no storage state, set up and reset independently — deliberately out of scope, since auth journeys are covered in Jest. | `src/auth/__tests__/authSession.test.ts` |
+| auth/First sign-in provisions user and seeds settings | `harness-cost` | The scenario is about signing in a second time and finding existing settings untouched, which needs a sign-out and a fresh sign-in the shared authenticated context does not allow. The settings suite does assert that the signed-in user already has a seeded row to edit. | `src/repository/__tests__/userRepository.test.ts` |
+| auth/Sign-up with validated credentials | `harness-cost` | Sign-up needs an unauthenticated context and creates a second user that the per-test reset (scoped to the single e2e user) would leave behind. Both are solvable, and both were ruled out with the rest of the auth journeys. | `src/actions/__tests__/authActions.test.ts` |
+| auth/Forgot-password does not reveal account existence | `external-dependency` | The requirement is that a reset email is sent for a known address and silently not sent for an unknown one. Proving either half from the browser needs a mail transport to observe, which the e2e stack does not run. | — |
+| auth/Reset password with a valid token | `harness-cost` | The raw token only ever reaches the user by email, so a browser test would have to read it out of the database and visit the reset link by hand — and then do it from an unauthenticated context. Left to Jest with the other auth journeys. | `src/actions/__tests__/authActions.test.ts` |
+| data-load-performance/Independent reads execute concurrently | `no-ui` | A requirement about how queries are dispatched and how many connections the pool allows. Latencies overlapping rather than summing is not visible in the DOM, and timing a page load would measure the machine, not the behaviour. | — |
+| data-load-performance/Connection attempts fail fast | `no-ui` | A pool configuration fact: the acquisition timeout is set. Observing it would mean making the database refuse connections mid-suite, and the outcome is an error in the server log rather than anything the browser can assert. | — |
+| data-load-performance/Server request duration guards against premature termination | `no-ui` | The guard is a route-segment duration declaration read by the hosting platform. It has no runtime behaviour to drive locally — the e2e server never enforces a platform timeout. | — |
+| data-load-performance/Repeated holiday lookups over a date range are cached | `no-ui` | The requirement is a call-count property of the holiday cache: each year resolved once and reused. Only instrumentation can see it; the rendered saldo is identical either way, which is the point of a cache. | — |
 | expected-hours/Per-date expected-hours overrides | `harness-cost` | The only UI that creates an override is the "Special days" panel on /settings, a daisyUI <details> collapse whose fields never become visible to Playwright — not by clicking the summary, and not by forcing the element open. Driving it would mean reworking the component for testability, which is a change to production markup this change does not make. | `src/repository/__tests__/expectedHoursOverrideRepository.test.ts` |
+| saldo/Running balance from begin date | `harness-cost` | The worked example fixes both the begin date and the current date, and the e2e server runs on the real clock — page.clock reaches only the browser. The rest of the capability is covered end to end by comparing two begin dates, but a single named total cannot be asserted without owning the clock. | `src/services/__tests__/index.test.tsx` |
+| saldo/Saldo calculation is timezone-independent | `unit-appropriate` | Comparing two runtime timezones needs two processes: Node caches the zone at startup. The Jest suite is parameterized by TZ instead (jest.config.mjs pins a non-UTC zone, TZ=UTC npm run test:ci runs it again), which is the only way to actually vary the input this requirement is about. | — |
+| spec-test-traceability/Tests declare covered scenarios by annotation | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the annotation syntax and how it is scanned. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Scenario identity is capability and title | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about how a scenario is named in an annotation. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Scenario content hash surfaces wording drift | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the hash written into the generated map. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Generated coverage map is a committed artifact | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the shape of the file the tool writes. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Exemptions are declared as data with a reason | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the exemptions file format. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Exemptions cannot rot | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the validation that rejects a stale exemption. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Dangling and malformed annotations fail loudly | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the errors the tool raises. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Coverage tool runs in generate and check modes | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the tool's command-line modes. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/CI gates every scenario on coverage | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the workflow step that runs the tool. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Coverage tooling adds no dependencies | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about the tool's import list. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| spec-test-traceability/Generated map is the single traceability source | `no-ui` | This capability is a Node script and a CI step, not application behaviour — the requirement is about where traceability is recorded. There is no page to open, and its own Jest tests run the tool directly against fixture specs. | — |
+| worklog/Map storage rows to the domain type | `no-ui` | The mapping is a repository-boundary translation, and its scenario is about an unrecognized stored absence value making the assertion fail. Such a row cannot be created through the app, and the failure is a server-side throw rather than a rendered outcome. | — |
 
 ## absence
 
