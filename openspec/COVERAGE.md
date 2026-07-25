@@ -40,7 +40,7 @@ None — every scenario is covered by a test or explicitly exempt.
 
 | Scenario | Requirement | Hash | Covered by |
 | --- | --- | --- | --- |
-| Correct credentials | Email/password sign-in | `0d820ba42f3e` | `src/actions/__tests__/authActions.test.ts` — returns the user when the credentials check succeeds<br>`src/repository/__tests__/userRepository.test.ts` — returns the user when the password matches the stored hash |
+| Correct credentials | Email/password sign-in | `0d820ba42f3e` | `src/actions/__tests__/authActions.test.ts` — returns the user when the credentials check succeeds<br>`src/repository/__tests__/userRepository.test.ts` — returns the user when the password matches the stored hash<br>`e2e/auth.setup.ts` — authenticate |
 | Wrong password or unknown email | Email/password sign-in | `14f8de0e44af` | `src/actions/__tests__/authActions.test.ts` — returns no user when the credential check rejects<br>`src/repository/__tests__/userRepository.test.ts` — returns no user when the email is unknown<br>`src/repository/__tests__/userRepository.test.ts` — returns no user when the account has no stored password<br>`src/repository/__tests__/userRepository.test.ts` — does not return a user when the password does not match |
 | First OAuth sign-in provisions the account | OAuth sign-in | `bf82d1094a74` | `src/repository/__tests__/userRepository.test.ts` — provisions an account for the email with no stored password |
 | Id surfaced on the session | JWT session with user id | `0de0975511d4` | `src/auth/__tests__/authSession.test.ts` — reads the numeric database id off the session<br>`src/auth/__tests__/authSession.test.ts` — copies the numeric id from the token onto the session user |

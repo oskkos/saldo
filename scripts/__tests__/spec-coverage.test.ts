@@ -541,3 +541,66 @@ describe('main', () => {
     expect(main(['--strict'], root).exitCode).toBe(0);
   });
 });
+
+describe('scanTestAnnotations with aliased test imports', () => {
+  it('recognises a test declared through an aliased import', () => {
+    const source = [
+      "import { test as setup, expect } from '@playwright/test';",
+      '',
+      '// @scenario auth/Correct credentials',
+      "setup('authenticate', async ({ page }) => {});",
+    ].join('\n');
+
+    expect(scanTestAnnotations('e2e/auth.setup.ts', source)).toEqual([
+      expect.objectContaining({
+        scenarioId: 'auth/Correct credentials',
+        testTitle: 'authenticate',
+        line: 4,
+      }),
+    ]);
+  });
+
+  it('treats an aliased describe as a suite covering the tests inside', () => {
+    const source = [
+      "import { describe as suite, it as spec } from '@jest/globals';",
+      '',
+      '// @scenario demo/Alpha happens',
+      "suite('a suite', () => {",
+      "  spec('inner test', () => {});",
+      '});',
+    ].join('\n');
+
+    const links = scanTestAnnotations('src/x/__tests__/a.test.ts', source);
+
+    expect(links.map((l) => l.testTitle)).toEqual(['inner test']);
+  });
+
+  it('reads aliases from a multi-line import declaration', () => {
+    const source = [
+      'import {',
+      '  test as setup,',
+      '  expect,',
+      "} from '@playwright/test';",
+      '',
+      '// @scenario demo/Alpha happens',
+      "setup('authenticate', async () => {});",
+    ].join('\n');
+
+    expect(scanTestAnnotations('e2e/auth.setup.ts', source)).toHaveLength(1);
+  });
+
+  it('does not treat an unrelated local of the same name as a test', () => {
+    const source = [
+      'const setup = () => {};',
+      '',
+      '// @scenario demo/Alpha happens',
+      "setup('not a test', () => {});",
+    ].join('\n');
+
+    // Without an aliasing import, `setup` is just a function call — the
+    // annotation is attached to nothing and must fail loudly.
+    expect(() =>
+      scanTestAnnotations('src/x/__tests__/a.test.ts', source),
+    ).toThrow(/not attached to a test/i);
+  });
+});
