@@ -23,6 +23,10 @@ const config = {
 
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
+    // `server-only`'s real entry throws outside a React Server Component bundle.
+    // Server-layer modules (repositories, auth) import it as a build guard; map
+    // it to a no-op so those modules can be exercised under jsdom.
+    '^server-only$': '<rootDir>/__mocks__/empty.ts',
   },
 
   collectCoverageFrom: ['src/**/*.{ts,tsx}'],
