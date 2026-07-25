@@ -201,6 +201,41 @@ export async function getWorklogs(): Promise<Worklog[]> {
   });
 }
 
+// A worklog belonging to somebody else, so per-user scoping can be proven
+// rather than assumed. Cleaned up by resetUserData's sibling below.
+export const OTHER_USER = { email: 'e2e-other@example.com', name: 'Not You' };
+
+export async function seedOtherUserWorklog(entry: {
+  from: Date;
+  to: Date;
+  comment: string;
+}): Promise<void> {
+  const other = await db().user.upsert({
+    where: { email: OTHER_USER.email },
+    update: {},
+    create: { email: OTHER_USER.email, name: OTHER_USER.name },
+  });
+  await db().worklog.create({
+    data: {
+      user_id: other.id,
+      from: entry.from,
+      to: entry.to,
+      comment: entry.comment,
+      subtract_lunch_break: false,
+    },
+  });
+}
+
+export async function clearOtherUserWorklogs(): Promise<void> {
+  const other = await db().user.findUnique({
+    where: { email: OTHER_USER.email },
+    select: { id: true },
+  });
+  if (other) {
+    await db().worklog.deleteMany({ where: { user_id: other.id } });
+  }
+}
+
 export async function disconnect(): Promise<void> {
   await client?.$disconnect();
   await pool?.end();

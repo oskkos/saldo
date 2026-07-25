@@ -41,7 +41,7 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | statistics | 7 | 0 | 0 | 7 |
 | time-clock | 7 | 7 | 0 | 0 |
 | user-guide-generation | 0 | 0 | 0 | 0 |
-| worklog | 9 | 0 | 0 | 9 |
+| worklog | 9 | 8 | 0 | 1 |
 
 ## Requirements without end-to-end coverage
 
@@ -98,15 +98,7 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 - `statistics/Absence counts by reason`
 - `statistics/Per-day work-minutes chart`
 - `statistics/Per-day grouping is timezone-independent`
-- `worklog/Worklogs are scoped to the authenticated user`
-- `worklog/List worklogs with an optional date range`
-- `worklog/Create a worklog`
-- `worklog/Edit a worklog only if owned`
-- `worklog/Delete a worklog only if owned`
 - `worklog/Map storage rows to the domain type`
-- `worklog/Worklog mutations are exposed through server actions`
-- `worklog/Worklog mutations are validated server-side`
-- `worklog/Worklog entry supports a duration mode`
 
 ## absence
 
@@ -292,24 +284,24 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | Scenario | Requirement | Hash | Covered by |
 | --- | --- | --- | --- |
 | No session | Worklogs are scoped to the authenticated user | `3f417405d65d` | `src/repository/__tests__/worklogRepository.test.ts` — refuses to list worklogs and reads nothing<br>`src/repository/__tests__/worklogRepository.test.ts` — refuses to insert a worklog and writes nothing<br>`src/repository/__tests__/worklogRepository.test.ts` — refuses to update a worklog and writes nothing<br>`src/repository/__tests__/worklogRepository.test.ts` — refuses to delete a worklog and removes nothing |
-| Listing returns only own worklogs | Worklogs are scoped to the authenticated user | `ed0aaaf2295a` | `src/repository/__tests__/worklogRepository.test.ts` — scopes the query to the session user |
-| Range query | List worklogs with an optional date range | `6b5a5bc903f7` | `src/repository/__tests__/worklogRepository.test.ts` — bounds the query by the given from and to dates |
-| Unbounded query | List worklogs with an optional date range | `7731b2064334` | `src/repository/__tests__/worklogRepository.test.ts` — applies no date bounds when none are given |
-| Regular entry | Create a worklog | `79232f3269d6` | `src/repository/__tests__/worklogRepository.test.ts` — persists a new record for the session user and returns it |
-| Owner edits | Edit a worklog only if owned | `89b17e25d4f4` | `src/repository/__tests__/worklogRepository.test.ts` — updates the listed fields and returns the record |
+| Listing returns only own worklogs | Worklogs are scoped to the authenticated user | `ed0aaaf2295a` | `src/repository/__tests__/worklogRepository.test.ts` — scopes the query to the session user<br>`e2e/worklog.spec.ts` — the worklog list shows nothing belonging to another user |
+| Range query | List worklogs with an optional date range | `6b5a5bc903f7` | `src/repository/__tests__/worklogRepository.test.ts` — bounds the query by the given from and to dates<br>`e2e/worklog.spec.ts` — the entry page lists only the worklogs of the day it shows |
+| Unbounded query | List worklogs with an optional date range | `7731b2064334` | `src/repository/__tests__/worklogRepository.test.ts` — applies no date bounds when none are given<br>`e2e/worklog.spec.ts` — the worklog list shows entries from every day |
+| Regular entry | Create a worklog | `79232f3269d6` | `src/repository/__tests__/worklogRepository.test.ts` — persists a new record for the session user and returns it<br>`e2e/worklog.spec.ts` — creating a worklog persists it and moves the saldo |
+| Owner edits | Edit a worklog only if owned | `89b17e25d4f4` | `src/repository/__tests__/worklogRepository.test.ts` — updates the listed fields and returns the record<br>`e2e/worklog.spec.ts` — editing a worklog updates it in place |
 | Non-owner edit rejected | Edit a worklog only if owned | `9c7fdcb7451c` | `src/repository/__tests__/worklogRepository.test.ts` — rejects an edit of a worklog owned by someone else |
-| Owner deletes | Delete a worklog only if owned | `dfa0c623e0c9` | `src/repository/__tests__/worklogRepository.test.ts` — removes a worklog owned by the session user |
+| Owner deletes | Delete a worklog only if owned | `dfa0c623e0c9` | `src/repository/__tests__/worklogRepository.test.ts` — removes a worklog owned by the session user<br>`e2e/worklog.spec.ts` — deleting a worklog removes it |
 | Non-owner delete rejected | Delete a worklog only if owned | `b3580781c72a` | `src/repository/__tests__/worklogRepository.test.ts` — rejects a delete of a worklog owned by someone else |
 | Unknown absence value | Map storage rows to the domain type | `f30881f180aa` | `src/repository/__tests__/worklogRepository.test.ts` — throws rather than mapping an unrecognized absence value |
-| Client triggers a write | Worklog mutations are exposed through server actions | `f93decfccb10` | `src/actions/__tests__/worklogActions.test.ts` — passes a valid worklog through to the repository |
+| Client triggers a write | Worklog mutations are exposed through server actions | `f93decfccb10` | `src/actions/__tests__/worklogActions.test.ts` — passes a valid worklog through to the repository<br>`e2e/worklog.spec.ts` — creating a worklog persists it and moves the saldo |
 | Non-positive duration rejected | Worklog mutations are validated server-side | `43099d5a280e` | `src/actions/__tests__/worklogActions.test.ts` — rejects an end time equal to the start and writes nothing<br>`src/actions/__tests__/worklogActions.test.ts` — rejects an end time before the start and writes nothing<br>`src/actions/__tests__/worklogActions.test.ts` — rejects a non-positive duration on edit and writes nothing |
 | Multi-day span rejected | Worklog mutations are validated server-side | `071193620eec` | `src/actions/__tests__/worklogActions.test.ts` — rejects a span that ends on a later calendar day and writes nothing |
 | Unrecognized absence reason rejected | Worklog mutations are validated server-side | `2341db5a5b65` | `src/actions/__tests__/worklogActions.test.ts` — rejects an absence value outside the recognized set and writes nothing |
-| Valid worklog passes | Worklog mutations are validated server-side | `cbebe47b6642` | `src/actions/__tests__/worklogActions.test.ts` — passes a valid worklog through to the repository<br>`src/actions/__tests__/worklogActions.test.ts` — accepts a recognized absence reason |
+| Valid worklog passes | Worklog mutations are validated server-side | `cbebe47b6642` | `src/actions/__tests__/worklogActions.test.ts` — passes a valid worklog through to the repository<br>`src/actions/__tests__/worklogActions.test.ts` — accepts a recognized absence reason<br>`e2e/worklog.spec.ts` — creating a worklog persists it and moves the saldo |
 | Validation is independent of the client | Worklog mutations are validated server-side | `18635d381b99` | `src/actions/__tests__/worklogActions.test.ts` — applies the same rules to the clock-out path as to the worklog form<br>`src/actions/__tests__/worklogActions.test.ts` — accepts through the clock-out path what the worklog form accepts |
-| New entry from duration uses the default start | Worklog entry supports a duration mode | `4ec9c319ecc3` | `src/components/__tests__/worklogInputs.test.tsx` — duration is net time: lunch is folded in and the flag cleared<br>`src/util/__tests__/duration.test.ts` — adds the duration to the default-start anchor |
+| New entry from duration uses the default start | Worklog entry supports a duration mode | `4ec9c319ecc3` | `src/components/__tests__/worklogInputs.test.tsx` — duration is net time: lunch is folded in and the flag cleared<br>`src/util/__tests__/duration.test.ts` — adds the duration to the default-start anchor<br>`e2e/worklog.spec.ts` — duration mode anchors at the default start and stores net time |
 | Editing an existing entry in duration mode keeps its start | Worklog entry supports a duration mode | `111e80670373` | `src/components/__tests__/worklogInputs.test.tsx` — editing an existing entry keeps its start time as the anchor |
-| Duration is net worked time, not span | Worklog entry supports a duration mode | `4d8d1541deee` | `src/components/__tests__/worklogInputs.test.tsx` — switching to Duration prefills net minutes and hides the lunch toggle<br>`src/components/__tests__/worklogInputs.test.tsx` — duration is net time: lunch is folded in and the flag cleared |
+| Duration is net worked time, not span | Worklog entry supports a duration mode | `4d8d1541deee` | `src/components/__tests__/worklogInputs.test.tsx` — switching to Duration prefills net minutes and hides the lunch toggle<br>`src/components/__tests__/worklogInputs.test.tsx` — duration is net time: lunch is folded in and the flag cleared<br>`e2e/worklog.spec.ts` — duration mode anchors at the default start and stores net time |
 | Duration crossing midnight is rejected | Worklog entry supports a duration mode | `cbea6343e369` | `src/actions/__tests__/worklogActions.test.ts` — rejects a span that ends on a later calendar day and writes nothing<br>`src/components/__tests__/worklogInputs.test.tsx` — rejects a duration that overflows past midnight |
 | Non-positive duration is rejected | Worklog entry supports a duration mode | `138c0980cf8f` | `src/components/__tests__/worklogInputs.test.tsx` — rejects a zero duration |
 | Edit opens in times mode | Worklog entry supports a duration mode | `531d221d92e2` | `src/components/__tests__/worklogInputs.test.tsx` — edit opens in Times mode showing the stored times, unmodified |
