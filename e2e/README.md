@@ -28,23 +28,23 @@ to prove the clock scenarios are timezone-independent.
 - **`global-setup.ts`** — `prisma migrate deploy` + seed, once per run.
 - **`auth.setup.ts`** — signs in once via the Credentials form and saves the
   session (`e2e/.auth/user.json`); every test reuses it.
-- **`time-clock.spec.ts`** — the scenarios below. Time is controlled with
+- **`time-clock.spec.ts`** — the time-clock scenarios. Time is controlled with
   Playwright's `page.clock` so clock-in/out instants are deterministic.
 
-## Scenario → test traceability (openspec/specs/time-clock/spec.md)
+## Scenario → test traceability
 
-| Requirement                                                     | Scenario                                              | Test                                                                |
-| --------------------------------------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------- |
-| Clock state is visible across the app                           | Idle home screen                                      | `idle home screen shows a clock-in action`                          |
-| Clock in starts a single open session                           | Clock in when idle                                    | `clock in when idle shows the clocked-in state`                     |
-| Clock state is visible across the app                           | Running state is globally visible                     | `running state is visible across the app (badge + clock-out)`       |
-| Forgotten sessions are handled on return                        | Returning with an open session                        | `returning with an open session shows the running state, unchanged` |
-| Clock out finalizes the session / timestamps reflect wall-clock | Save creates a worklog / Logged times match the clock | `save creates a worklog spanning the session and clears it`         |
-| Clock out finalizes the session                                 | Cancel keeps the session open                         | `cancel keeps the session open and logs nothing`                    |
-| Discard a session without logging                               | Discard                                               | `discard clears the session without logging`                        |
-| Sessions may not span more than one day                         | Overnight session must be corrected or discarded      | `overnight session must be corrected or discarded before saving`    |
+Which spec scenarios these tests cover is recorded in the generated coverage map
+at [`openspec/COVERAGE.md`](../openspec/COVERAGE.md), not here — a hand-written
+table drifts silently, and two records of the same thing eventually disagree.
 
-The remaining time-clock scenarios (already-clocked-in idempotency, clock-out
-transaction atomicity, the no-user session gate) are covered at the data layer in
-`src/repository/__tests__/clockRepository.test.ts`, since they are not observable
-through the UI.
+Each test declares what it covers with an annotation directly above it:
+
+```ts
+// @scenario time-clock/Clock in when idle
+test('clock in when idle shows the clocked-in state', async ({ page }) => {
+```
+
+Regenerate the map with `npm run spec:coverage` after changing annotations; CI
+runs `npm run spec:coverage:ci`, which fails on an uncovered scenario, a stale
+map, or an annotation naming a scenario that no longer exists. A test may claim
+a scenario only if it asserts that scenario's THEN outcome.

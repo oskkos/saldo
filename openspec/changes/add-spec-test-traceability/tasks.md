@@ -55,7 +55,7 @@
 
 ## 8. CI gate and documentation
 
-- [ ] 8.1 Add the `npm run spec:coverage:ci` step to the `build-and-test` job in `.github/workflows/build.yml`
-- [ ] 8.2 Replace the hand-maintained traceability table in `e2e/README.md` with a pointer to `openspec/COVERAGE.md`
-- [ ] 8.3 Document the annotation convention, the assert-the-THEN rule, and the regenerate command in `CLAUDE.md`
-- [ ] 8.4 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
+- [x] 8.1 Add the `npm run spec:coverage:ci` step to the `build-and-test` job in `.github/workflows/build.yml`
+- [x] 8.2 Replace the hand-maintained traceability table in `e2e/README.md` with a pointer to `openspec/COVERAGE.md`
+- [x] 8.3 Document the annotation convention, the assert-the-THEN rule, and the regenerate command in `CLAUDE.md`
+- [x] 8.4 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
