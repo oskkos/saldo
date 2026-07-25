@@ -25,6 +25,89 @@
 
 None — every scenario is covered by a test or explicitly exempt.
 
+## End-to-end coverage
+
+Each requirement needs one scenario covered by a Playwright test, or a stated exemption.
+
+| Capability | Requirements | End-to-end | Exempt | Missing |
+| --- | --- | --- | --- | --- |
+| absence | 4 | 0 | 0 | 4 |
+| auth | 8 | 1 | 0 | 7 |
+| data-load-performance | 4 | 0 | 0 | 4 |
+| expected-hours | 2 | 0 | 0 | 2 |
+| saldo | 13 | 0 | 0 | 13 |
+| settings | 5 | 0 | 0 | 5 |
+| spec-test-traceability | 11 | 0 | 0 | 11 |
+| statistics | 7 | 0 | 0 | 7 |
+| time-clock | 7 | 7 | 0 | 0 |
+| user-guide-generation | 0 | 0 | 0 | 0 |
+| worklog | 9 | 0 | 0 | 9 |
+
+## Requirements without end-to-end coverage
+
+- `absence/Fixed set of absence reasons`
+- `absence/Multi-day absence over a date range`
+- `absence/Human-readable reason labels`
+- `absence/Reason iconography`
+- `auth/OAuth sign-in`
+- `auth/JWT session with user id`
+- `auth/Server-side auth gate`
+- `auth/First sign-in provisions user and seeds settings`
+- `auth/Sign-up with validated credentials`
+- `auth/Forgot-password does not reveal account existence`
+- `auth/Reset password with a valid token`
+- `data-load-performance/Independent reads execute concurrently`
+- `data-load-performance/Connection attempts fail fast`
+- `data-load-performance/Server request duration guards against premature termination`
+- `data-load-performance/Repeated holiday lookups over a date range are cached`
+- `expected-hours/Expected minutes are resolved per date`
+- `expected-hours/Per-date expected-hours overrides`
+- `saldo/Running balance from begin date`
+- `saldo/Initial balance seeds the sum`
+- `saldo/Expected minutes accrue only on working days`
+- `saldo/Worked minutes count on any calendar day`
+- `saldo/Worked minutes net of lunch break`
+- `saldo/Worklogs before the begin date are excluded`
+- `saldo/Future worklogs are excluded`
+- `saldo/Flex-hours absence draws down the balance`
+- `saldo/Non-flex absence on a working day is balance-neutral`
+- `saldo/Any absence on a non-working day is ignored`
+- `saldo/Saldo formatted as hours, minutes, string, and badge`
+- `saldo/Worklog sum aggregation ignores absence semantics`
+- `saldo/Saldo calculation is timezone-independent`
+- `settings/One settings row per user`
+- `settings/Default settings on account creation`
+- `settings/Update settings`
+- `settings/Default times must be well-formed and ordered`
+- `settings/Settings updates are validated server-side`
+- `spec-test-traceability/Tests declare covered scenarios by annotation`
+- `spec-test-traceability/Scenario identity is capability and title`
+- `spec-test-traceability/Scenario content hash surfaces wording drift`
+- `spec-test-traceability/Generated coverage map is a committed artifact`
+- `spec-test-traceability/Exemptions are declared as data with a reason`
+- `spec-test-traceability/Exemptions cannot rot`
+- `spec-test-traceability/Dangling and malformed annotations fail loudly`
+- `spec-test-traceability/Coverage tool runs in generate and check modes`
+- `spec-test-traceability/CI gates every scenario on coverage`
+- `spec-test-traceability/Coverage tooling adds no dependencies`
+- `spec-test-traceability/Generated map is the single traceability source`
+- `statistics/Statistics require an authenticated user with settings`
+- `statistics/Same window as the saldo`
+- `statistics/Separate work entries from absences`
+- `statistics/Hours figures`
+- `statistics/Absence counts by reason`
+- `statistics/Per-day work-minutes chart`
+- `statistics/Per-day grouping is timezone-independent`
+- `worklog/Worklogs are scoped to the authenticated user`
+- `worklog/List worklogs with an optional date range`
+- `worklog/Create a worklog`
+- `worklog/Edit a worklog only if owned`
+- `worklog/Delete a worklog only if owned`
+- `worklog/Map storage rows to the domain type`
+- `worklog/Worklog mutations are exposed through server actions`
+- `worklog/Worklog mutations are validated server-side`
+- `worklog/Worklog entry supports a duration mode`
+
 ## absence
 
 | Scenario | Requirement | Hash | Covered by |

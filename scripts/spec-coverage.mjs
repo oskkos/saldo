@@ -90,6 +90,35 @@ export function parseSpecScenarios(capability, markdown) {
   return scenarios;
 }
 
+/**
+ * Extract every requirement from one capability's spec markdown.
+ *
+ * Requirements become identifiers here so end-to-end exemptions can name one.
+ * Scenario ids deliberately stay requirement-free, so a scenario can still move
+ * between requirements without breaking the annotations that cite it.
+ */
+export function parseSpecRequirements(capability, markdown) {
+  const requirements = [];
+  const seen = new Set();
+
+  for (const line of markdown.split('\n')) {
+    const match = REQUIREMENT_HEADING.exec(line);
+    if (!match) continue;
+
+    const name = match[1];
+    const id = `${capability}/${name}`;
+    if (seen.has(id)) {
+      throw new Error(
+        `Duplicate requirement name: ${id}. Requirement names must be unique within a capability.`,
+      );
+    }
+    seen.add(id);
+    requirements.push({ id, capability, name });
+  }
+
+  return requirements;
+}
+
 const ANNOTATION = /^\s*\/\/\s*@scenario\s+(\S.*?)\s*$/;
 const BLANK_OR_COMMENT = /^\s*(?:\/\/|\/\*|\*|$)/;
 const STRING_LITERAL = /^\s*(['"])((?:\\.|(?!\1).)*)\1/;
@@ -246,6 +275,60 @@ export function scanTestAnnotations(file, content) {
   return links;
 }
 
+export const E2E_DIR = 'e2e/';
+
+/** Whether a covering test belongs to the browser layer. */
+export function isE2eTest(file) {
+  return file.startsWith(E2E_DIR);
+}
+
+/**
+ * Resolve each requirement's end-to-end state.
+ *
+ * `e2e`            at least one scenario is covered by a Playwright test
+ * `not-applicable` every scenario is scenario-exempt, so no coverage is possible
+ * `exempt`         carries a written end-to-end exemption
+ * `missing`        needs a browser test or a decision
+ */
+export function analyzeRequirements({
+  requirements,
+  scenarios,
+  links,
+  scenarioExemptions,
+  e2eExemptions,
+}) {
+  const e2eCovered = new Set(
+    links.filter((link) => isE2eTest(link.file)).map((link) => link.scenarioId),
+  );
+
+  return requirements.map((requirement) => {
+    const own = scenarios.filter(
+      (scenario) =>
+        scenario.capability === requirement.capability &&
+        scenario.requirement === requirement.name,
+    );
+    const exemption = e2eExemptions.get(requirement.id) ?? null;
+
+    const hasE2e = own.some((scenario) => e2eCovered.has(scenario.id));
+    const allExempt =
+      own.length > 0 &&
+      own.every((scenario) => scenarioExemptions.has(scenario.id));
+
+    let state;
+    if (hasE2e) state = 'e2e';
+    else if (allExempt) state = 'not-applicable';
+    else if (exemption) state = 'exempt';
+    else state = 'missing';
+
+    return {
+      ...requirement,
+      scenarioIds: own.map((scenario) => scenario.id),
+      state,
+      exemption,
+    };
+  });
+}
+
 /** Escape the one character that would break a markdown table cell. */
 function cell(text) {
   return String(text).replaceAll('|', '\\|');
@@ -255,7 +338,12 @@ function cell(text) {
  * Render the committed coverage map: a summary table, the gap list, and every
  * scenario with its content hash and the tests covering it.
  */
-export function renderCoverageMap(scenarios, links, exemptions) {
+export function renderCoverageMap(
+  scenarios,
+  links,
+  exemptions,
+  requirementStates = [],
+) {
   const coveringTests = new Map();
   for (const link of links) {
     if (!coveringTests.has(link.scenarioId)) {
@@ -305,6 +393,63 @@ export function renderCoverageMap(scenarios, links, exemptions) {
   } else {
     for (const scenario of uncovered) {
       lines.push(`- \`${scenario.id}\` (${scenario.requirement})`);
+    }
+  }
+
+  if (requirementStates.length) {
+    const e2eCapabilities = [
+      ...new Set(requirementStates.map((r) => r.capability)),
+    ].sort();
+    const missing = requirementStates.filter((r) => r.state === 'missing');
+
+    lines.push(
+      '',
+      '## End-to-end coverage',
+      '',
+      'Each requirement needs one scenario covered by a Playwright test, or a stated exemption.',
+      '',
+      '| Capability | Requirements | End-to-end | Exempt | Missing |',
+      '| --- | --- | --- | --- | --- |',
+    );
+
+    for (const capability of e2eCapabilities) {
+      const own = requirementStates.filter((r) => r.capability === capability);
+      // A requirement whose scenarios are all exempt cannot have coverage of
+      // any kind, so it is not counted as something to decide.
+      const decidable = own.filter((r) => r.state !== 'not-applicable');
+      const count = (state) =>
+        decidable.filter((r) => r.state === state).length;
+      lines.push(
+        `| ${capability} | ${decidable.length} | ${count('e2e')} | ${count('exempt')} | ${count('missing')} |`,
+      );
+    }
+
+    lines.push('', '## Requirements without end-to-end coverage', '');
+    if (missing.length === 0) {
+      lines.push(
+        'None — every requirement has end-to-end coverage or a stated exemption.',
+      );
+    } else {
+      for (const requirement of missing) {
+        lines.push(`- \`${requirement.id}\``);
+      }
+    }
+
+    const exempt = requirementStates.filter((r) => r.state === 'exempt');
+    if (exempt.length) {
+      lines.push(
+        '',
+        '## End-to-end exemptions',
+        '',
+        '| Requirement | Category | Reason | Covered at |',
+        '| --- | --- | --- | --- |',
+      );
+      for (const requirement of exempt) {
+        const { category, reason, coveredAt } = requirement.exemption;
+        lines.push(
+          `| ${cell(requirement.id)} | \`${cell(category)}\` | ${cell(reason)} | ${coveredAt ? `\`${cell(coveredAt)}\`` : '—'} |`,
+        );
+      }
     }
   }
 
@@ -409,10 +554,19 @@ export function collectFromDisk(root) {
         .sort()
     : [];
 
-  const scenarios = capabilities.flatMap((capability) => {
+  const readSpec = (capability) => {
     const specPath = path.join(specsRoot, capability, 'spec.md');
-    if (!fs.existsSync(specPath)) return [];
-    return parseSpecScenarios(capability, fs.readFileSync(specPath, 'utf8'));
+    return fs.existsSync(specPath) ? fs.readFileSync(specPath, 'utf8') : null;
+  };
+
+  const scenarios = capabilities.flatMap((capability) => {
+    const markdown = readSpec(capability);
+    return markdown ? parseSpecScenarios(capability, markdown) : [];
+  });
+
+  const requirements = capabilities.flatMap((capability) => {
+    const markdown = readSpec(capability);
+    return markdown ? parseSpecRequirements(capability, markdown) : [];
   });
 
   const testFiles = [
@@ -433,7 +587,7 @@ export function collectFromDisk(root) {
     ? JSON.parse(fs.readFileSync(exemptionsPath, 'utf8'))
     : [];
 
-  return { scenarios, links, exemptionEntries };
+  return { scenarios, requirements, links, exemptionEntries };
 }
 
 /**
@@ -449,11 +603,13 @@ export function main(argv, root) {
   const output = [];
 
   let scenarios;
+  let requirements;
   let links;
   let exemptions;
   try {
     const collected = collectFromDisk(root);
     scenarios = collected.scenarios;
+    requirements = collected.requirements;
     links = collected.links;
 
     const known = new Set(scenarios.map((scenario) => scenario.id));
@@ -479,7 +635,20 @@ export function main(argv, root) {
     return { exitCode: 1, output: error.message };
   }
 
-  const markdown = renderCoverageMap(scenarios, links, exemptions);
+  const requirementStates = analyzeRequirements({
+    requirements,
+    scenarios,
+    links,
+    scenarioExemptions: exemptions,
+    // Populated once end-to-end exemptions are declarable; report-only until then.
+    e2eExemptions: new Map(),
+  });
+  const markdown = renderCoverageMap(
+    scenarios,
+    links,
+    exemptions,
+    requirementStates,
+  );
   const mapPath = path.join(root, MAP_PATH);
   let stale = false;
 
