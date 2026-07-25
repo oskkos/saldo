@@ -6,22 +6,7 @@ import {
   seedWorklog,
   utcTimeOn,
 } from './db';
-
-// Date-agnostic throughout: the saldo is asserted as a change, never as a
-// figure, because the server's clock is not controllable from a test.
-
-async function saldoMinutes(page: Page): Promise<number> {
-  const text = await page.locator('.badge-lg').first().innerText();
-  const match = /(-?)(\d+)h\s*(\d+)min/.exec(text);
-  if (!match) throw new Error(`Unrecognized saldo badge text: "${text}"`);
-  const magnitude = Number(match[2]) * 60 + Number(match[3]);
-  return match[1] === '-' ? -magnitude : magnitude;
-}
-
-// The quick-add dialog lives in the layout, so its inputs exist on every page.
-// Scope to what is actually on screen.
-const visible = (page: Page, selector: string) =>
-  page.locator(`${selector}:visible`);
+import { saldoMinutes, visible } from './ui';
 
 // /settings renders three hh/mm pairs in this order: the initial balance, the
 // default expected day, and the "special day" override form.

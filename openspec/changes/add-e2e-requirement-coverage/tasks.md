@@ -47,10 +47,10 @@
 
 ## 7. Absence end-to-end suite
 
-- [ ] 7.1 Cover submitting a multi-day absence and assert one entry per day appears, all with the chosen reason and comment
-- [ ] 7.2 Cover reason selection and the reason icon shown in the worklog list
-- [ ] 7.3 Cover range normalization in the browser, in both directions
-- [ ] 7.4 Annotate the suite and confirm `absence`'s 4 requirements report end-to-end coverage
+- [x] 7.1 Cover submitting a multi-day absence and assert one entry per day appears, all with the chosen reason and comment
+- [x] 7.2 Cover reason selection and the reason icon shown in the worklog list
+- [x] 7.3 Cover range normalization in the browser, in both directions
+- [x] 7.4 Annotate the suite and confirm `absence`'s 4 requirements report end-to-end coverage
 
 ## 8. Statistics end-to-end suite
 
