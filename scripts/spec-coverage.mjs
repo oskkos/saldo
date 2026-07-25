@@ -380,7 +380,9 @@ export function collectFromDisk(root) {
   });
 
   const testFiles = [
-    ...walk(root, 'src').filter(
+    // Jest suites live next to the code, plus the tooling's own tests; the
+    // Playwright layer is a flat directory of specs and helpers.
+    ...[...walk(root, 'src'), ...walk(root, 'scripts')].filter(
       (file) => file.includes('/__tests__/') && /\.tsx?$/.test(file),
     ),
     ...walk(root, 'e2e').filter((file) => /\.tsx?$/.test(file)),

@@ -18,5 +18,9 @@
   {
     "scenario": "statistics/Same grouping regardless of runtime timezone",
     "reason": "Comparing two runtime timezones needs two processes: Node caches the zone at startup. The suite is parameterized by TZ instead (jest.config.mjs pins a non-UTC zone; TZ=UTC npm run test:ci runs it again), and 'Worklog near UTC midnight' asserts the UTC grouping that makes the figures invariant."
+  },
+  {
+    "scenario": "spec-test-traceability/Over-claiming is a review defect",
+    "reason": "The requirement itself states this is enforced by code review, not tooling: no check can tell whether a test really asserts the scenario's THEN. The rule is written into CLAUDE.md and e2e/README.md, and the generated map puts each claim in the diff a reviewer reads."
   }
 ]
