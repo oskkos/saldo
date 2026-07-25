@@ -5,8 +5,10 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 
 import {
+  analyzeRequirements,
   hashScenarioBody,
   main,
+  parseSpecRequirements,
   parseSpecScenarios,
   renderCoverageMap,
   resolveExemptions,
@@ -602,5 +604,223 @@ describe('scanTestAnnotations with aliased test imports', () => {
     expect(() =>
       scanTestAnnotations('src/x/__tests__/a.test.ts', source),
     ).toThrow(/not attached to a test/i);
+  });
+});
+
+describe('parseSpecRequirements', () => {
+  it('identifies each requirement as capability/name', () => {
+    expect(parseSpecRequirements('demo', SPEC)).toEqual([
+      {
+        id: 'demo/First requirement',
+        capability: 'demo',
+        name: 'First requirement',
+      },
+      {
+        id: 'demo/Second requirement',
+        capability: 'demo',
+        name: 'Second requirement',
+      },
+    ]);
+  });
+
+  it('rejects two requirements sharing a name in one capability', () => {
+    const duplicated = SPEC.replace(
+      '### Requirement: Second requirement',
+      '### Requirement: First requirement',
+    );
+
+    expect(() => parseSpecRequirements('demo', duplicated)).toThrow(
+      /duplicate requirement name.*demo\/First requirement/i,
+    );
+  });
+
+  it('ignores requirement-shaped text that is not a heading', () => {
+    const withProse = SPEC.replace(
+      'Some requirement prose.',
+      'Mentions `### Requirement: Not a heading` inline.',
+    );
+
+    expect(parseSpecRequirements('demo', withProse)).toHaveLength(2);
+  });
+});
+
+describe('analyzeRequirements', () => {
+  const requirements = [
+    { id: 'demo/Journey', capability: 'demo', name: 'Journey' },
+    { id: 'demo/Rule', capability: 'demo', name: 'Rule' },
+    { id: 'demo/Internal', capability: 'demo', name: 'Internal' },
+  ];
+  const scenarios = [
+    { id: 'demo/A', capability: 'demo', requirement: 'Journey' },
+    { id: 'demo/B', capability: 'demo', requirement: 'Journey' },
+    { id: 'demo/C', capability: 'demo', requirement: 'Rule' },
+    { id: 'demo/D', capability: 'demo', requirement: 'Internal' },
+  ];
+  const link = (scenarioId: string, file: string) => ({
+    scenarioId,
+    file,
+    line: 1,
+    annotationLine: 1,
+    testTitle: 't',
+  });
+
+  const analyze = (options: Record<string, unknown> = {}) =>
+    analyzeRequirements({
+      requirements,
+      scenarios,
+      links: [],
+      scenarioExemptions: new Map(),
+      e2eExemptions: new Map(),
+      ...options,
+    });
+
+  const stateOf = (result: { id: string; state: string }[], id: string) =>
+    result.find((r) => r.id === id)?.state;
+
+  it('marks a requirement covered when any scenario has an e2e test', () => {
+    const result = analyze({
+      links: [link('demo/B', 'e2e/demo.spec.ts')],
+    });
+
+    expect(stateOf(result, 'demo/Journey')).toBe('e2e');
+  });
+
+  it('does not count a unit test as end-to-end coverage', () => {
+    const result = analyze({
+      links: [link('demo/C', 'src/x/__tests__/a.test.ts')],
+    });
+
+    expect(stateOf(result, 'demo/Rule')).toBe('missing');
+  });
+
+  it('needs no decision when every scenario is already exempt', () => {
+    const result = analyze({
+      scenarioExemptions: new Map([['demo/D', 'no app code path']]),
+    });
+
+    expect(stateOf(result, 'demo/Internal')).toBe('not-applicable');
+  });
+
+  it('treats a partially exempt requirement as still needing a decision', () => {
+    const result = analyze({
+      scenarioExemptions: new Map([['demo/A', 'no app code path']]),
+    });
+
+    expect(stateOf(result, 'demo/Journey')).toBe('missing');
+  });
+
+  it('resolves a requirement that carries an e2e exemption', () => {
+    const result = analyze({
+      e2eExemptions: new Map([
+        ['demo/Rule', { category: 'unit-appropriate', reason: 'pinned lower' }],
+      ]),
+    });
+
+    expect(stateOf(result, 'demo/Rule')).toBe('exempt');
+  });
+
+  it('reports the exemption alongside the requirement', () => {
+    const entry = { category: 'unit-appropriate', reason: 'pinned lower' };
+    const result = analyze({ e2eExemptions: new Map([['demo/Rule', entry]]) });
+
+    expect(
+      result.find((r: { id: string }) => r.id === 'demo/Rule')?.exemption,
+    ).toEqual(entry);
+  });
+});
+
+describe('renderCoverageMap end-to-end section', () => {
+  const scenarios = [
+    {
+      id: 'demo/A',
+      capability: 'demo',
+      title: 'A',
+      requirement: 'Journey',
+      body: '- **THEN** a',
+    },
+    {
+      id: 'demo/C',
+      capability: 'demo',
+      title: 'C',
+      requirement: 'Rule',
+      body: '- **THEN** c',
+    },
+    {
+      id: 'other/E',
+      capability: 'other',
+      title: 'E',
+      requirement: 'Elsewhere',
+      body: '- **THEN** e',
+    },
+  ];
+  const links = [
+    {
+      scenarioId: 'demo/A',
+      file: 'e2e/demo.spec.ts',
+      line: 1,
+      annotationLine: 1,
+      testTitle: 'journey works',
+    },
+  ];
+  const requirementStates = [
+    {
+      id: 'demo/Journey',
+      capability: 'demo',
+      name: 'Journey',
+      state: 'e2e',
+      exemption: null,
+    },
+    {
+      id: 'demo/Rule',
+      capability: 'demo',
+      name: 'Rule',
+      state: 'exempt',
+      exemption: {
+        category: 'unit-appropriate',
+        reason: 'pinned exactly at the service layer',
+      },
+    },
+    {
+      id: 'other/Elsewhere',
+      capability: 'other',
+      name: 'Elsewhere',
+      state: 'missing',
+      exemption: null,
+    },
+  ];
+
+  const render = () =>
+    renderCoverageMap(scenarios, links, new Map(), requirementStates);
+
+  it('counts end-to-end coverage per capability', () => {
+    const markdown = render();
+
+    // capability | requirements | e2e | exempt | missing
+    expect(markdown).toContain('| demo | 2 | 1 | 1 | 0 |');
+    expect(markdown).toContain('| other | 1 | 0 | 0 | 1 |');
+  });
+
+  it('lists requirements that have no end-to-end coverage', () => {
+    const markdown = render();
+    const section = markdown.slice(
+      markdown.indexOf('## Requirements without end-to-end coverage'),
+    );
+
+    expect(section).toContain('other/Elsewhere');
+    expect(section).not.toContain('demo/Journey');
+  });
+
+  it('shows the category and reason behind an exempt requirement', () => {
+    expect(render()).toMatch(
+      /demo\/Rule.*unit-appropriate.*pinned exactly at the service layer/,
+    );
+  });
+
+  it('reports none missing when every requirement is resolved', () => {
+    const resolved = requirementStates.filter((r) => r.state !== 'missing');
+
+    expect(renderCoverageMap(scenarios, links, new Map(), resolved)).toContain(
+      'None — every requirement has end-to-end coverage or a stated exemption.',
+    );
   });
 });

@@ -6,12 +6,12 @@
 
 ## 2. Requirement-level analysis, report-only
 
-- [ ] 2.1 Write failing Jest tests for requirement identity: `<capability>/<Requirement name>`, and duplicate requirement names within a capability rejected
-- [ ] 2.2 Implement requirement extraction to satisfy 2.1
-- [ ] 2.3 Write failing Jest tests for layer derivation: a scenario covered by a test under `e2e/` marks its requirement as end-to-end covered, a unit-only requirement does not, and a requirement whose scenarios are all exempt needs no decision
-- [ ] 2.4 Implement layer derivation from the covering test's path to satisfy 2.3
-- [ ] 2.5 Write failing Jest tests for the map's end-to-end section: per-capability counts, the list of requirements lacking coverage, category and reason per exempt requirement
-- [ ] 2.6 Render the end-to-end dimension into `openspec/COVERAGE.md`; regenerate and record the authoritative gap list (no enforcement yet)
+- [x] 2.1 Write failing Jest tests for requirement identity: `<capability>/<Requirement name>`, and duplicate requirement names within a capability rejected
+- [x] 2.2 Implement requirement extraction to satisfy 2.1
+- [x] 2.3 Write failing Jest tests for layer derivation: a scenario covered by a test under `e2e/` marks its requirement as end-to-end covered, a unit-only requirement does not, and a requirement whose scenarios are all exempt needs no decision
+- [x] 2.4 Implement layer derivation from the covering test's path to satisfy 2.3
+- [x] 2.5 Write failing Jest tests for the map's end-to-end section: per-capability counts, the list of requirements lacking coverage, category and reason per exempt requirement
+- [x] 2.6 Render the end-to-end dimension into `openspec/COVERAGE.md`; regenerate and record the authoritative gap list (no enforcement yet)
 
 ## 3. Categorised end-to-end exemptions
 
