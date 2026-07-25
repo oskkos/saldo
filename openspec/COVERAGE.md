@@ -38,7 +38,7 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | saldo | 13 | 0 | 0 | 13 |
 | settings | 5 | 5 | 0 | 0 |
 | spec-test-traceability | 11 | 0 | 0 | 11 |
-| statistics | 7 | 0 | 0 | 7 |
+| statistics | 7 | 7 | 0 | 0 |
 | time-clock | 7 | 7 | 0 | 0 |
 | user-guide-generation | 0 | 0 | 0 | 0 |
 | worklog | 9 | 8 | 0 | 1 |
@@ -80,13 +80,6 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 - `spec-test-traceability/CI gates every scenario on coverage`
 - `spec-test-traceability/Coverage tooling adds no dependencies`
 - `spec-test-traceability/Generated map is the single traceability source`
-- `statistics/Statistics require an authenticated user with settings`
-- `statistics/Same window as the saldo`
-- `statistics/Separate work entries from absences`
-- `statistics/Hours figures`
-- `statistics/Absence counts by reason`
-- `statistics/Per-day work-minutes chart`
-- `statistics/Per-day grouping is timezone-independent`
 - `worklog/Map storage rows to the domain type`
 
 ## End-to-end exemptions
@@ -227,14 +220,14 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 
 | Scenario | Requirement | Hash | Covered by |
 | --- | --- | --- | --- |
-| No session or no settings | Statistics require an authenticated user with settings | `08fbf4c1c638` | `src/app/statistics/__tests__/page.test.tsx` — renders nothing without an authenticated user<br>`src/app/statistics/__tests__/page.test.tsx` — renders nothing when the user has no settings |
-| Out-of-window entries excluded | Same window as the saldo | `f12838320849` | `src/app/statistics/__tests__/page.test.tsx` — excludes entries before the begin date and in the future |
-| Absences excluded from hours totals | Separate work entries from absences | `66acce1ea4f2` | `src/app/statistics/__tests__/page.test.tsx` — leaves absences out of the total and average hours |
-| Totals and extremes | Hours figures | `9aa25f4d66d0` | `src/app/statistics/__tests__/page.test.tsx` — sums work minutes and identifies the highest and lowest days |
-| Absence tally | Absence counts by reason | `58462f4b924f` | `src/app/statistics/__tests__/page.test.tsx` — counts each absence reason on working days only |
-| Chart renders | Per-day work-minutes chart | `17bad499ccf4` | `src/app/statistics/__tests__/page.test.tsx` — shows a per-day chart when there are in-window work entries |
+| No session or no settings | Statistics require an authenticated user with settings | `08fbf4c1c638` | `src/app/statistics/__tests__/page.test.tsx` — renders nothing without an authenticated user<br>`src/app/statistics/__tests__/page.test.tsx` — renders nothing when the user has no settings<br>`e2e/statistics.spec.ts` — a user without settings gets no statistics at all |
+| Out-of-window entries excluded | Same window as the saldo | `f12838320849` | `src/app/statistics/__tests__/page.test.tsx` — excludes entries before the begin date and in the future<br>`e2e/statistics.spec.ts` — the hours figures are computed from the in-window work entries |
+| Absences excluded from hours totals | Separate work entries from absences | `66acce1ea4f2` | `src/app/statistics/__tests__/page.test.tsx` — leaves absences out of the total and average hours<br>`e2e/statistics.spec.ts` — absences stay out of the hours totals but are counted by reason |
+| Totals and extremes | Hours figures | `9aa25f4d66d0` | `src/app/statistics/__tests__/page.test.tsx` — sums work minutes and identifies the highest and lowest days<br>`e2e/statistics.spec.ts` — the hours figures are computed from the in-window work entries |
+| Absence tally | Absence counts by reason | `58462f4b924f` | `src/app/statistics/__tests__/page.test.tsx` — counts each absence reason on working days only<br>`e2e/statistics.spec.ts` — absences stay out of the hours totals but are counted by reason |
+| Chart renders | Per-day work-minutes chart | `17bad499ccf4` | `src/app/statistics/__tests__/page.test.tsx` — shows a per-day chart when there are in-window work entries<br>`e2e/statistics.spec.ts` — the per-day chart is drawn for the in-window work entries |
 | Same grouping regardless of runtime timezone | Per-day grouping is timezone-independent | `6d20121c7a09` | _Exempt: Comparing two runtime timezones needs two processes: Node caches the zone at startup. The suite is parameterized by TZ instead (jest.config.mjs pins a non-UTC zone; TZ=UTC npm run test:ci runs it again), and 'Worklog near UTC midnight' asserts the UTC grouping that makes the figures invariant._ |
-| Worklog near UTC midnight | Per-day grouping is timezone-independent | `691a6d7187ba` | `src/app/statistics/__tests__/page.test.tsx` — groups an entry near UTC midnight under its UTC date |
+| Worklog near UTC midnight | Per-day grouping is timezone-independent | `691a6d7187ba` | `src/app/statistics/__tests__/page.test.tsx` — groups an entry near UTC midnight under its UTC date<br>`e2e/statistics.spec.ts` — a worklog just after UTC midnight is grouped under its UTC date |
 
 ## time-clock
 

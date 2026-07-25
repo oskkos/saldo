@@ -13,6 +13,7 @@ import {
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
+import { isNonWorkingDay } from '../src/util/date';
 
 // The single user every e2e test authenticates as.
 export const TEST_USER = {
@@ -88,6 +89,28 @@ export function utcDay(offsetDays = 0): Date {
   );
 }
 
+// Some behaviour only shows on working days — an absence on a weekend or public
+// holiday is left out of the statistics tally, for instance. Tests cannot hard-
+// code a weekday, so they ask for offsets that are known to be working days on
+// the day the suite happens to run.
+export function pastWorkingDayOffsets(count: number): number[] {
+  const offsets: number[] = [];
+  for (let offset = -1; offset > -60; offset--) {
+    if (!isNonWorkingDay(utcDay(offset))) {
+      offsets.push(offset);
+      if (offsets.length === count) return offsets;
+    }
+  }
+  throw new Error(`Could not find ${count} working days in the last 60 days`);
+}
+
+export function pastNonWorkingDayOffset(): number {
+  for (let offset = -1; offset > -60; offset--) {
+    if (isNonWorkingDay(utcDay(offset))) return offset;
+  }
+  throw new Error('Could not find a non-working day in the last 60 days');
+}
+
 /** A UTC instant at `hours:minutes` on the day `offsetDays` from today. */
 export function utcTimeOn(
   offsetDays: number,
@@ -131,6 +154,13 @@ export async function getSettings(): Promise<Settings> {
   return db().settings.findUniqueOrThrow({ where: { user_id: id } });
 }
 
+// Leaves the user without a settings row, which is the state pages guard
+// against. resetUserData puts the baseline row back.
+export async function deleteSettings(): Promise<void> {
+  const id = await userId();
+  await db().settings.deleteMany({ where: { user_id: id } });
+}
+
 export async function seedOverride(entry: {
   date: Date;
   minutes: number;
@@ -165,9 +195,12 @@ export async function resetUserData(): Promise<void> {
   await db().worklog.deleteMany({ where: { user_id: id } });
   await db().expectedHoursOverride.deleteMany({ where: { user_id: id } });
   await db().user.update({ where: { id }, data: { started_at: null } });
-  await db().settings.update({
+  // Upsert rather than update: a test may have removed the row to exercise the
+  // no-settings state, and the next test still has to start from the baseline.
+  await db().settings.upsert({
     where: { user_id: id },
-    data: BASELINE_SETTINGS,
+    update: BASELINE_SETTINGS,
+    create: { user_id: id, ...BASELINE_SETTINGS },
   });
 }
 
