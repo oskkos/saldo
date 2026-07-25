@@ -92,8 +92,41 @@ export function parseSpecScenarios(capability, markdown) {
 
 const ANNOTATION = /^\s*\/\/\s*@scenario\s+(\S.*?)\s*$/;
 const BLANK_OR_COMMENT = /^\s*(?:\/\/|\/\*|\*|$)/;
-const TEST_OPENER = /^(\s*)(it|test|describe)((?:\.\w+)*)\s*\(/;
 const STRING_LITERAL = /^\s*(['"])((?:\\.|(?!\1).)*)\1/;
+const BASE_OPENERS = ['it', 'test', 'describe'];
+// `[^}]*` spans newlines, so multi-line import blocks are matched too.
+const IMPORT_BLOCK = /import\s*\{([^}]*)\}\s*from\s*['"][^'"]+['"]/g;
+
+/**
+ * Local names in this file that declare a test or suite, mapped to the base
+ * function they came from.
+ *
+ * Playwright's setup convention renames the import (`import { test as setup }`),
+ * and a scanner that only knew the base names would not recognize the resulting
+ * test at all — producing no annotation, no error, and silently uncoverable
+ * tests. Aliases are read from the file's own imports so that cannot happen.
+ */
+function testOpeners(content) {
+  const openers = new Map(BASE_OPENERS.map((name) => [name, name]));
+
+  for (const [, specifiers] of content.matchAll(IMPORT_BLOCK)) {
+    for (const specifier of specifiers.split(',')) {
+      const alias = /^\s*(\w+)\s+as\s+(\w+)\s*$/.exec(specifier);
+      if (alias && BASE_OPENERS.includes(alias[1])) {
+        openers.set(alias[2], alias[1]);
+      }
+    }
+  }
+
+  return openers;
+}
+
+/** Opener pattern for one file's set of local test names. */
+function testOpenerPattern(openers) {
+  // Longest first so one name cannot shadow a longer one that starts with it.
+  const names = [...openers.keys()].sort((a, b) => b.length - a.length);
+  return new RegExp(`^(\\s*)(${names.join('|')})((?:\\.\\w+)*)\\s*\\(`);
+}
 
 /** Index just past the `)` matching an already-opened `(`, or -1. */
 function skipBalancedParens(text) {
@@ -134,6 +167,8 @@ function extractTitle(afterOpenParen, modifiers) {
  */
 export function scanTestAnnotations(file, content) {
   const lines = content.split('\n');
+  const openers = testOpeners(content);
+  const testOpener = testOpenerPattern(openers);
   const links = [];
   const suites = [];
   let pending = null;
@@ -160,13 +195,14 @@ export function scanTestAnnotations(file, content) {
       suites.pop();
     }
 
-    const opener = TEST_OPENER.exec(line);
+    const opener = testOpener.exec(line);
     if (!opener) {
       if (pending) fail(pending.line, 'annotation is not attached to a test');
       continue;
     }
 
-    const [matched, , keyword, modifierChain] = opener;
+    const [matched, , localName, modifierChain] = opener;
+    const keyword = openers.get(localName);
     const modifiers = modifierChain.split('.').filter(Boolean);
     const isSuite = keyword === 'describe' || modifiers.includes('describe');
     const title = extractTitle(line.slice(matched.length), modifiers);

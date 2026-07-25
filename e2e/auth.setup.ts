@@ -5,6 +5,7 @@ import { STORAGE_STATE } from './constants';
 // Sign in once through the real Credentials form and persist the session so the
 // chromium project can reuse it (no per-test login). This also lightly exercises
 // the auth capability. The seeded user is created in global-setup.
+// @scenario auth/Correct credentials
 setup('authenticate', async ({ page }) => {
   await page.goto('/signin');
 

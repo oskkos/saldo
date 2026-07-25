@@ -1,8 +1,8 @@
 ## 1. Recognize aliased test imports
 
-- [ ] 1.1 Write failing Jest tests for the scanner: a test declared via `import { test as setup } from '@playwright/test'` is recognized, an aliased `it`/`describe` is recognized, and an unrelated local named `setup` without the import is not
-- [ ] 1.2 Collect local aliases from the file's import declarations and treat them as test openers, keeping the scanner line-based
-- [ ] 1.3 Annotate `e2e/auth.setup.ts` with `auth/Email/password sign-in`, regenerate the map, and confirm the scenario resolves
+- [x] 1.1 Write failing Jest tests for the scanner: a test declared via `import { test as setup } from '@playwright/test'` is recognized, an aliased `it`/`describe` is recognized, and an unrelated local named `setup` without the import is not
+- [x] 1.2 Collect local aliases from the file's import declarations and treat them as test openers, keeping the scanner line-based
+- [x] 1.3 Annotate `e2e/auth.setup.ts` with `auth/Email/password sign-in`, regenerate the map, and confirm the scenario resolves
 
 ## 2. Requirement-level analysis, report-only
 
