@@ -31,11 +31,11 @@
 
 ## 5. Worklog end-to-end suite
 
-- [ ] 5.1 Cover creating a worklog through the form: entry appears in the list and the saldo badge moves by the entered amount
-- [ ] 5.2 Cover editing an existing worklog and deleting one, asserting the list and badge afterwards
-- [ ] 5.3 Cover the duration mode journey end to end: net time, the default-start anchor, and rejection of an overflow past midnight
-- [ ] 5.4 Cover server-side rejection surfacing in the UI for an invalid worklog, and that nothing is added to the list
-- [ ] 5.5 Annotate the suite and confirm `worklog`'s 8 journey requirements report end-to-end coverage
+- [x] 5.1 Cover creating a worklog through the form: entry appears in the list and the saldo badge moves by the entered amount
+- [x] 5.2 Cover editing an existing worklog and deleting one, asserting the list and badge afterwards
+- [x] 5.3 Cover the duration mode journey end to end: net time, the default-start anchor, and rejection of an overflow past midnight
+- [x] 5.4 Cover server-side rejection surfacing in the UI for an invalid worklog, and that nothing is added to the list
+- [x] 5.5 Annotate the suite and confirm `worklog`'s 8 journey requirements report end-to-end coverage
 
 ## 6. Settings and expected-hours end-to-end suites
 

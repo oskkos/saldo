@@ -47,15 +47,23 @@ export default function WorklogItem({
           <WorklogTitle worklog={worklog} />
           <div className="card-actions justify-end w-16">
             {worklog.absence ? null : (
-              <MdModeEdit
-                className="w-6 h-6 cursor-pointer"
+              <button
+                type="button"
+                aria-label="Edit"
+                className="cursor-pointer"
                 onClick={() => setShowEdit(true)}
-              />
+              >
+                <MdModeEdit className="w-6 h-6" title="Edit" />
+              </button>
             )}
-            <MdDelete
-              className="w-6 h-6 cursor-pointer"
+            <button
+              type="button"
+              aria-label="Delete"
+              className="cursor-pointer"
               onClick={() => setShowDeleteConfirm(true)}
-            />
+            >
+              <MdDelete className="w-6 h-6" title="Delete" />
+            </button>
           </div>
         </div>
         {worklog.comment ? <p>{worklog.comment}</p> : null}
