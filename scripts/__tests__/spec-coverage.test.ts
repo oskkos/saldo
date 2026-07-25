@@ -419,6 +419,24 @@ describe('renderCoverageMap', () => {
   });
 });
 
+// Both demo requirements declared out of the end-to-end rule, for the tests
+// whose subject is scenario coverage rather than the layer a test lives in.
+const NO_E2E = {
+  scenarios: [],
+  requirementsWithoutE2e: [
+    {
+      requirement: 'demo/First requirement',
+      category: 'no-ui',
+      reason: 'nothing to click',
+    },
+    {
+      requirement: 'demo/Second requirement',
+      category: 'no-ui',
+      reason: 'nothing to click',
+    },
+  ],
+};
+
 describe('main', () => {
   let root: string;
 
@@ -439,10 +457,10 @@ describe('main', () => {
         '\n',
       ),
     );
-    write(
-      'scripts/spec-coverage.exemptions.json',
-      JSON.stringify({ scenarios: [], requirementsWithoutE2e: [] }),
-    );
+    // The fixture settles the requirement dimension, so tests about scenario
+    // coverage are not also asserting the end-to-end rule by accident. The
+    // tests that are about that rule write their own file.
+    write('scripts/spec-coverage.exemptions.json', JSON.stringify(NO_E2E));
   });
 
   afterEach(() => {
@@ -499,12 +517,114 @@ describe('main', () => {
     write(
       'scripts/spec-coverage.exemptions.json',
       JSON.stringify({
+        ...NO_E2E,
         scenarios: [{ scenario: 'demo/Beta happens', reason: 'manual only' }],
-        requirementsWithoutE2e: [],
       }),
     );
 
     expect(main(['--strict'], root).exitCode).toBe(0);
+  });
+
+  // @scenario spec-test-traceability/Requirement without end-to-end coverage fails CI
+  it('fails under --strict when a requirement has no end-to-end test', () => {
+    // Both scenarios covered, but only by Jest, so neither requirement has a
+    // browser test behind it.
+    write(
+      'src/x/__tests__/b.test.ts',
+      ['// @scenario demo/Beta happens', "it('covers beta', () => {});"].join(
+        '\n',
+      ),
+    );
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({ scenarios: [], requirementsWithoutE2e: [] }),
+    );
+
+    const result = main(['--strict'], root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('demo/First requirement');
+    expect(result.output).toContain('demo/Second requirement');
+    expect(result.output).toContain('requirementsWithoutE2e');
+  });
+
+  // @scenario spec-test-traceability/Existing CI step picks up the rule
+  // @scenario spec-test-traceability/Requirement covered by one end-to-end test
+  it('evaluates scenario and requirement coverage in the same strict run', () => {
+    write(
+      'e2e/demo.spec.ts',
+      ['// @scenario demo/Beta happens', "test('covers beta', () => {});"].join(
+        '\n',
+      ),
+    );
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({
+        scenarios: [],
+        requirementsWithoutE2e: [
+          {
+            requirement: 'demo/First requirement',
+            category: 'no-ui',
+            reason: 'nothing to click',
+          },
+        ],
+      }),
+    );
+
+    // One requirement covered by the Playwright test, the other exempt, and
+    // every scenario covered — a single --strict run is satisfied by both.
+    const result = main(['--strict'], root);
+
+    expect(result.output).toBe('');
+    expect(result.exitCode).toBe(0);
+  });
+
+  // @scenario spec-test-traceability/End-to-end exemption resolves the requirement
+  it('passes under --strict once the end-to-end gap is exempt', () => {
+    write(
+      'src/x/__tests__/b.test.ts',
+      ['// @scenario demo/Beta happens', "it('covers beta', () => {});"].join(
+        '\n',
+      ),
+    );
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({
+        scenarios: [],
+        requirementsWithoutE2e: [
+          {
+            requirement: 'demo/First requirement',
+            category: 'no-ui',
+            reason: 'nothing to click',
+          },
+          {
+            requirement: 'demo/Second requirement',
+            category: 'unit-appropriate',
+            reason: 'pinned precisely in the unit layer',
+          },
+        ],
+      }),
+    );
+
+    expect(main(['--strict'], root).exitCode).toBe(0);
+  });
+
+  it('does not fail on a missing end-to-end test without --strict', () => {
+    write(
+      'src/x/__tests__/b.test.ts',
+      ['// @scenario demo/Beta happens', "it('covers beta', () => {});"].join(
+        '\n',
+      ),
+    );
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({ scenarios: [], requirementsWithoutE2e: [] }),
+    );
+
+    const result = main([], root);
+
+    expect(result.exitCode).toBe(0);
+    expect(result.output).toContain('end-to-end test');
   });
 
   // @scenario spec-test-traceability/Annotation citing an unknown scenario fails the run
@@ -538,12 +658,24 @@ describe('main', () => {
   });
 
   // @scenario spec-test-traceability/Annotations work identically in both test layers
+  // @scenario spec-test-traceability/Declaring the layer costs the author nothing
   it('scans the playwright layer as well as the jest layer', () => {
+    // The same annotation the Jest fixture uses, moved to a Playwright path
+    // and left otherwise untouched.
     write(
       'e2e/demo.spec.ts',
       ['// @scenario demo/Beta happens', "test('covers beta', () => {});"].join(
         '\n',
       ),
+    );
+    // Its requirement's exemption has to go: the annotation now counts as
+    // end-to-end coverage purely because of where the file lives.
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({
+        scenarios: [],
+        requirementsWithoutE2e: [NO_E2E.requirementsWithoutE2e[0]],
+      }),
     );
 
     expect(main(['--strict'], root).exitCode).toBe(0);
@@ -551,6 +683,7 @@ describe('main', () => {
 });
 
 describe('scanTestAnnotations with aliased test imports', () => {
+  // @scenario spec-test-traceability/Aliased test function is recognized
   it('recognises a test declared through an aliased import', () => {
     const source = [
       "import { test as setup, expect } from '@playwright/test';",
@@ -568,6 +701,7 @@ describe('scanTestAnnotations with aliased test imports', () => {
     ]);
   });
 
+  // @scenario spec-test-traceability/Aliased test function is recognized
   it('treats an aliased describe as a suite covering the tests inside', () => {
     const source = [
       "import { describe as suite, it as spec } from '@jest/globals';",
@@ -614,6 +748,7 @@ describe('scanTestAnnotations with aliased test imports', () => {
 });
 
 describe('parseSpecRequirements', () => {
+  // @scenario spec-test-traceability/Scenario resolved by capability and title
   it('identifies each requirement as capability/name', () => {
     expect(parseSpecRequirements('demo', SPEC)).toEqual([
       {
@@ -683,6 +818,8 @@ describe('analyzeRequirements', () => {
   const stateOf = (result: { id: string; state: string }[], id: string) =>
     result.find((r) => r.id === id)?.state;
 
+  // @scenario spec-test-traceability/Requirement covered by one end-to-end test
+  // @scenario spec-test-traceability/Layer read from the test's path
   it('marks a requirement covered when any scenario has an e2e test', () => {
     const result = analyze({
       links: [link('demo/B', 'e2e/demo.spec.ts')],
@@ -691,6 +828,8 @@ describe('analyzeRequirements', () => {
     expect(stateOf(result, 'demo/Journey')).toBe('e2e');
   });
 
+  // @scenario spec-test-traceability/Unit-only requirement is reported as a gap
+  // @scenario spec-test-traceability/Layer read from the test's path
   it('does not count a unit test as end-to-end coverage', () => {
     const result = analyze({
       links: [link('demo/C', 'src/x/__tests__/a.test.ts')],
@@ -699,6 +838,7 @@ describe('analyzeRequirements', () => {
     expect(stateOf(result, 'demo/Rule')).toBe('missing');
   });
 
+  // @scenario spec-test-traceability/Fully exempt requirement needs no end-to-end decision
   it('needs no decision when every scenario is already exempt', () => {
     const result = analyze({
       scenarioExemptions: new Map([['demo/D', 'no app code path']]),
@@ -707,6 +847,7 @@ describe('analyzeRequirements', () => {
     expect(stateOf(result, 'demo/Internal')).toBe('not-applicable');
   });
 
+  // @scenario spec-test-traceability/Unit-only requirement is reported as a gap
   it('treats a partially exempt requirement as still needing a decision', () => {
     const result = analyze({
       scenarioExemptions: new Map([['demo/A', 'no app code path']]),
@@ -715,6 +856,7 @@ describe('analyzeRequirements', () => {
     expect(stateOf(result, 'demo/Journey')).toBe('missing');
   });
 
+  // @scenario spec-test-traceability/End-to-end exemption resolves the requirement
   it('resolves a requirement that carries an e2e exemption', () => {
     const result = analyze({
       e2eExemptions: new Map([
@@ -798,6 +940,7 @@ describe('renderCoverageMap end-to-end section', () => {
   const render = () =>
     renderCoverageMap(scenarios, links, new Map(), requirementStates);
 
+  // @scenario spec-test-traceability/Map counts end-to-end coverage per capability
   it('counts end-to-end coverage per capability', () => {
     const markdown = render();
 
@@ -806,6 +949,7 @@ describe('renderCoverageMap end-to-end section', () => {
     expect(markdown).toContain('| other | 1 | 0 | 0 | 1 |');
   });
 
+  // @scenario spec-test-traceability/Map lists requirements without end-to-end coverage
   it('lists requirements that have no end-to-end coverage', () => {
     const markdown = render();
     const section = markdown.slice(
@@ -816,6 +960,7 @@ describe('renderCoverageMap end-to-end section', () => {
     expect(section).not.toContain('demo/Journey');
   });
 
+  // @scenario spec-test-traceability/Map shows the category behind each exemption
   it('shows the category and reason behind an exempt requirement', () => {
     expect(render()).toMatch(
       /demo\/Rule.*unit-appropriate.*pinned exactly at the service layer/,
@@ -868,6 +1013,7 @@ describe('resolveE2eExemptions', () => {
       existingFiles.includes(file),
     );
 
+  // @scenario spec-test-traceability/Exemption records a category and a reason
   it('resolves an entry to its category and reason', () => {
     const result = resolve([
       {
@@ -884,6 +1030,7 @@ describe('resolveE2eExemptions', () => {
     });
   });
 
+  // @scenario spec-test-traceability/Exemption records a category and a reason
   it('accepts every defined category', () => {
     for (const category of [
       'no-ui',
@@ -896,6 +1043,7 @@ describe('resolveE2eExemptions', () => {
     }
   });
 
+  // @scenario spec-test-traceability/Unrecognized category is rejected
   it('rejects a category outside the defined set', () => {
     expect(() =>
       resolve([
@@ -904,12 +1052,14 @@ describe('resolveE2eExemptions', () => {
     ).toThrow(/category.*deferred/i);
   });
 
+  // @scenario spec-test-traceability/Exemption without a reason is rejected
   it('rejects an entry with no reason', () => {
     expect(() =>
       resolve([{ requirement: 'demo/Rule', category: 'no-ui', reason: '  ' }]),
     ).toThrow(/reason/i);
   });
 
+  // @scenario spec-test-traceability/Cost-based exemption must point at real coverage
   it('requires a covering test for a harness-cost exemption', () => {
     expect(() =>
       resolve([
@@ -922,6 +1072,7 @@ describe('resolveE2eExemptions', () => {
     ).toThrow(/coveredAt/i);
   });
 
+  // @scenario spec-test-traceability/Pointer to a missing file is rejected
   it('rejects a harness-cost pointer to a file that does not exist', () => {
     expect(() =>
       resolve([
@@ -950,12 +1101,15 @@ describe('resolveE2eExemptions', () => {
     );
   });
 
+  // @scenario spec-test-traceability/Other categories need no pointer
   it('does not require a pointer for other categories', () => {
     expect(() =>
       resolve([{ requirement: 'demo/Rule', category: 'no-ui', reason: 'why' }]),
     ).not.toThrow();
   });
 
+  // @scenario spec-test-traceability/Exemption for an unknown requirement fails the run
+  // @scenario spec-test-traceability/Renaming a requirement breaks its exemption visibly
   it('rejects an entry naming a requirement that does not exist', () => {
     expect(() =>
       resolve([
@@ -964,6 +1118,7 @@ describe('resolveE2eExemptions', () => {
     ).toThrow(/unknown requirement.*demo\/Renamed/i);
   });
 
+  // @scenario spec-test-traceability/Exemption superseded by end-to-end coverage fails the run
   it('rejects an entry for a requirement that already has e2e coverage', () => {
     expect(() =>
       resolve(

@@ -36,7 +36,10 @@ npm run lint:fix     # eslint --fix + prettier --write
 
 ### Spec-to-test traceability
 
-Every scenario in `openspec/specs/` must be covered by a test or explicitly exempt — CI enforces it.
+Two rules, both enforced by CI from the same annotations:
+
+1. Every **scenario** in `openspec/specs/` must be covered by a test or explicitly exempt.
+2. Every **requirement** must have at least one of its scenarios covered by a **Playwright** test, or carry a categorised end-to-end exemption.
 
 ```bash
 npm run spec:coverage      # regenerate openspec/COVERAGE.md (commit the result)
@@ -51,7 +54,18 @@ npm run spec:coverage:ci   # what CI runs: --check --strict, writes nothing
   Stack the comments to claim several scenarios; on a `describe` / `test.describe` the claim applies to every test inside. Many-to-many is fine — one test may cover several scenarios, and several tests may jointly cover one.
 - **A test may claim a scenario only if it asserts that scenario's THEN.** No tool can catch an over-claim; this is a review check. If a scenario's THEN spans layers (e.g. "throws a validation error **and** nothing is written"), a schema-level test alone does not cover it — assert the persistence half at the action level too, or let two tests jointly cover it.
 - **Regenerate and commit `openspec/COVERAGE.md`** whenever annotations or specs change; CI fails on a stale map. Renaming a scenario deliberately breaks the annotations citing it — that is the signal to re-read those tests.
-- **Cannot be automated?** Add an entry to `scripts/spec-coverage.exemptions.json` with a written reason (a `<capability>/*` wildcard is allowed). Exemptions are self-policing: one naming an unknown scenario fails, and so does one for a scenario a test already covers.
+- **Cannot be automated?** Add an entry under `scenarios` in `scripts/spec-coverage.exemptions.json` with a written reason (a `<capability>/*` wildcard is allowed). Exemptions are self-policing: one naming an unknown scenario fails, and so does one for a scenario a test already covers.
+- **The end-to-end rule is per requirement, not per scenario** — one browser test of the journey is enough, so the rules beneath it don't each need one. The layer is read from the test's path (`e2e/**`); there is no extra syntax. A requirement whose scenarios are all scenario-exempt needs no end-to-end decision.
+- **No Playwright test for a requirement?** Say why, under `requirementsWithoutE2e`, with one of four categories:
+
+  | Category | Means |
+  | --- | --- |
+  | `no-ui` | The requirement has no user-visible surface at all. |
+  | `unit-appropriate` | Observable, but pinned more precisely at a lower layer. |
+  | `external-dependency` | Needs a third party the test environment cannot drive. |
+  | `harness-cost` | Declined deliberately: the setup outweighs the confidence gained. |
+
+  `harness-cost` additionally requires `coveredAt`, naming an existing test file that does cover it — it is the one category asserting a judgement rather than a fact, so the claim is made checkable. These exemptions rot the same way scenario ones do: an unknown requirement fails, and so does one that has since gained a Playwright test.
 
 ## Local setup (Docker Compose)
 

@@ -161,6 +161,41 @@
       "requirement": "worklog/Map storage rows to the domain type",
       "category": "no-ui",
       "reason": "The mapping is a repository-boundary translation, and its scenario is about an unrecognized stored absence value making the assertion fail. Such a row cannot be created through the app, and the failure is a server-side throw rather than a rendered outcome."
+    },
+    {
+      "requirement": "spec-test-traceability/Every requirement has end-to-end coverage or a stated exemption",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the rule this tool enforces. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "spec-test-traceability/End-to-end coverage is derived from the test's location",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about how the tool classifies a test by its path. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "spec-test-traceability/End-to-end exemptions are categorised",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the exemption categories the tool accepts. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "spec-test-traceability/Cost-based exemptions name the layer that covers them",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the extra field a harness-cost exemption carries. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "spec-test-traceability/End-to-end exemptions cannot rot",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the validation that forces a stale exemption out. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "spec-test-traceability/Coverage map reports end-to-end coverage per requirement",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the end-to-end section the tool writes into the map. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "spec-test-traceability/CI gates every requirement on end-to-end coverage",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the strict check the CI step runs. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     }
   ]
 }

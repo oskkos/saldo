@@ -789,7 +789,27 @@ export function main(argv, root) {
     }
   }
 
-  const failed = stale || (strict && uncovered.length > 0);
+  // The second gate, on the same annotations: a requirement needs one of its
+  // scenarios covered in the browser, or a written decision not to.
+  const withoutE2e = requirementStates.filter(
+    (requirement) => requirement.state === 'missing',
+  );
+
+  if (withoutE2e.length) {
+    const summary = `${withoutE2e.length} requirement(s) have no end-to-end test and no exemption:`;
+    if (strict) {
+      output.push(
+        summary,
+        ...withoutE2e.map((requirement) => `  ${requirement.id}`),
+        `Add a Playwright test covering one of the requirement's scenarios, or an entry under "requirementsWithoutE2e" in ${EXEMPTIONS_PATH}.`,
+      );
+    } else {
+      output.push(`${summary} see ${MAP_PATH}.`);
+    }
+  }
+
+  const failed =
+    stale || (strict && (uncovered.length > 0 || withoutE2e.length > 0));
   return { exitCode: failed ? 1 : 0, output: output.join('\n') };
 }
 
