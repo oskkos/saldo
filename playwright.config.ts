@@ -8,8 +8,11 @@ import { STORAGE_STATE } from './e2e/constants';
 // override variables already set in the environment.
 try {
   process.loadEnvFile(path.join(__dirname, '.env.e2e'));
-} catch {
-  // no .env.e2e present (e.g. CI) — fall through to the guard below
+} catch (err) {
+  // A missing file is fine (CI provides env directly). Anything else — e.g.
+  // process.loadEnvFile itself being absent on Node < 20.12 — must surface
+  // rather than masquerade as "copy the example file".
+  if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
 }
 
 // Fail fast rather than silently run against the developer's own database: if
