@@ -15,12 +15,12 @@
 
 ## 3. Categorised end-to-end exemptions
 
-- [ ] 3.1 Write failing Jest tests for the new exemptions file shape: `scenarios` and `requirementsWithoutE2e` top-level keys, with the existing scenario behaviour unchanged
-- [ ] 3.2 Migrate `scripts/spec-coverage.exemptions.json` to the keyed shape and update loading to satisfy 3.1
-- [ ] 3.3 Write failing Jest tests for category validation: the four categories accepted, an unknown category rejected, a missing or blank reason rejected
-- [ ] 3.4 Write failing Jest tests for `coveredAt`: required for `harness-cost`, rejected when the named file does not exist, not required for other categories
-- [ ] 3.5 Write failing Jest tests for the rot rules: unknown requirement rejected, renamed requirement reported with its old identifier, exemption superseded by real end-to-end coverage rejected
-- [ ] 3.6 Implement category, `coveredAt` and rot validation to satisfy 3.3–3.5
+- [x] 3.1 Write failing Jest tests for the new exemptions file shape: `scenarios` and `requirementsWithoutE2e` top-level keys, with the existing scenario behaviour unchanged
+- [x] 3.2 Migrate `scripts/spec-coverage.exemptions.json` to the keyed shape and update loading to satisfy 3.1
+- [x] 3.3 Write failing Jest tests for category validation: the four categories accepted, an unknown category rejected, a missing or blank reason rejected
+- [x] 3.4 Write failing Jest tests for `coveredAt`: required for `harness-cost`, rejected when the named file does not exist, not required for other categories
+- [x] 3.5 Write failing Jest tests for the rot rules: unknown requirement rejected, renamed requirement reported with its old identifier, exemption superseded by real end-to-end coverage rejected
+- [x] 3.6 Implement category, `coveredAt` and rot validation to satisfy 3.3–3.5
 
 ## 4. End-to-end harness
 
