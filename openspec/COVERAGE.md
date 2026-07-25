@@ -36,7 +36,7 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 | data-load-performance | 4 | 0 | 0 | 4 |
 | expected-hours | 2 | 0 | 0 | 2 |
 | saldo | 13 | 0 | 0 | 13 |
-| settings | 5 | 0 | 0 | 5 |
+| settings | 5 | 5 | 0 | 0 |
 | spec-test-traceability | 11 | 0 | 0 | 11 |
 | statistics | 7 | 0 | 0 | 7 |
 | time-clock | 7 | 7 | 0 | 0 |
@@ -75,11 +75,6 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 - `saldo/Saldo formatted as hours, minutes, string, and badge`
 - `saldo/Worklog sum aggregation ignores absence semantics`
 - `saldo/Saldo calculation is timezone-independent`
-- `settings/One settings row per user`
-- `settings/Default settings on account creation`
-- `settings/Update settings`
-- `settings/Default times must be well-formed and ordered`
-- `settings/Settings updates are validated server-side`
 - `spec-test-traceability/Tests declare covered scenarios by annotation`
 - `spec-test-traceability/Scenario identity is capability and title`
 - `spec-test-traceability/Scenario content hash surfaces wording drift`
@@ -181,17 +176,17 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 
 | Scenario | Requirement | Hash | Covered by |
 | --- | --- | --- | --- |
-| Read own settings | One settings row per user | `e3c89ca72516` | `src/repository/__tests__/settingsRepository.test.ts` — returns the session user's single settings row |
+| Read own settings | One settings row per user | `e3c89ca72516` | `src/repository/__tests__/settingsRepository.test.ts` — returns the session user's single settings row<br>`e2e/settings.spec.ts` — saved settings persist and are read back on reload |
 | No settings yet | One settings row per user | `d2bb95258d9d` | `src/repository/__tests__/settingsRepository.test.ts` — returns null when the user has no settings row |
-| Seed on first sign-in | Default settings on account creation | `b791e916ef7f` | `src/actions/__tests__/settingsActions.test.ts` — seeds settings with a start-of-today begin date, zero balance and defaults |
-| Save settings | Update settings | `8d731f0674b8` | `src/repository/__tests__/settingsRepository.test.ts` — updates the user's row with the submitted values |
-| From after to is rejected | Default times must be well-formed and ordered | `5dd7b52433d9` | `src/actions/__tests__/settingsActions.test.ts` — rejects a default from-time after the to-time and changes nothing |
+| Seed on first sign-in | Default settings on account creation | `b791e916ef7f` | `src/actions/__tests__/settingsActions.test.ts` — seeds settings with a start-of-today begin date, zero balance and defaults<br>`e2e/settings.spec.ts` — the signed-in user already has settings to edit |
+| Save settings | Update settings | `8d731f0674b8` | `src/repository/__tests__/settingsRepository.test.ts` — updates the user's row with the submitted values<br>`e2e/settings.spec.ts` — saved settings persist and are read back on reload<br>`e2e/settings.spec.ts` — changing the expected day length moves the saldo |
+| From after to is rejected | Default times must be well-formed and ordered | `5dd7b52433d9` | `src/actions/__tests__/settingsActions.test.ts` — rejects a default from-time after the to-time and changes nothing<br>`e2e/settings.spec.ts` — inverted default times are refused and change nothing |
 | Stored times are validated on read | Default times must be well-formed and ordered | `6b37739569a4` | `src/repository/__tests__/settingsRepository.test.ts` — rejects a stored from-time that is not a time of day<br>`src/repository/__tests__/settingsRepository.test.ts` — rejects a stored to-time that is not in HH:MM form |
-| Inverted default times rejected | Settings updates are validated server-side | `1fdadf393bc2` | `src/actions/__tests__/settingsActions.test.ts` — rejects a default from-time after the to-time and changes nothing<br>`src/actions/__tests__/settingsActions.test.ts` — rejects equal default times and changes nothing |
+| Inverted default times rejected | Settings updates are validated server-side | `1fdadf393bc2` | `src/actions/__tests__/settingsActions.test.ts` — rejects a default from-time after the to-time and changes nothing<br>`src/actions/__tests__/settingsActions.test.ts` — rejects equal default times and changes nothing<br>`e2e/settings.spec.ts` — inverted default times are refused and change nothing |
 | Missing begin date rejected | Settings updates are validated server-side | `df703b5bdf47` | `src/actions/__tests__/settingsActions.test.ts` — rejects a missing begin date and changes nothing |
 | Out-of-range initial balance rejected | Settings updates are validated server-side | `7322868538e9` | `src/actions/__tests__/settingsActions.test.ts` — rejects initial-balance minutes above 59 and changes nothing<br>`src/actions/__tests__/settingsActions.test.ts` — rejects initial-balance hours beyond the allowed bound |
 | Out-of-range expected minutes per day rejected | Settings updates are validated server-side | `488f3fb8c313` | `src/actions/__tests__/settingsActions.test.ts` — rejects negative expected minutes per day and changes nothing<br>`src/actions/__tests__/settingsActions.test.ts` — rejects expected minutes per day beyond a full day |
-| Valid settings pass | Settings updates are validated server-side | `b54af2722af3` | `src/actions/__tests__/settingsActions.test.ts` — persists settings that satisfy every rule |
+| Valid settings pass | Settings updates are validated server-side | `b54af2722af3` | `src/actions/__tests__/settingsActions.test.ts` — persists settings that satisfy every rule<br>`e2e/settings.spec.ts` — saved settings persist and are read back on reload |
 
 ## spec-test-traceability
 

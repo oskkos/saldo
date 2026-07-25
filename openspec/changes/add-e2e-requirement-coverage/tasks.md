@@ -39,10 +39,10 @@
 
 ## 6. Settings and expected-hours end-to-end suites
 
-- [ ] 6.1 Cover saving settings and reading them back after a reload
-- [ ] 6.2 Cover a settings change moving the saldo, asserted as a relationship rather than an absolute figure
-- [ ] 6.3 Cover rejection of inverted default times surfacing in the UI, with the stored settings unchanged
-- [ ] 6.4 Cover creating an expected-hours override and its effect on the day's expectation, plus one override per date on re-save
+- [x] 6.1 Cover saving settings and reading them back after a reload
+- [x] 6.2 Cover a settings change moving the saldo, asserted as a relationship rather than an absolute figure
+- [x] 6.3 Cover rejection of inverted default times surfacing in the UI, with the stored settings unchanged
+- [ ] 6.4 (blocked) Cover creating an expected-hours override and its effect on the day's expectation, plus one override per date on re-save
 - [ ] 6.5 Annotate both suites and confirm `settings` (5) and `expected-hours` (2) report end-to-end coverage
 
 ## 7. Absence end-to-end suite
