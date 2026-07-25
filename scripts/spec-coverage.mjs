@@ -483,6 +483,92 @@ export function renderCoverageMap(
   return `${lines.join('\n')}\n`;
 }
 
+export const E2E_EXEMPTION_CATEGORIES = [
+  'no-ui',
+  'unit-appropriate',
+  'external-dependency',
+  'harness-cost',
+];
+
+/** Read the two-section exemptions file. */
+export function parseExemptionsFile(json) {
+  const parsed = JSON.parse(json);
+
+  if (Array.isArray(parsed)) {
+    throw new Error(
+      `${EXEMPTIONS_PATH} must be an object with "scenarios" and "requirementsWithoutE2e" keys, not a bare array.`,
+    );
+  }
+
+  return {
+    scenarios: parsed.scenarios ?? [],
+    requirementsWithoutE2e: parsed.requirementsWithoutE2e ?? [],
+  };
+}
+
+/**
+ * Expand end-to-end exemption entries into a requirement -> exemption map.
+ *
+ * `harness-cost` is the only category that asserts a judgement rather than a
+ * fact about the requirement, so it must name the test that does cover it and
+ * that file must exist — otherwise the claim is unfalsifiable.
+ */
+export function resolveE2eExemptions(
+  entries,
+  requirementIds,
+  e2eCoveredRequirementIds,
+  fileExists,
+) {
+  const known = new Set(requirementIds);
+  const covered = new Set(e2eCoveredRequirementIds);
+  const exemptions = new Map();
+
+  for (const entry of entries) {
+    const { requirement, category, reason, coveredAt } = entry;
+
+    if (!known.has(requirement)) {
+      throw new Error(
+        `End-to-end exemption names an unknown requirement: ${requirement}. Remove it or fix the name.`,
+      );
+    }
+    if (!E2E_EXEMPTION_CATEGORIES.includes(category)) {
+      throw new Error(
+        `End-to-end exemption for ${requirement} has an unrecognized category: ${category}. Use one of ${E2E_EXEMPTION_CATEGORIES.join(', ')}.`,
+      );
+    }
+    if (!reason || !reason.trim()) {
+      throw new Error(
+        `End-to-end exemption for ${requirement} has no stated reason.`,
+      );
+    }
+    if (category === 'harness-cost') {
+      if (!coveredAt) {
+        throw new Error(
+          `End-to-end exemption for ${requirement} is harness-cost, so it must name the test that does cover it in "coveredAt".`,
+        );
+      }
+      if (!fileExists(coveredAt)) {
+        throw new Error(
+          `End-to-end exemption for ${requirement} names a coveredAt file that does not exist: ${coveredAt}.`,
+        );
+      }
+    }
+    if (covered.has(requirement)) {
+      throw new Error(
+        `Requirement ${requirement} has end-to-end coverage. Remove its exemption.`,
+      );
+    }
+
+    exemptions.set(requirement, {
+      category,
+      reason: reason.trim(),
+      coveredAt,
+    });
+  }
+
+  return exemptions;
+}
+
 /**
  * Expand exemption entries into a scenario -> reason map.
  *
@@ -583,11 +669,17 @@ export function collectFromDisk(root) {
   );
 
   const exemptionsPath = path.join(root, EXEMPTIONS_PATH);
-  const exemptionEntries = fs.existsSync(exemptionsPath)
-    ? JSON.parse(fs.readFileSync(exemptionsPath, 'utf8'))
-    : [];
+  const exemptions = fs.existsSync(exemptionsPath)
+    ? parseExemptionsFile(fs.readFileSync(exemptionsPath, 'utf8'))
+    : { scenarios: [], requirementsWithoutE2e: [] };
 
-  return { scenarios, requirements, links, exemptionEntries };
+  return {
+    scenarios,
+    requirements,
+    links,
+    exemptionEntries: exemptions.scenarios,
+    e2eExemptionEntries: exemptions.requirementsWithoutE2e,
+  };
 }
 
 /**
@@ -606,6 +698,7 @@ export function main(argv, root) {
   let requirements;
   let links;
   let exemptions;
+  let e2eExemptions;
   try {
     const collected = collectFromDisk(root);
     scenarios = collected.scenarios;
@@ -631,6 +724,22 @@ export function main(argv, root) {
       [...known],
       links.map((link) => link.scenarioId),
     );
+
+    // Which requirements already have browser coverage, so an exemption for one
+    // of them can be rejected as superseded.
+    const e2eCovered = new Set(
+      links
+        .filter((link) => isE2eTest(link.file))
+        .map((link) => scenarios.find((s) => s.id === link.scenarioId))
+        .filter(Boolean)
+        .map((s) => `${s.capability}/${s.requirement}`),
+    );
+    e2eExemptions = resolveE2eExemptions(
+      collected.e2eExemptionEntries,
+      requirements.map((requirement) => requirement.id),
+      [...e2eCovered],
+      (file) => fs.existsSync(path.join(root, file)),
+    );
   } catch (error) {
     return { exitCode: 1, output: error.message };
   }
@@ -640,8 +749,7 @@ export function main(argv, root) {
     scenarios,
     links,
     scenarioExemptions: exemptions,
-    // Populated once end-to-end exemptions are declarable; report-only until then.
-    e2eExemptions: new Map(),
+    e2eExemptions,
   });
   const markdown = renderCoverageMap(
     scenarios,

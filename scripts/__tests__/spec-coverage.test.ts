@@ -8,9 +8,11 @@ import {
   analyzeRequirements,
   hashScenarioBody,
   main,
+  parseExemptionsFile,
   parseSpecRequirements,
   parseSpecScenarios,
   renderCoverageMap,
+  resolveE2eExemptions,
   resolveExemptions,
   scanTestAnnotations,
 } from '../spec-coverage.mjs';
@@ -437,7 +439,10 @@ describe('main', () => {
         '\n',
       ),
     );
-    write('scripts/spec-coverage.exemptions.json', '[]');
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({ scenarios: [], requirementsWithoutE2e: [] }),
+    );
   });
 
   afterEach(() => {
@@ -493,9 +498,10 @@ describe('main', () => {
   it('passes under --strict once the gap is exempt', () => {
     write(
       'scripts/spec-coverage.exemptions.json',
-      JSON.stringify([
-        { scenario: 'demo/Beta happens', reason: 'manual only' },
-      ]),
+      JSON.stringify({
+        scenarios: [{ scenario: 'demo/Beta happens', reason: 'manual only' }],
+        requirementsWithoutE2e: [],
+      }),
     );
 
     expect(main(['--strict'], root).exitCode).toBe(0);
@@ -822,5 +828,148 @@ describe('renderCoverageMap end-to-end section', () => {
     expect(renderCoverageMap(scenarios, links, new Map(), resolved)).toContain(
       'None — every requirement has end-to-end coverage or a stated exemption.',
     );
+  });
+});
+
+describe('parseExemptionsFile', () => {
+  it('reads the scenario and requirement sections', () => {
+    const parsed = parseExemptionsFile(
+      JSON.stringify({
+        scenarios: [{ scenario: 'demo/A', reason: 'why' }],
+        requirementsWithoutE2e: [
+          { requirement: 'demo/Rule', category: 'no-ui', reason: 'why' },
+        ],
+      }),
+    );
+
+    expect(parsed.scenarios).toHaveLength(1);
+    expect(parsed.requirementsWithoutE2e).toHaveLength(1);
+  });
+
+  it('defaults a missing section to empty', () => {
+    const parsed = parseExemptionsFile(JSON.stringify({ scenarios: [] }));
+
+    expect(parsed.requirementsWithoutE2e).toEqual([]);
+  });
+
+  it('rejects the old bare-array shape with a migration hint', () => {
+    expect(() => parseExemptionsFile('[]')).toThrow(/scenarios/i);
+  });
+});
+
+describe('resolveE2eExemptions', () => {
+  const requirementIds = ['demo/Journey', 'demo/Rule'];
+  const resolve = (
+    entries: Record<string, unknown>[],
+    covered: string[] = [],
+    existingFiles: string[] = ['src/x/__tests__/a.test.ts'],
+  ) =>
+    resolveE2eExemptions(entries, requirementIds, covered, (file: string) =>
+      existingFiles.includes(file),
+    );
+
+  it('resolves an entry to its category and reason', () => {
+    const result = resolve([
+      {
+        requirement: 'demo/Rule',
+        category: 'unit-appropriate',
+        reason: 'lower',
+      },
+    ]);
+
+    expect(result.get('demo/Rule')).toEqual({
+      category: 'unit-appropriate',
+      reason: 'lower',
+      coveredAt: undefined,
+    });
+  });
+
+  it('accepts every defined category', () => {
+    for (const category of [
+      'no-ui',
+      'unit-appropriate',
+      'external-dependency',
+    ]) {
+      expect(() =>
+        resolve([{ requirement: 'demo/Rule', category, reason: 'why' }]),
+      ).not.toThrow();
+    }
+  });
+
+  it('rejects a category outside the defined set', () => {
+    expect(() =>
+      resolve([
+        { requirement: 'demo/Rule', category: 'deferred', reason: 'later' },
+      ]),
+    ).toThrow(/category.*deferred/i);
+  });
+
+  it('rejects an entry with no reason', () => {
+    expect(() =>
+      resolve([{ requirement: 'demo/Rule', category: 'no-ui', reason: '  ' }]),
+    ).toThrow(/reason/i);
+  });
+
+  it('requires a covering test for a harness-cost exemption', () => {
+    expect(() =>
+      resolve([
+        {
+          requirement: 'demo/Rule',
+          category: 'harness-cost',
+          reason: 'too costly',
+        },
+      ]),
+    ).toThrow(/coveredAt/i);
+  });
+
+  it('rejects a harness-cost pointer to a file that does not exist', () => {
+    expect(() =>
+      resolve([
+        {
+          requirement: 'demo/Rule',
+          category: 'harness-cost',
+          reason: 'too costly',
+          coveredAt: 'src/x/__tests__/gone.test.ts',
+        },
+      ]),
+    ).toThrow(/gone\.test\.ts/);
+  });
+
+  it('accepts a harness-cost exemption naming a real file', () => {
+    const result = resolve([
+      {
+        requirement: 'demo/Rule',
+        category: 'harness-cost',
+        reason: 'too costly',
+        coveredAt: 'src/x/__tests__/a.test.ts',
+      },
+    ]);
+
+    expect(result.get('demo/Rule')?.coveredAt).toBe(
+      'src/x/__tests__/a.test.ts',
+    );
+  });
+
+  it('does not require a pointer for other categories', () => {
+    expect(() =>
+      resolve([{ requirement: 'demo/Rule', category: 'no-ui', reason: 'why' }]),
+    ).not.toThrow();
+  });
+
+  it('rejects an entry naming a requirement that does not exist', () => {
+    expect(() =>
+      resolve([
+        { requirement: 'demo/Renamed', category: 'no-ui', reason: 'why' },
+      ]),
+    ).toThrow(/unknown requirement.*demo\/Renamed/i);
+  });
+
+  it('rejects an entry for a requirement that already has e2e coverage', () => {
+    expect(() =>
+      resolve(
+        [{ requirement: 'demo/Journey', category: 'no-ui', reason: 'why' }],
+        ['demo/Journey'],
+      ),
+    ).toThrow(/demo\/Journey.*end-to-end.*remove/i);
   });
 });
