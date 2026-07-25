@@ -34,6 +34,25 @@ npm run lint:fix     # eslint --fix + prettier --write
   It boots the app on port **3100** against `saldo_test` (never the dev DB), applies migrations, and seeds a test user. See `e2e/README.md` for the harness and scenario→spec traceability.
 - Husky pre-commit runs `lint-staged`; commit-msg enforces Conventional Commits (commitlint). Keep commits conventional or they will be rejected.
 
+### Spec-to-test traceability
+
+Every scenario in `openspec/specs/` must be covered by a test or explicitly exempt — CI enforces it.
+
+```bash
+npm run spec:coverage      # regenerate openspec/COVERAGE.md (commit the result)
+npm run spec:coverage:ci   # what CI runs: --check --strict, writes nothing
+```
+
+- **Declare coverage next to the test**, in either layer (Jest or Playwright):
+  ```ts
+  // @scenario time-clock/Clock in when idle
+  it('records the session start', () => { ... })
+  ```
+  Stack the comments to claim several scenarios; on a `describe` / `test.describe` the claim applies to every test inside. Many-to-many is fine — one test may cover several scenarios, and several tests may jointly cover one.
+- **A test may claim a scenario only if it asserts that scenario's THEN.** No tool can catch an over-claim; this is a review check. If a scenario's THEN spans layers (e.g. "throws a validation error **and** nothing is written"), a schema-level test alone does not cover it — assert the persistence half at the action level too, or let two tests jointly cover it.
+- **Regenerate and commit `openspec/COVERAGE.md`** whenever annotations or specs change; CI fails on a stale map. Renaming a scenario deliberately breaks the annotations citing it — that is the signal to re-read those tests.
+- **Cannot be automated?** Add an entry to `scripts/spec-coverage.exemptions.json` with a written reason (a `<capability>/*` wildcard is allowed). Exemptions are self-policing: one naming an unknown scenario fails, and so does one for a scenario a test already covers.
+
 ## Local setup (Docker Compose)
 
 ```bash

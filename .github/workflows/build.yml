@@ -27,6 +27,8 @@ jobs:
         run: npm run lint:ci
       - name: Run prettier
         run: npm run prettier:ci
+      - name: Check spec-to-test coverage
+        run: npm run spec:coverage:ci
       - name: Run tests
         run: npm run test:ci
       - name: Upload coverage reports to Codecov
