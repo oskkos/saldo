@@ -24,10 +24,10 @@
 
 ## 4. End-to-end harness
 
-- [ ] 4.1 Add `db.ts` helpers to seed and clear worklogs for the test user, including absences and lunch-break flags
-- [ ] 4.2 Add `db.ts` helpers to set and reset settings (begin date, initial balance, default times, expected minutes) and expected-hours overrides
-- [ ] 4.3 Add a per-test reset that clears worklogs, overrides and settings back to a known baseline, in the shape `resetClockState` already establishes
-- [ ] 4.4 Confirm the existing 9 time-clock tests still pass against the new reset
+- [x] 4.1 Add `db.ts` helpers to seed and clear worklogs for the test user, including absences and lunch-break flags
+- [x] 4.2 Add `db.ts` helpers to set and reset settings (begin date, initial balance, default times, expected minutes) and expected-hours overrides
+- [x] 4.3 Add a per-test reset that clears worklogs, overrides and settings back to a known baseline, in the shape `resetClockState` already establishes
+- [x] 4.4 Confirm the existing 9 time-clock tests still pass against the new reset
 
 ## 5. Worklog end-to-end suite
 
