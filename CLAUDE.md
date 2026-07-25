@@ -17,11 +17,21 @@ npm run dev          # next dev (port 3000)
 npm run build        # next build (outputs to build/ unless on Vercel)
 npm test             # jest in WATCH mode — does not exit
 npm run test:ci      # jest --ci --coverage — use this for a single run
+npm run test:e2e     # playwright (time-clock e2e; see one-time setup below)
+npm run test:e2e:ui  # playwright --ui (watch/debug)
 npm run lint         # eslint (max-warnings=0) + prettier --check
 npm run lint:fix     # eslint --fix + prettier --write
 ```
 
+- **Two test layers.** Jest (`src/**/__tests__`, jsdom) for unit/logic and server-layer code with Prisma/session mocked; Playwright (`e2e/`) for browser end-to-end. `test:ci` runs Jest only — `e2e/` is excluded from it.
 - **Run a single test:** `npx jest src/services/__tests__/someFile.test.ts` (add `-t "name"` to filter by test name). `npm test` defaults to watch mode and will not terminate.
+- **Running e2e** needs a one-time setup, then `npm run test:e2e`:
+  ```bash
+  docker compose up -d db
+  docker compose exec -T db psql -U postgres -c "CREATE DATABASE saldo_test"  # once
+  cp .env.e2e.example .env.e2e                                                # once
+  ```
+  It boots the app on port **3100** against `saldo_test` (never the dev DB), applies migrations, and seeds a test user. See `e2e/README.md` for the harness and scenario→spec traceability.
 - Husky pre-commit runs `lint-staged`; commit-msg enforces Conventional Commits (commitlint). Keep commits conventional or they will be rejected.
 
 ## Local setup (Docker Compose)
