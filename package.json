@@ -14,7 +14,9 @@
     "test": "jest --watch",
     "lint:ci": "eslint --max-warnings=0 .",
     "prettier:ci": "prettier --check .",
-    "test:ci": "jest --ci --coverage"
+    "test:ci": "jest --ci --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@hookform/resolvers": "5.2.2",
@@ -48,6 +50,7 @@
   "devDependencies": {
     "@commitlint/cli": "^20.3.0",
     "@commitlint/config-conventional": "^20.3.0",
+    "@playwright/test": "^1.62.0",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.1",
     "@testing-library/user-event": "14.6.1",

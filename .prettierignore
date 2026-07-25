@@ -10,3 +10,8 @@ docs
 prisma/migrations
 *Dockerfile
 docker-compose*
+playwright-report
+test-results
+blob-report
+e2e/.auth
+.env*
