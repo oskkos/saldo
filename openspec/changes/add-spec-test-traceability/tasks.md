@@ -22,9 +22,9 @@
 
 ## 3. Exemptions
 
-- [ ] 3.1 Add the `user-guide-generation/*` wildcard exemption (Claude skill workflow; no app code path)
-- [ ] 3.2 Review the gap list from 1.12 and add per-scenario exemptions with written reasons for the remaining scenarios that no automated test can assert
-- [ ] 3.3 Regenerate the map and confirm every exemption resolves to a real, unannotated scenario
+- [x] 3.1 Add the `user-guide-generation/*` wildcard exemption (Claude skill workflow; no app code path)
+- [x] 3.2 Review the gap list from 1.12 and add per-scenario exemptions with written reasons for the remaining scenarios that no automated test can assert
+- [x] 3.3 Regenerate the map and confirm every exemption resolves to a real, unannotated scenario
 
 ## 4. Close worklog and saldo gaps
 
