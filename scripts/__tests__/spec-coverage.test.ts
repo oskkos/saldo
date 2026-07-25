@@ -1,0 +1,499 @@
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
+
+import {
+  hashScenarioBody,
+  main,
+  parseSpecScenarios,
+  renderCoverageMap,
+  resolveExemptions,
+  scanTestAnnotations,
+} from '../spec-coverage.mjs';
+
+const SPEC = `# demo Specification
+
+## Purpose
+Something.
+
+## Requirements
+
+### Requirement: First requirement
+
+Some requirement prose.
+
+#### Scenario: Alpha happens
+
+- **WHEN** a thing occurs
+- **THEN** another thing follows
+
+### Requirement: Second requirement
+
+More prose.
+
+#### Scenario: Beta happens
+
+- **WHEN** something else occurs
+- **THEN** a different thing follows
+`;
+
+describe('parseSpecScenarios', () => {
+  it('identifies each scenario as capability/title', () => {
+    const scenarios = parseSpecScenarios('demo', SPEC);
+
+    expect(scenarios.map((s) => s.id)).toEqual([
+      'demo/Alpha happens',
+      'demo/Beta happens',
+    ]);
+  });
+
+  it('captures the scenario body without the requirement prose', () => {
+    const [alpha] = parseSpecScenarios('demo', SPEC);
+
+    expect(alpha.body).toContain('a thing occurs');
+    expect(alpha.body).not.toContain('Some requirement prose');
+  });
+
+  it('records the parent requirement without putting it in the id', () => {
+    const [, beta] = parseSpecScenarios('demo', SPEC);
+
+    expect(beta.requirement).toBe('Second requirement');
+    expect(beta.id).toBe('demo/Beta happens');
+  });
+
+  it('gives a scenario the same id after it moves to another requirement', () => {
+    const moved = SPEC.replace(
+      '### Requirement: Second requirement\n\nMore prose.\n\n',
+      '',
+    );
+
+    const ids = parseSpecScenarios('demo', moved).map((s) => s.id);
+
+    expect(ids).toEqual(['demo/Alpha happens', 'demo/Beta happens']);
+  });
+
+  it('rejects two scenarios sharing a title in one capability', () => {
+    const duplicated = SPEC.replace('Beta happens', 'Alpha happens');
+
+    expect(() => parseSpecScenarios('demo', duplicated)).toThrow(
+      /duplicate scenario title.*demo\/Alpha happens/i,
+    );
+  });
+});
+
+describe('hashScenarioBody', () => {
+  it('renders 12 lowercase hex characters', () => {
+    expect(hashScenarioBody('- **WHEN** a thing\n- **THEN** another')).toMatch(
+      /^[0-9a-f]{12}$/,
+    );
+  });
+
+  it('is stable when the body is reindented', () => {
+    const original = '- **WHEN** a thing occurs\n- **THEN** another follows';
+    const reindented =
+      '  - **WHEN** a thing occurs\n    - **THEN** another follows';
+
+    expect(hashScenarioBody(reindented)).toBe(hashScenarioBody(original));
+  });
+
+  it('is stable when the body is rewrapped across lines', () => {
+    const oneLine =
+      '- **THEN** the scenario is recorded as covered by that test';
+    const wrapped =
+      '- **THEN** the scenario is recorded\n  as covered by that test';
+
+    expect(hashScenarioBody(wrapped)).toBe(hashScenarioBody(oneLine));
+  });
+
+  it('changes when the wording changes', () => {
+    expect(hashScenarioBody('- **THEN** it is covered')).not.toBe(
+      hashScenarioBody('- **THEN** it is exempt'),
+    );
+  });
+});
+
+describe('scenario hashing over a whole spec', () => {
+  it('leaves scenario hashes untouched when only requirement prose changes', () => {
+    const before = parseSpecScenarios('demo', SPEC);
+    const after = parseSpecScenarios(
+      'demo',
+      SPEC.replace('Some requirement prose.', 'Completely rewritten prose.'),
+    );
+
+    expect(after.map((s) => hashScenarioBody(s.body))).toEqual(
+      before.map((s) => hashScenarioBody(s.body)),
+    );
+  });
+
+  it('changes one scenario hash when that scenario is reworded', () => {
+    const before = parseSpecScenarios('demo', SPEC);
+    const after = parseSpecScenarios(
+      'demo',
+      SPEC.replace('a thing occurs', 'a different thing occurs'),
+    );
+
+    expect(hashScenarioBody(after[0].body)).not.toBe(
+      hashScenarioBody(before[0].body),
+    );
+    expect(hashScenarioBody(after[1].body)).toBe(
+      hashScenarioBody(before[1].body),
+    );
+  });
+});
+
+describe('scanTestAnnotations', () => {
+  it('links an annotated test to its scenario', () => {
+    const source = [
+      '// @scenario time-clock/Clock in when idle',
+      "it('records the session start', () => {});",
+    ].join('\n');
+
+    expect(scanTestAnnotations('e2e/demo.spec.ts', source)).toEqual([
+      {
+        scenarioId: 'time-clock/Clock in when idle',
+        file: 'e2e/demo.spec.ts',
+        line: 2,
+        annotationLine: 1,
+        testTitle: 'records the session start',
+      },
+    ]);
+  });
+
+  it('links every scenario in a stack of annotations to the same test', () => {
+    const source = [
+      '// @scenario demo/Alpha happens',
+      '// @scenario demo/Beta happens',
+      "it('covers both', () => {});",
+    ].join('\n');
+
+    const links = scanTestAnnotations('src/x/__tests__/a.test.ts', source);
+
+    expect(links.map((l) => l.scenarioId)).toEqual([
+      'demo/Alpha happens',
+      'demo/Beta happens',
+    ]);
+    expect(links.every((l) => l.testTitle === 'covers both')).toBe(true);
+  });
+
+  it('applies a describe annotation to every test inside the block', () => {
+    const source = [
+      '// @scenario demo/Alpha happens',
+      "describe('a suite', () => {",
+      "  it('first test', () => {});",
+      "  it('second test', () => {});",
+      '});',
+      "it('outside test', () => {});",
+    ].join('\n');
+
+    const links = scanTestAnnotations('src/x/__tests__/a.test.ts', source);
+
+    expect(links.map((l) => l.testTitle)).toEqual([
+      'first test',
+      'second test',
+    ]);
+  });
+
+  it('applies a test.describe annotation to every test inside the block', () => {
+    const source = [
+      '// @scenario demo/Alpha happens',
+      "test.describe('a suite', () => {",
+      "  test('inner test', async () => {});",
+      '});',
+    ].join('\n');
+
+    const links = scanTestAnnotations('e2e/demo.spec.ts', source);
+
+    expect(links.map((l) => l.testTitle)).toEqual(['inner test']);
+  });
+
+  it('recognises a test declared with a modifier', () => {
+    const source = [
+      '// @scenario demo/Alpha happens',
+      "it.each([1, 2])('handles %s', () => {});",
+    ].join('\n');
+
+    expect(scanTestAnnotations('src/x/__tests__/a.test.ts', source)).toEqual([
+      expect.objectContaining({ testTitle: 'handles %s' }),
+    ]);
+  });
+
+  it('reports file and line for an annotation attached to nothing', () => {
+    const source = [
+      "it('an unrelated test', () => {});",
+      '',
+      '// @scenario demo/Alpha happens',
+    ].join('\n');
+
+    expect(() =>
+      scanTestAnnotations('src/x/__tests__/a.test.ts', source),
+    ).toThrow(/src\/x\/__tests__\/a\.test\.ts:3.*not attached to a test/i);
+  });
+
+  it('reports file and line when an annotation precedes ordinary code', () => {
+    const source = [
+      '// @scenario demo/Alpha happens',
+      'const helper = 1;',
+      "it('a test', () => {});",
+    ].join('\n');
+
+    expect(() =>
+      scanTestAnnotations('src/x/__tests__/a.test.ts', source),
+    ).toThrow(/src\/x\/__tests__\/a\.test\.ts:1.*not attached to a test/i);
+  });
+
+  it('reports file and line for a non-literal test title', () => {
+    const source = [
+      '// @scenario demo/Alpha happens',
+      'it(`handles ${value}`, () => {});',
+    ].join('\n');
+
+    expect(() =>
+      scanTestAnnotations('src/x/__tests__/a.test.ts', source),
+    ).toThrow(/src\/x\/__tests__\/a\.test\.ts:2.*not a plain string literal/i);
+  });
+
+  it('ignores tests that carry no annotation', () => {
+    const source = "it('unannotated', () => {});";
+
+    expect(scanTestAnnotations('src/x/__tests__/a.test.ts', source)).toEqual(
+      [],
+    );
+  });
+});
+
+describe('resolveExemptions', () => {
+  const scenarioIds = [
+    'demo/Alpha happens',
+    'demo/Beta happens',
+    'other/Gamma happens',
+  ];
+
+  it('resolves a scenario entry to its reason', () => {
+    const entries = [
+      { scenario: 'demo/Alpha happens', reason: 'not automatable' },
+    ];
+
+    expect(resolveExemptions(entries, scenarioIds, [])).toEqual(
+      new Map([['demo/Alpha happens', 'not automatable']]),
+    );
+  });
+
+  it('expands a capability wildcard to every scenario in it', () => {
+    const entries = [{ scenario: 'demo/*', reason: 'skill workflow' }];
+
+    expect([...resolveExemptions(entries, scenarioIds, []).keys()]).toEqual([
+      'demo/Alpha happens',
+      'demo/Beta happens',
+    ]);
+  });
+
+  it('rejects an entry naming a scenario that does not exist', () => {
+    const entries = [{ scenario: 'demo/Deleted scenario', reason: 'stale' }];
+
+    expect(() => resolveExemptions(entries, scenarioIds, [])).toThrow(
+      /unknown scenario.*demo\/Deleted scenario/i,
+    );
+  });
+
+  it('rejects a wildcard naming a capability that does not exist', () => {
+    const entries = [{ scenario: 'ghost/*', reason: 'stale' }];
+
+    expect(() => resolveExemptions(entries, scenarioIds, [])).toThrow(
+      /unknown scenario.*ghost\/\*/i,
+    );
+  });
+
+  it('rejects an entry for a scenario a test already covers', () => {
+    const entries = [
+      { scenario: 'demo/Alpha happens', reason: 'not automatable' },
+    ];
+
+    expect(() =>
+      resolveExemptions(entries, scenarioIds, ['demo/Alpha happens']),
+    ).toThrow(/demo\/Alpha happens.*covered by a test.*remove/i);
+  });
+
+  it('rejects an entry with no stated reason', () => {
+    const entries = [{ scenario: 'demo/Alpha happens', reason: '  ' }];
+
+    expect(() => resolveExemptions(entries, scenarioIds, [])).toThrow(
+      /reason/i,
+    );
+  });
+});
+
+describe('renderCoverageMap', () => {
+  const scenarios = [
+    {
+      id: 'demo/Alpha happens',
+      capability: 'demo',
+      title: 'Alpha happens',
+      requirement: 'First requirement',
+      body: '- **THEN** alpha',
+    },
+    {
+      id: 'demo/Beta happens',
+      capability: 'demo',
+      title: 'Beta happens',
+      requirement: 'First requirement',
+      body: '- **THEN** beta',
+    },
+    {
+      id: 'other/Gamma happens',
+      capability: 'other',
+      title: 'Gamma happens',
+      requirement: 'Another requirement',
+      body: '- **THEN** gamma',
+    },
+  ];
+  const links = [
+    {
+      scenarioId: 'demo/Alpha happens',
+      file: 'src/x/__tests__/a.test.ts',
+      line: 4,
+      testTitle: 'does the thing',
+    },
+  ];
+  const exemptions = new Map([['demo/Beta happens', 'not automatable']]);
+
+  const render = () => renderCoverageMap(scenarios, links, exemptions);
+
+  it('counts covered, exempt and uncovered per capability', () => {
+    expect(render()).toContain('| demo | 2 | 1 | 1 | 0 |');
+    expect(render()).toContain('| other | 1 | 0 | 0 | 1 |');
+  });
+
+  it('lists the tests covering a scenario with its hash', () => {
+    const markdown = render();
+
+    expect(markdown).toContain(hashScenarioBody('- **THEN** alpha'));
+    expect(markdown).toContain('src/x/__tests__/a.test.ts');
+    expect(markdown).toContain('does the thing');
+  });
+
+  it('shows an exempt scenario with its reason', () => {
+    expect(render()).toMatch(/Beta happens.*not automatable/);
+  });
+
+  it('lists scenarios that have neither a test nor an exemption', () => {
+    const markdown = render();
+    const uncovered = markdown.slice(markdown.indexOf('## Uncovered'));
+
+    expect(uncovered).toContain('other/Gamma happens');
+    expect(uncovered).not.toContain('demo/Alpha happens');
+  });
+
+  it('names the regeneration command so the file is not hand-edited', () => {
+    expect(render()).toContain('npm run spec:coverage');
+  });
+});
+
+describe('main', () => {
+  let root: string;
+
+  const write = (relative: string, content: string) => {
+    const target = path.join(root, relative);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, content);
+  };
+
+  const mapPath = () => path.join(root, 'openspec/COVERAGE.md');
+
+  beforeEach(() => {
+    root = fs.mkdtempSync(path.join(os.tmpdir(), 'spec-coverage-'));
+    write('openspec/specs/demo/spec.md', SPEC);
+    write(
+      'src/x/__tests__/a.test.ts',
+      ['// @scenario demo/Alpha happens', "it('covers alpha', () => {});"].join(
+        '\n',
+      ),
+    );
+    write('scripts/spec-coverage.exemptions.json', '[]');
+  });
+
+  afterEach(() => {
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('writes the coverage map in generate mode', () => {
+    const result = main([], root);
+
+    expect(result.exitCode).toBe(0);
+    expect(fs.readFileSync(mapPath(), 'utf8')).toContain('demo/Beta happens');
+  });
+
+  it('writes nothing in check mode', () => {
+    const result = main(['--check'], root);
+
+    expect(fs.existsSync(mapPath())).toBe(false);
+    expect(result.exitCode).toBe(1);
+  });
+
+  it('fails the check when the committed map is stale', () => {
+    main([], root);
+    fs.writeFileSync(mapPath(), '# Scenario coverage\n\nstale\n');
+
+    const result = main(['--check'], root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('npm run spec:coverage');
+  });
+
+  it('passes the check when the committed map is current', () => {
+    main([], root);
+
+    expect(main(['--check'], root).exitCode).toBe(0);
+  });
+
+  it('fails under --strict when a scenario has no test and no exemption', () => {
+    const result = main(['--strict'], root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toContain('demo/Beta happens');
+  });
+
+  it('does not fail on an uncovered scenario without --strict', () => {
+    expect(main([], root).exitCode).toBe(0);
+  });
+
+  it('passes under --strict once the gap is exempt', () => {
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify([
+        { scenario: 'demo/Beta happens', reason: 'manual only' },
+      ]),
+    );
+
+    expect(main(['--strict'], root).exitCode).toBe(0);
+  });
+
+  it('fails on an annotation citing a scenario that does not exist', () => {
+    write(
+      'src/x/__tests__/a.test.ts',
+      [
+        '// @scenario demo/Renamed away',
+        "it('covers nothing', () => {});",
+      ].join('\n'),
+    );
+
+    const result = main([], root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toMatch(
+      /src\/x\/__tests__\/a\.test\.ts:1.*demo\/Renamed away/,
+    );
+  });
+
+  it('scans the playwright layer as well as the jest layer', () => {
+    write(
+      'e2e/demo.spec.ts',
+      ['// @scenario demo/Beta happens', "test('covers beta', () => {});"].join(
+        '\n',
+      ),
+    );
+
+    expect(main(['--strict'], root).exitCode).toBe(0);
+  });
+});

@@ -1,17 +1,17 @@
 ## 1. Coverage tool
 
-- [ ] 1.1 Add `scripts/spec-coverage.mjs` skeleton (plain ESM, `node:fs`/`node:path`/`node:crypto` only) with `--check` and `--strict` flag parsing, and confirm eslint accepts a `.mjs` Node script under the existing flat config (add an override only if it does not)
-- [ ] 1.2 Write failing Jest tests for the spec parser: scenario extraction as `<capability>/<title>`, requirement-independent IDs, duplicate-title-in-capability rejection
-- [ ] 1.3 Implement the spec parser over `openspec/specs/*/spec.md` to satisfy 1.2
-- [ ] 1.4 Write failing Jest tests for the content hash: 12-hex SHA-256 over the WHEN/THEN body, stable under whitespace-only edits, unchanged when only requirement prose changes
-- [ ] 1.5 Implement scenario hashing to satisfy 1.4
-- [ ] 1.6 Write failing Jest tests for the annotation scanner: single/stacked annotations, `describe`/`test.describe` inheritance, and hard errors with `file:line` for unattached annotations and non-literal test titles
-- [ ] 1.7 Implement the line-based annotation scanner over `src/**/__tests__/**` and `e2e/**` to satisfy 1.6
-- [ ] 1.8 Write failing Jest tests for exemption handling: wildcard expansion, unknown-scenario error, exempt-and-annotated error
-- [ ] 1.9 Implement exemption loading from `scripts/spec-coverage.exemptions.json` (created empty) to satisfy 1.8
-- [ ] 1.10 Write failing Jest tests for the map renderer and check mode: per-capability counts, covered rows with hash and test refs, uncovered list, exempt rows with reasons, `--check` writes nothing, stale map exits non-zero naming the regenerate command
-- [ ] 1.11 Implement map rendering to `openspec/COVERAGE.md` plus check mode to satisfy 1.10
-- [ ] 1.12 Add `spec:coverage` and `spec:coverage:ci` npm scripts; run the tool to produce the first map and record the authoritative gap list (do not wire CI yet)
+- [x] 1.1 Add `scripts/spec-coverage.mjs` skeleton (plain ESM, `node:fs`/`node:path`/`node:crypto` only) with `--check` and `--strict` flag parsing, and confirm eslint accepts a `.mjs` Node script under the existing flat config (add an override only if it does not)
+- [x] 1.2 Write failing Jest tests for the spec parser: scenario extraction as `<capability>/<title>`, requirement-independent IDs, duplicate-title-in-capability rejection
+- [x] 1.3 Implement the spec parser over `openspec/specs/*/spec.md` to satisfy 1.2
+- [x] 1.4 Write failing Jest tests for the content hash: 12-hex SHA-256 over the WHEN/THEN body, stable under whitespace-only edits, unchanged when only requirement prose changes
+- [x] 1.5 Implement scenario hashing to satisfy 1.4
+- [x] 1.6 Write failing Jest tests for the annotation scanner: single/stacked annotations, `describe`/`test.describe` inheritance, and hard errors with `file:line` for unattached annotations and non-literal test titles
+- [x] 1.7 Implement the line-based annotation scanner over `src/**/__tests__/**` and `e2e/**` to satisfy 1.6
+- [x] 1.8 Write failing Jest tests for exemption handling: wildcard expansion, unknown-scenario error, exempt-and-annotated error
+- [x] 1.9 Implement exemption loading from `scripts/spec-coverage.exemptions.json` (created empty) to satisfy 1.8
+- [x] 1.10 Write failing Jest tests for the map renderer and check mode: per-capability counts, covered rows with hash and test refs, uncovered list, exempt rows with reasons, `--check` writes nothing, stale map exits non-zero naming the regenerate command
+- [x] 1.11 Implement map rendering to `openspec/COVERAGE.md` plus check mode to satisfy 1.10
+- [x] 1.12 Add `spec:coverage` and `spec:coverage:ci` npm scripts; run the tool to produce the first map and record the authoritative gap list (do not wire CI yet)
 
 ## 2. Annotate existing tests
 
