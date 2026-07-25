@@ -34,10 +34,10 @@
 
 ## 5. Close settings, expected-hours and absence gaps
 
-- [ ] 5.1 Write the missing tests for uncovered `settings` scenarios and annotate them
-- [ ] 5.2 Write the missing tests for uncovered `expected-hours` scenarios and annotate them
-- [ ] 5.3 Write the missing tests for uncovered `absence` scenarios and annotate them
-- [ ] 5.4 Regenerate the map and confirm all three capabilities report zero uncovered scenarios
+- [x] 5.1 Write the missing tests for uncovered `settings` scenarios and annotate them
+- [x] 5.2 Write the missing tests for uncovered `expected-hours` scenarios and annotate them
+- [x] 5.3 Write the missing tests for uncovered `absence` scenarios and annotate them
+- [x] 5.4 Regenerate the map and confirm all three capabilities report zero uncovered scenarios
 
 ## 6. Close auth, statistics and data-load-performance gaps
 
