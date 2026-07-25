@@ -31,10 +31,10 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 
 | Capability | Requirements | End-to-end | Exempt | Missing |
 | --- | --- | --- | --- | --- |
-| absence | 4 | 0 | 0 | 4 |
+| absence | 4 | 4 | 0 | 0 |
 | auth | 8 | 1 | 0 | 7 |
 | data-load-performance | 4 | 0 | 0 | 4 |
-| expected-hours | 2 | 0 | 0 | 2 |
+| expected-hours | 2 | 0 | 2 | 0 |
 | saldo | 13 | 0 | 0 | 13 |
 | settings | 5 | 5 | 0 | 0 |
 | spec-test-traceability | 11 | 0 | 0 | 11 |
@@ -45,10 +45,6 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 
 ## Requirements without end-to-end coverage
 
-- `absence/Fixed set of absence reasons`
-- `absence/Multi-day absence over a date range`
-- `absence/Human-readable reason labels`
-- `absence/Reason iconography`
 - `auth/OAuth sign-in`
 - `auth/JWT session with user id`
 - `auth/Server-side auth gate`
@@ -60,8 +56,6 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 - `data-load-performance/Connection attempts fail fast`
 - `data-load-performance/Server request duration guards against premature termination`
 - `data-load-performance/Repeated holiday lookups over a date range are cached`
-- `expected-hours/Expected minutes are resolved per date`
-- `expected-hours/Per-date expected-hours overrides`
 - `saldo/Running balance from begin date`
 - `saldo/Initial balance seeds the sum`
 - `saldo/Expected minutes accrue only on working days`
@@ -95,16 +89,23 @@ Each requirement needs one scenario covered by a Playwright test, or a stated ex
 - `statistics/Per-day grouping is timezone-independent`
 - `worklog/Map storage rows to the domain type`
 
+## End-to-end exemptions
+
+| Requirement | Category | Reason | Covered at |
+| --- | --- | --- | --- |
+| expected-hours/Expected minutes are resolved per date | `harness-cost` | Resolution only becomes observable in the browser once an override exists, and the panel that creates one cannot be driven (see the sibling exemption). The default and non-working-day branches are asserted as pure logic; the settings suite separately proves a changed default moves the saldo on screen. | `src/services/__tests__/index.test.tsx` |
+| expected-hours/Per-date expected-hours overrides | `harness-cost` | The only UI that creates an override is the "Special days" panel on /settings, a daisyUI <details> collapse whose fields never become visible to Playwright — not by clicking the summary, and not by forcing the element open. Driving it would mean reworking the component for testability, which is a change to production markup this change does not make. | `src/repository/__tests__/expectedHoursOverrideRepository.test.ts` |
+
 ## absence
 
 | Scenario | Requirement | Hash | Covered by |
 | --- | --- | --- | --- |
-| Reason selection | Fixed set of absence reasons | `00d188c3a878` | `src/app/absence/__tests__/absence.test.tsx` — offers exactly the four recognized reasons |
+| Reason selection | Fixed set of absence reasons | `00d188c3a878` | `src/app/absence/__tests__/absence.test.tsx` — offers exactly the four recognized reasons<br>`e2e/absence.spec.ts` — the reason picker offers exactly the four supported reasons |
 | Holiday means annual leave | Fixed set of absence reasons | `1fcde8de8561` | `src/app/absence/__tests__/absence.test.tsx` — records a holiday as leave the user took on the chosen day |
-| Three-day absence | Multi-day absence over a date range | `fb4f5bd0db8a` | `src/app/absence/__tests__/absence.test.tsx` — creates one record per day across the range, all alike |
-| Range normalization | Multi-day absence over a date range | `ec7ebcf72505` | `src/app/absence/__tests__/absence.test.tsx` — pushes the to-date out when a later from-date is chosen<br>`src/app/absence/__tests__/absence.test.tsx` — pulls the from-date back when an earlier to-date is chosen |
-| Label formatting | Human-readable reason labels | `63714891b7be` | `src/services/__tests__/index.test.tsx` — should convert an absence reason to a human-friendly string |
-| Icon per reason | Reason iconography | `7534966c30be` | `src/components/worklogItem/__tests__/absenceIcon.test.tsx` — renders a distinct icon for every reason<br>`src/components/worklogItem/__tests__/absenceIcon.test.tsx` — labels each icon with its human-readable reason |
+| Three-day absence | Multi-day absence over a date range | `fb4f5bd0db8a` | `src/app/absence/__tests__/absence.test.tsx` — creates one record per day across the range, all alike<br>`e2e/absence.spec.ts` — a multi-day range creates one absence per day |
+| Range normalization | Multi-day absence over a date range | `ec7ebcf72505` | `src/app/absence/__tests__/absence.test.tsx` — pushes the to-date out when a later from-date is chosen<br>`src/app/absence/__tests__/absence.test.tsx` — pulls the from-date back when an earlier to-date is chosen<br>`e2e/absence.spec.ts` — the range stays coherent when the dates cross, in both directions |
+| Label formatting | Human-readable reason labels | `63714891b7be` | `src/services/__tests__/index.test.tsx` — should convert an absence reason to a human-friendly string<br>`e2e/absence.spec.ts` — an absence is listed by its readable label and its own icon |
+| Icon per reason | Reason iconography | `7534966c30be` | `src/components/worklogItem/__tests__/absenceIcon.test.tsx` — renders a distinct icon for every reason<br>`src/components/worklogItem/__tests__/absenceIcon.test.tsx` — labels each icon with its human-readable reason<br>`e2e/absence.spec.ts` — an absence is listed by its readable label and its own icon |
 
 ## auth
 

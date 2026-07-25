@@ -9,51 +9,18 @@ import {
   utcDay,
   utcTimeOn,
 } from './db';
-
-// Assertions here are deliberately date-agnostic: page.clock controls only the
-// browser, while the begin-date window and future-entry exclusion are decided
-// on the server against the real clock. So worklogs are seeded relative to
-// today and the saldo is asserted as a change, never as an absolute figure.
+import { dialogButton, expandMonths, saldoMinutes, visible } from './ui';
 
 const isoDay = (offsetDays = 0) =>
   utcDay(offsetDays).toISOString().slice(0, 10);
 
-/** The saldo badge as signed minutes, e.g. "-0h 45min" -> -45. */
-async function saldoMinutes(page: Page): Promise<number> {
-  const text = await page.locator('.badge-lg').first().innerText();
-  const match = /(-?)(\d+)h\s*(\d+)min/.exec(text);
-  if (!match) throw new Error(`Unrecognized saldo badge text: "${text}"`);
-  const magnitude = Number(match[2]) * 60 + Number(match[3]);
-  return match[1] === '-' ? -magnitude : magnitude;
-}
-
 const entryPage = (page: Page, offsetDays = 0) =>
   page.goto(`/worklog-entry?day=${isoDay(offsetDays)}`);
-
-// Both the inline form and the quick-add/edit dialogs render the same inputs,
-// so every field is scoped to whichever copy is currently visible. Closed
-// <dialog> content is hidden, which makes this unambiguous.
-const visible = (page: Page, selector: string) =>
-  page.locator(`${selector}:visible`);
 
 const fillTimes = async (page: Page, from: string, to: string) => {
   await visible(page, 'input[placeholder="From"]').fill(from);
   await visible(page, 'input[placeholder="To"]').fill(to);
 };
-
-// The worklog list groups by month in accordions that start collapsed, so the
-// entries are present but hidden until a month is opened.
-const expandMonths = async (page: Page) => {
-  const toggles = page.locator('.collapse > input[type="checkbox"]');
-  for (let i = 0; i < (await toggles.count()); i++) {
-    await toggles.nth(i).check();
-  }
-};
-
-// The icon button that opens a dialog and the dialog's own confirm button share
-// a name, so the confirm is always taken from the open dialog.
-const dialogButton = (page: Page, name: string) =>
-  page.locator('dialog[open]').getByRole('button', { name, exact: true });
 
 const lunchToggle = (page: Page) =>
   page.locator(
