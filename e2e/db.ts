@@ -3,7 +3,7 @@
 // builds its own client against the e2e database so the Playwright runner
 // process can seed and reset state directly. Connection comes from the env that
 // playwright.config.ts loads from .env.e2e.
-import { PrismaClient } from '../src/generated/prisma/client';
+import { PrismaClient, type Worklog } from '../src/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
@@ -16,12 +16,11 @@ export const TEST_USER = {
 };
 
 let client: PrismaClient | undefined;
+let pool: Pool | undefined;
 
 function db(): PrismaClient {
   if (!client) {
-    const pool = new Pool({
-      connectionString: process.env.POSTGRES_PRISMA_URL,
-    });
+    pool = new Pool({ connectionString: process.env.POSTGRES_PRISMA_URL });
     client = new PrismaClient({ adapter: new PrismaPg(pool) });
   }
   return client;
@@ -81,7 +80,7 @@ export async function getStartedAt(): Promise<Date | null> {
   return row?.started_at ?? null;
 }
 
-export async function getWorklogs() {
+export async function getWorklogs(): Promise<Worklog[]> {
   const id = await userId();
   return db().worklog.findMany({
     where: { user_id: id },
@@ -91,5 +90,7 @@ export async function getWorklogs() {
 
 export async function disconnect(): Promise<void> {
   await client?.$disconnect();
+  await pool?.end();
   client = undefined;
+  pool = undefined;
 }

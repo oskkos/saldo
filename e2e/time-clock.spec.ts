@@ -12,8 +12,6 @@ import {
 // the <dialog id="clock-out-modal">; scope its buttons to it because "Save",
 // "Cancel" and "Discard" are generic labels shared by other modals in the app.
 
-const clockInButton = (name = 'Clock in') => ({ name });
-
 // The finalize dialog. Native <dialog> renders in the top layer without hiding
 // the page behind it, so tests must assert on the dialog itself (its heading
 // appearing/disappearing) rather than on background content.
@@ -31,15 +29,15 @@ test.afterAll(async () => {
 
 test('idle home screen shows a clock-in action', async ({ page }) => {
   await page.goto('/');
-  await expect(page.getByRole('button', clockInButton())).toBeVisible();
-  await expect(page.locator('[title="Clocked in"]')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
+  await expect(page.getByTitle('Clocked in')).toHaveCount(0);
 });
 
 test('clock in when idle shows the clocked-in state', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
 
-  await page.getByRole('button', clockInButton()).click();
+  await page.getByRole('button', { name: 'Clock in' }).click();
 
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
   await expect(page.getByText('Since 08:00')).toBeVisible();
@@ -51,13 +49,13 @@ test('running state is visible across the app (badge + clock-out)', async ({
 }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
-  await page.getByRole('button', clockInButton()).click();
+  await page.getByRole('button', { name: 'Clock in' }).click();
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
 
   // Navigate elsewhere: the always-visible badge (server-rendered in the navbar)
   // must indicate the clocked-in state from any page.
   await page.goto('/settings');
-  await expect(page.locator('[title="Clocked in"]')).toBeVisible();
+  await expect(page.getByTitle('Clocked in')).toBeVisible();
 });
 
 test('returning with an open session shows the running state, unchanged', async ({
@@ -70,7 +68,7 @@ test('returning with an open session shows the running state, unchanged', async 
 
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
   await expect(page.getByText('Since 08:00')).toBeVisible();
-  await expect(page.locator('[title="Clocked in"]')).toBeVisible();
+  await expect(page.getByTitle('Clocked in')).toBeVisible();
   // No background process altered the session.
   expect((await getStartedAt())?.getTime()).toBe(startedAt.getTime());
 });
@@ -80,7 +78,7 @@ test('save creates a worklog spanning the session and clears it', async ({
 }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
-  await page.getByRole('button', clockInButton()).click();
+  await page.getByRole('button', { name: 'Clock in' }).click();
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
 
   await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
@@ -91,7 +89,7 @@ test('save creates a worklog spanning the session and clears it', async ({
 
   // Dialog closed and back to idle before asserting on the DB.
   await expect(finalizeHeading(page)).toBeHidden();
-  await expect(page.getByRole('button', clockInButton())).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
   expect(await getStartedAt()).toBeNull();
 
   // The worklog reads 08:00–16:00 even though the server runs in a non-UTC zone.
@@ -104,7 +102,7 @@ test('save creates a worklog spanning the session and clears it', async ({
 test('cancel keeps the session open and logs nothing', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
-  await page.getByRole('button', clockInButton()).click();
+  await page.getByRole('button', { name: 'Clock in' }).click();
 
   await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
   await page.getByRole('button', { name: 'Clock out' }).click();
@@ -124,7 +122,7 @@ test('cancel keeps the session open and logs nothing', async ({ page }) => {
 test('discard clears the session without logging', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
-  await page.getByRole('button', clockInButton()).click();
+  await page.getByRole('button', { name: 'Clock in' }).click();
 
   await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
   await page.getByRole('button', { name: 'Clock out' }).click();
@@ -135,7 +133,7 @@ test('discard clears the session without logging', async ({ page }) => {
   await finalizeModal(page).getByRole('button', { name: 'Discard' }).click();
 
   await expect(finalizeHeading(page)).toBeHidden();
-  await expect(page.getByRole('button', clockInButton())).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
   expect(await getStartedAt()).toBeNull();
   expect(await getWorklogs()).toHaveLength(0);
 });
@@ -145,7 +143,7 @@ test('overnight session must be corrected or discarded before saving', async ({
 }) => {
   await page.clock.install({ time: new Date('2026-07-25T23:30:00Z') });
   await page.goto('/');
-  await page.getByRole('button', clockInButton()).click();
+  await page.getByRole('button', { name: 'Clock in' }).click();
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
 
   // The session now crosses midnight.
@@ -164,7 +162,7 @@ test('overnight session must be corrected or discarded before saving', async ({
   page.once('dialog', (dialog) => dialog.accept());
   await finalizeModal(page).getByRole('button', { name: 'Discard' }).click();
   await expect(finalizeHeading(page)).toBeHidden();
-  await expect(page.getByRole('button', clockInButton())).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
   expect(await getStartedAt()).toBeNull();
   expect(await getWorklogs()).toHaveLength(0);
 });
