@@ -48,10 +48,10 @@
 
 ## 7. Self-coverage bootstrap
 
-- [ ] 7.1 Run `/opsx:sync` to promote the `spec-test-traceability` delta into `openspec/specs/`, so the tool's own scenarios are canonical before the gate is switched on
-- [ ] 7.2 Annotate the tool's Jest tests from group 1 with the `spec-test-traceability` scenarios they assert
-- [ ] 7.3 Exempt the `spec-test-traceability` scenarios that are review- or CI-enforced rather than unit-testable (the over-claiming rule, the CI gate steps, the no-dependency rule) with written reasons
-- [ ] 7.4 Regenerate the map and confirm the whole repository reports zero uncovered scenarios
+- [x] 7.1 Run `/opsx:sync` to promote the `spec-test-traceability` delta into `openspec/specs/`, so the tool's own scenarios are canonical before the gate is switched on
+- [x] 7.2 Annotate the tool's Jest tests from group 1 with the `spec-test-traceability` scenarios they assert
+- [x] 7.3 Exempt the `spec-test-traceability` scenarios that are review- or CI-enforced rather than unit-testable (the over-claiming rule, the CI gate steps, the no-dependency rule) with written reasons
+- [x] 7.4 Regenerate the map and confirm the whole repository reports zero uncovered scenarios
 
 ## 8. CI gate and documentation
 

@@ -40,6 +40,7 @@ More prose.
 `;
 
 describe('parseSpecScenarios', () => {
+  // @scenario spec-test-traceability/Scenario resolved by capability and title
   it('identifies each scenario as capability/title', () => {
     const scenarios = parseSpecScenarios('demo', SPEC);
 
@@ -56,6 +57,7 @@ describe('parseSpecScenarios', () => {
     expect(alpha.body).not.toContain('Some requirement prose');
   });
 
+  // @scenario spec-test-traceability/Scenario resolved by capability and title
   it('records the parent requirement without putting it in the id', () => {
     const [, beta] = parseSpecScenarios('demo', SPEC);
 
@@ -63,6 +65,7 @@ describe('parseSpecScenarios', () => {
     expect(beta.id).toBe('demo/Beta happens');
   });
 
+  // @scenario spec-test-traceability/Scenario resolved by capability and title
   it('gives a scenario the same id after it moves to another requirement', () => {
     const moved = SPEC.replace(
       '### Requirement: Second requirement\n\nMore prose.\n\n',
@@ -74,6 +77,7 @@ describe('parseSpecScenarios', () => {
     expect(ids).toEqual(['demo/Alpha happens', 'demo/Beta happens']);
   });
 
+  // @scenario spec-test-traceability/Duplicate titles in a capability are rejected
   it('rejects two scenarios sharing a title in one capability', () => {
     const duplicated = SPEC.replace('Beta happens', 'Alpha happens');
 
@@ -90,6 +94,7 @@ describe('hashScenarioBody', () => {
     );
   });
 
+  // @scenario spec-test-traceability/Whitespace-only edit leaves the hash stable
   it('is stable when the body is reindented', () => {
     const original = '- **WHEN** a thing occurs\n- **THEN** another follows';
     const reindented =
@@ -98,6 +103,7 @@ describe('hashScenarioBody', () => {
     expect(hashScenarioBody(reindented)).toBe(hashScenarioBody(original));
   });
 
+  // @scenario spec-test-traceability/Whitespace-only edit leaves the hash stable
   it('is stable when the body is rewrapped across lines', () => {
     const oneLine =
       '- **THEN** the scenario is recorded as covered by that test';
@@ -115,6 +121,7 @@ describe('hashScenarioBody', () => {
 });
 
 describe('scenario hashing over a whole spec', () => {
+  // @scenario spec-test-traceability/Requirement prose edit leaves scenario hashes stable
   it('leaves scenario hashes untouched when only requirement prose changes', () => {
     const before = parseSpecScenarios('demo', SPEC);
     const after = parseSpecScenarios(
@@ -127,6 +134,7 @@ describe('scenario hashing over a whole spec', () => {
     );
   });
 
+  // @scenario spec-test-traceability/Reworded scenario changes its hash
   it('changes one scenario hash when that scenario is reworded', () => {
     const before = parseSpecScenarios('demo', SPEC);
     const after = parseSpecScenarios(
@@ -144,6 +152,7 @@ describe('scenario hashing over a whole spec', () => {
 });
 
 describe('scanTestAnnotations', () => {
+  // @scenario spec-test-traceability/Annotation links a test to a scenario
   it('links an annotated test to its scenario', () => {
     const source = [
       '// @scenario time-clock/Clock in when idle',
@@ -161,6 +170,7 @@ describe('scanTestAnnotations', () => {
     ]);
   });
 
+  // @scenario spec-test-traceability/Stacked annotations declare multiple scenarios
   it('links every scenario in a stack of annotations to the same test', () => {
     const source = [
       '// @scenario demo/Alpha happens',
@@ -177,6 +187,7 @@ describe('scanTestAnnotations', () => {
     expect(links.every((l) => l.testTitle === 'covers both')).toBe(true);
   });
 
+  // @scenario spec-test-traceability/Suite-level annotation covers every test inside
   it('applies a describe annotation to every test inside the block', () => {
     const source = [
       '// @scenario demo/Alpha happens',
@@ -195,6 +206,8 @@ describe('scanTestAnnotations', () => {
     ]);
   });
 
+  // @scenario spec-test-traceability/Suite-level annotation covers every test inside
+  // @scenario spec-test-traceability/Annotations work identically in both test layers
   it('applies a test.describe annotation to every test inside the block', () => {
     const source = [
       '// @scenario demo/Alpha happens',
@@ -219,6 +232,7 @@ describe('scanTestAnnotations', () => {
     ]);
   });
 
+  // @scenario spec-test-traceability/Unattached annotation fails the run
   it('reports file and line for an annotation attached to nothing', () => {
     const source = [
       "it('an unrelated test', () => {});",
@@ -231,6 +245,7 @@ describe('scanTestAnnotations', () => {
     ).toThrow(/src\/x\/__tests__\/a\.test\.ts:3.*not attached to a test/i);
   });
 
+  // @scenario spec-test-traceability/Unattached annotation fails the run
   it('reports file and line when an annotation precedes ordinary code', () => {
     const source = [
       '// @scenario demo/Alpha happens',
@@ -243,6 +258,7 @@ describe('scanTestAnnotations', () => {
     ).toThrow(/src\/x\/__tests__\/a\.test\.ts:1.*not attached to a test/i);
   });
 
+  // @scenario spec-test-traceability/Non-literal test title fails the run
   it('reports file and line for a non-literal test title', () => {
     const source = [
       '// @scenario demo/Alpha happens',
@@ -270,6 +286,7 @@ describe('resolveExemptions', () => {
     'other/Gamma happens',
   ];
 
+  // @scenario spec-test-traceability/Exempt scenario is not a gap
   it('resolves a scenario entry to its reason', () => {
     const entries = [
       { scenario: 'demo/Alpha happens', reason: 'not automatable' },
@@ -280,6 +297,7 @@ describe('resolveExemptions', () => {
     );
   });
 
+  // @scenario spec-test-traceability/Wildcard exempts a whole capability
   it('expands a capability wildcard to every scenario in it', () => {
     const entries = [{ scenario: 'demo/*', reason: 'skill workflow' }];
 
@@ -289,6 +307,7 @@ describe('resolveExemptions', () => {
     ]);
   });
 
+  // @scenario spec-test-traceability/Unknown exemption fails the run
   it('rejects an entry naming a scenario that does not exist', () => {
     const entries = [{ scenario: 'demo/Deleted scenario', reason: 'stale' }];
 
@@ -297,6 +316,7 @@ describe('resolveExemptions', () => {
     );
   });
 
+  // @scenario spec-test-traceability/Unknown exemption fails the run
   it('rejects a wildcard naming a capability that does not exist', () => {
     const entries = [{ scenario: 'ghost/*', reason: 'stale' }];
 
@@ -305,6 +325,7 @@ describe('resolveExemptions', () => {
     );
   });
 
+  // @scenario spec-test-traceability/Exemption superseded by a real test fails the run
   it('rejects an entry for a scenario a test already covers', () => {
     const entries = [
       { scenario: 'demo/Alpha happens', reason: 'not automatable' },
@@ -360,11 +381,13 @@ describe('renderCoverageMap', () => {
 
   const render = () => renderCoverageMap(scenarios, links, exemptions);
 
+  // @scenario spec-test-traceability/Map reports coverage per capability
   it('counts covered, exempt and uncovered per capability', () => {
     expect(render()).toContain('| demo | 2 | 1 | 1 | 0 |');
     expect(render()).toContain('| other | 1 | 0 | 0 | 1 |');
   });
 
+  // @scenario spec-test-traceability/Map lists the tests covering each scenario
   it('lists the tests covering a scenario with its hash', () => {
     const markdown = render();
 
@@ -373,10 +396,12 @@ describe('renderCoverageMap', () => {
     expect(markdown).toContain('does the thing');
   });
 
+  // @scenario spec-test-traceability/Exempt scenarios are shown with their reason
   it('shows an exempt scenario with its reason', () => {
     expect(render()).toMatch(/Beta happens.*not automatable/);
   });
 
+  // @scenario spec-test-traceability/Map lists uncovered scenarios
   it('lists scenarios that have neither a test nor an exemption', () => {
     const markdown = render();
     const uncovered = markdown.slice(markdown.indexOf('## Uncovered'));
@@ -417,6 +442,7 @@ describe('main', () => {
     fs.rmSync(root, { recursive: true, force: true });
   });
 
+  // @scenario spec-test-traceability/Generate mode writes the map
   it('writes the coverage map in generate mode', () => {
     const result = main([], root);
 
@@ -424,6 +450,7 @@ describe('main', () => {
     expect(fs.readFileSync(mapPath(), 'utf8')).toContain('demo/Beta happens');
   });
 
+  // @scenario spec-test-traceability/Check mode does not write
   it('writes nothing in check mode', () => {
     const result = main(['--check'], root);
 
@@ -431,6 +458,7 @@ describe('main', () => {
     expect(result.exitCode).toBe(1);
   });
 
+  // @scenario spec-test-traceability/Stale committed map fails the check
   it('fails the check when the committed map is stale', () => {
     main([], root);
     fs.writeFileSync(mapPath(), '# Scenario coverage\n\nstale\n');
@@ -447,6 +475,7 @@ describe('main', () => {
     expect(main(['--check'], root).exitCode).toBe(0);
   });
 
+  // @scenario spec-test-traceability/Uncovered scenario fails CI
   it('fails under --strict when a scenario has no test and no exemption', () => {
     const result = main(['--strict'], root);
 
@@ -458,6 +487,7 @@ describe('main', () => {
     expect(main([], root).exitCode).toBe(0);
   });
 
+  // @scenario spec-test-traceability/Exempt scenario is not a gap
   it('passes under --strict once the gap is exempt', () => {
     write(
       'scripts/spec-coverage.exemptions.json',
@@ -469,6 +499,8 @@ describe('main', () => {
     expect(main(['--strict'], root).exitCode).toBe(0);
   });
 
+  // @scenario spec-test-traceability/Annotation citing an unknown scenario fails the run
+  // @scenario spec-test-traceability/Renaming a scenario breaks its annotations visibly
   it('fails on an annotation citing a scenario that does not exist', () => {
     write(
       'src/x/__tests__/a.test.ts',
@@ -486,6 +518,18 @@ describe('main', () => {
     );
   });
 
+  it('scans the tooling tests under scripts as well', () => {
+    write(
+      'scripts/__tests__/tool.test.ts',
+      ['// @scenario demo/Beta happens', "it('covers beta', () => {});"].join(
+        '\n',
+      ),
+    );
+
+    expect(main(['--strict'], root).exitCode).toBe(0);
+  });
+
+  // @scenario spec-test-traceability/Annotations work identically in both test layers
   it('scans the playwright layer as well as the jest layer', () => {
     write(
       'e2e/demo.spec.ts',
