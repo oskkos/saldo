@@ -25,5 +25,18 @@
       "reason": "The requirement itself states this is enforced by code review, not tooling: no check can tell whether a test really asserts the scenario's THEN. The rule is written into CLAUDE.md and e2e/README.md, and the generated map puts each claim in the diff a reviewer reads."
     }
   ],
-  "requirementsWithoutE2e": []
+  "requirementsWithoutE2e": [
+    {
+      "requirement": "expected-hours/Per-date expected-hours overrides",
+      "category": "harness-cost",
+      "reason": "The only UI that creates an override is the \"Special days\" panel on /settings, a daisyUI <details> collapse whose fields never become visible to Playwright — not by clicking the summary, and not by forcing the element open. Driving it would mean reworking the component for testability, which is a change to production markup this change does not make.",
+      "coveredAt": "src/repository/__tests__/expectedHoursOverrideRepository.test.ts"
+    },
+    {
+      "requirement": "expected-hours/Expected minutes are resolved per date",
+      "category": "harness-cost",
+      "reason": "Resolution only becomes observable in the browser once an override exists, and the panel that creates one cannot be driven (see the sibling exemption). The default and non-working-day branches are asserted as pure logic; the settings suite separately proves a changed default moves the saldo on screen.",
+      "coveredAt": "src/services/__tests__/index.test.tsx"
+    }
+  ]
 }
