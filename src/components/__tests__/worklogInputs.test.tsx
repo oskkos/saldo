@@ -64,6 +64,7 @@ describe('WorklogInputs', () => {
     expect(screen.queryByPlaceholderText('Hours')).not.toBeInTheDocument();
   });
 
+  // @scenario worklog/Duration is net worked time, not span
   test('switching to Duration prefills net minutes and hides the lunch toggle', () => {
     renderInputs({}, '08:00');
     toDuration();
@@ -75,6 +76,7 @@ describe('WorklogInputs', () => {
     ).not.toBeInTheDocument();
   });
 
+  // @scenario worklog/Duration is net worked time, not span
   test('duration is net time: lunch is folded in and the flag cleared', () => {
     renderInputs({}, '08:00');
     toDuration();
@@ -85,6 +87,7 @@ describe('WorklogInputs', () => {
     expect(screen.getByTestId('valid')).toHaveTextContent('true');
   });
 
+  // @scenario worklog/Editing an existing entry in duration mode keeps its start
   test('editing an existing entry keeps its start time as the anchor', () => {
     renderInputs(
       { from: time('09:15'), to: time('16:45'), subtractLunchBreak: false },

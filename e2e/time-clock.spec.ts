@@ -27,12 +27,14 @@ test.afterAll(async () => {
   await disconnect();
 });
 
+// @scenario time-clock/Idle home screen
 test('idle home screen shows a clock-in action', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
   await expect(page.getByTitle('Clocked in')).toHaveCount(0);
 });
 
+// @scenario time-clock/Clock in when idle
 test('clock in when idle shows the clocked-in state', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
@@ -44,6 +46,7 @@ test('clock in when idle shows the clocked-in state', async ({ page }) => {
   expect(await getStartedAt()).not.toBeNull();
 });
 
+// @scenario time-clock/Running state is globally visible
 test('running state is visible across the app (badge + clock-out)', async ({
   page,
 }) => {
@@ -51,6 +54,8 @@ test('running state is visible across the app (badge + clock-out)', async ({
   await page.goto('/');
   await page.getByRole('button', { name: 'Clock in' }).click();
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
+  // The home screen shows the running session's elapsed time.
+  await expect(page.getByText('Since 08:00')).toBeVisible();
 
   // Navigate elsewhere: the always-visible badge (server-rendered in the navbar)
   // must indicate the clocked-in state from any page.
@@ -58,6 +63,7 @@ test('running state is visible across the app (badge + clock-out)', async ({
   await expect(page.getByTitle('Clocked in')).toBeVisible();
 });
 
+// @scenario time-clock/Returning with an open session
 test('returning with an open session shows the running state, unchanged', async ({
   page,
 }) => {
@@ -73,6 +79,8 @@ test('returning with an open session shows the running state, unchanged', async 
   expect((await getStartedAt())?.getTime()).toBe(startedAt.getTime());
 });
 
+// @scenario time-clock/Save creates a worklog
+// @scenario time-clock/Logged times match the clock
 test('save creates a worklog spanning the session and clears it', async ({
   page,
 }) => {
@@ -85,6 +93,14 @@ test('save creates a worklog spanning the session and clears it', async ({
   await page.getByRole('button', { name: 'Clock out' }).click();
 
   await expect(finalizeHeading(page)).toBeVisible();
+
+  // Choose a lunch-break setting and a comment, so the saved worklog is checked
+  // against what the user picked rather than only against the defaults.
+  await finalizeModal(page)
+    .getByLabel('Subtract lunch break automatically')
+    .uncheck();
+  await finalizeModal(page).getByPlaceholder('Comment').fill('Feature work');
+
   await finalizeModal(page).getByRole('button', { name: 'Save' }).click();
 
   // Dialog closed and back to idle before asserting on the DB.
@@ -97,8 +113,11 @@ test('save creates a worklog spanning the session and clears it', async ({
   expect(worklogs).toHaveLength(1);
   expect(worklogs[0].from.getUTCHours()).toBe(8);
   expect(worklogs[0].to.getUTCHours()).toBe(16);
+  expect(worklogs[0].subtract_lunch_break).toBe(false);
+  expect(worklogs[0].comment).toBe('Feature work');
 });
 
+// @scenario time-clock/Cancel keeps the session open
 test('cancel keeps the session open and logs nothing', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
@@ -119,6 +138,7 @@ test('cancel keeps the session open and logs nothing', async ({ page }) => {
   expect(await getWorklogs()).toHaveLength(0);
 });
 
+// @scenario time-clock/Discard
 test('discard clears the session without logging', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
   await page.goto('/');
@@ -138,6 +158,7 @@ test('discard clears the session without logging', async ({ page }) => {
   expect(await getWorklogs()).toHaveLength(0);
 });
 
+// @scenario time-clock/Overnight session must be corrected or discarded
 test('overnight session must be corrected or discarded before saving', async ({
   page,
 }) => {

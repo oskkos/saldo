@@ -15,10 +15,10 @@
 
 ## 2. Annotate existing tests
 
-- [ ] 2.1 Annotate `e2e/time-clock.spec.ts` from the traceability table currently in `e2e/README.md`
-- [ ] 2.2 Annotate `src/repository/__tests__/clockRepository.test.ts` for the time-clock scenarios covered at the data layer
-- [ ] 2.3 Annotate the remaining Jest tests (`src/services/`, `src/schemas/`, `src/components/`, `src/util/`) with the scenarios they already assert, claiming only scenarios whose THEN outcome is actually asserted
-- [ ] 2.4 Regenerate the map and confirm every annotation resolves (no unknown-scenario or unattached-annotation errors)
+- [x] 2.1 Annotate `e2e/time-clock.spec.ts` from the traceability table currently in `e2e/README.md`
+- [x] 2.2 Annotate `src/repository/__tests__/clockRepository.test.ts` for the time-clock scenarios covered at the data layer
+- [x] 2.3 Annotate the remaining Jest tests (`src/services/`, `src/schemas/`, `src/components/`, `src/util/`) with the scenarios they already assert, claiming only scenarios whose THEN outcome is actually asserted
+- [x] 2.4 Regenerate the map and confirm every annotation resolves (no unknown-scenario or unattached-annotation errors)
 
 ## 3. Exemptions
 

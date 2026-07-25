@@ -120,6 +120,7 @@ describe('clockIn', () => {
     });
   });
 
+  // @scenario time-clock/Clock in when already clocked in
   it('leaves an already-open session unchanged (returns the existing start)', async () => {
     const existing = new Date('2026-07-25T06:30:00.000Z');
     const attempted = new Date('2026-07-25T09:00:00.000Z');
