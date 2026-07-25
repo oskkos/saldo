@@ -6,7 +6,7 @@ import {
   beforeAll,
   beforeEach,
 } from '@jest/globals';
-import type { WorklogFormData } from '@/types';
+import { AbsenceReason, type WorklogFormData } from '@/types';
 
 // --- Server-layer unit-test harness -----------------------------------------
 // Repositories touch three seams we must keep out of jsdom: the Prisma client
@@ -93,6 +93,11 @@ describe('getActiveSession', () => {
     await expect(repo.getActiveSession()).resolves.toBeNull();
   });
 
+  it('returns null when the user row is missing', async () => {
+    db.user.findUnique.mockResolvedValue(null);
+    await expect(repo.getActiveSession()).resolves.toBeNull();
+  });
+
   it('throws when there is no user in the session', async () => {
     getUserFromSession.mockResolvedValue(null);
     await expect(repo.getActiveSession()).rejects.toThrow('User not found');
@@ -174,6 +179,25 @@ describe('clockOutWithWorklog', () => {
     expect(tx.user.update).toHaveBeenCalledWith({
       where: { id: USER.id },
       data: { started_at: null },
+    });
+  });
+
+  it('persists the absence reason when the session carries one', async () => {
+    const tx = {
+      worklog: { create: jest.fn() },
+      user: { update: jest.fn() },
+    };
+    db.$transaction.mockImplementation((cb: unknown) =>
+      Promise.resolve((cb as (t: typeof tx) => unknown)(tx)),
+    );
+
+    await repo.clockOutWithWorklog({
+      ...data,
+      absence: AbsenceReason.flex_hours,
+    });
+
+    expect(tx.worklog.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({ absence: AbsenceReason.flex_hours }),
     });
   });
 
