@@ -187,6 +187,7 @@ describe('date module', () => {
     );
   });
 
+  // @scenario data-load-performance/Holiday classification is unchanged
   test('isHoliday', () => {
     expect(date.isHoliday(new Date('2022-01-01T00:00:00Z'))).toBe(true);
     expect(date.isHoliday(new Date('2022-12-24T00:00:00Z'))).toBe(false);

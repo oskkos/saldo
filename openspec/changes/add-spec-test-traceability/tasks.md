@@ -41,10 +41,10 @@
 
 ## 6. Close auth, statistics and data-load-performance gaps
 
-- [ ] 6.1 Write tests for the `auth` scenarios (session gate, provider sign-in, signup/reset validation) and annotate them
-- [ ] 6.2 Write tests for the `statistics` scenarios and annotate them
-- [ ] 6.3 Write tests for the `data-load-performance` scenarios that are assertable without timing a real database, and exempt the rest with reasons
-- [ ] 6.4 Regenerate the map and confirm all three capabilities report zero uncovered scenarios
+- [x] 6.1 Write tests for the `auth` scenarios (session gate, provider sign-in, signup/reset validation) and annotate them
+- [x] 6.2 Write tests for the `statistics` scenarios and annotate them
+- [x] 6.3 Write tests for the `data-load-performance` scenarios that are assertable without timing a real database, and exempt the rest with reasons
+- [x] 6.4 Regenerate the map and confirm all three capabilities report zero uncovered scenarios
 
 ## 7. Self-coverage bootstrap
 
