@@ -14,5 +14,9 @@
   {
     "scenario": "data-load-performance/Distinct requests are not shared",
     "reason": "Requires two separate request scopes to observe that memoization does not leak between them. Jest has no request boundary, and the e2e layer cannot see per-request query counts."
+  },
+  {
+    "scenario": "statistics/Same grouping regardless of runtime timezone",
+    "reason": "Comparing two runtime timezones needs two processes: Node caches the zone at startup. The suite is parameterized by TZ instead (jest.config.mjs pins a non-UTC zone; TZ=UTC npm run test:ci runs it again), and 'Worklog near UTC midnight' asserts the UTC grouping that makes the figures invariant."
   }
 ]
