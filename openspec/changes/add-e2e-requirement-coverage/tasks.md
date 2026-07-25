@@ -54,10 +54,10 @@
 
 ## 8. Statistics end-to-end suite
 
-- [ ] 8.1 Cover the statistics page rendering figures from seeded worklogs, with date-agnostic assertions
-- [ ] 8.2 Cover absences being excluded from hours totals while appearing in the absence tally
-- [ ] 8.3 Cover the per-day chart rendering, and the empty/no-settings state rendering nothing
-- [ ] 8.4 Annotate the suite and confirm `statistics`' 6 journey requirements report end-to-end coverage
+- [x] 8.1 Cover the statistics page rendering figures from seeded worklogs, with date-agnostic assertions
+- [x] 8.2 Cover absences being excluded from hours totals while appearing in the absence tally
+- [x] 8.3 Cover the per-day chart rendering, and the empty/no-settings state rendering nothing
+- [x] 8.4 Annotate the suite and confirm `statistics`' 6 journey requirements report end-to-end coverage
 
 ## 9. Exemption decisions
 
