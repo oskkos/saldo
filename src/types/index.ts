@@ -53,6 +53,13 @@ export interface AbsenceData {
   reason?: AbsenceReason;
   comment: string;
 }
+
+// A rejected absence is an expected outcome carrying a message written for the
+// user, so it is returned rather than thrown: Next redacts anything raised out
+// of a server action in a production build, leaving only an opaque digest.
+export type AbsenceSubmitResult =
+  | { status: 'success'; worklogs: Worklog[] }
+  | { status: 'error'; message: string };
 import type { ReactElement } from 'react';
 
 export interface SaldoForDay {

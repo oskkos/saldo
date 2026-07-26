@@ -7,6 +7,8 @@ import {
   beforeEach,
 } from '@jest/globals';
 import { AbsenceReason, type AbsenceData } from '@/types';
+import { AbsenceConflictError } from '@/services';
+import type { Date_ISODay } from '@/util/dateFormatter';
 
 // Same harness as worklogActions.test.ts: repositories are mocked so the suite
 // can show that a rejected absence never reaches a write, and the module under
@@ -17,7 +19,6 @@ jest.mock('@/repository/worklogRepository', () => ({
   updateWorklog: jest.fn(),
   deleteWorklog: jest.fn(),
   getWorklogs: jest.fn(),
-  getAbsenceDays: jest.fn(),
 }));
 jest.mock('@/repository/clockRepository', () => ({
   clockIn: jest.fn(),
@@ -84,44 +85,84 @@ beforeEach(() => {
   insertWorklogs.mockResolvedValue([]);
 });
 
-describe('onAbsenceSubmit validation', () => {
-  it('rejects a missing reason and writes nothing', async () => {
-    const noReason = { ...valid, reason: undefined };
+// Every refusal comes back as a value. Throwing would not reach the user: a
+// production build replaces the message of anything raised out of a server
+// action with an opaque digest.
+const refusal = async (data: AbsenceData) => {
+  const result = await actions.onAbsenceSubmit(data);
+  expect(result.status).toBe('error');
+  expect(insertWorklogs).not.toHaveBeenCalled();
+  return result.status === 'error' ? result.message : '';
+};
 
-    await expect(actions.onAbsenceSubmit(noReason)).rejects.toThrow(
+describe('onAbsenceSubmit validation', () => {
+  it('refuses a missing reason and writes nothing', async () => {
+    expect(await refusal({ ...valid, reason: undefined })).toBe(
       'Reason is required',
     );
-    expect(insertWorklogs).not.toHaveBeenCalled();
   });
 
-  it('rejects a missing from-date and writes nothing', async () => {
-    const noFrom = { ...valid, from: null };
-
-    await expect(actions.onAbsenceSubmit(noFrom)).rejects.toThrow(
+  it('refuses a missing from-date and writes nothing', async () => {
+    expect(await refusal({ ...valid, from: null })).toBe(
       'From date is required',
     );
-    expect(insertWorklogs).not.toHaveBeenCalled();
   });
 
-  it('rejects a to-date before the from-date and writes nothing', async () => {
-    const reversed = {
+  it('refuses a to-date before the from-date and writes nothing', async () => {
+    expect(
+      await refusal({ ...valid, to: new Date('2026-07-27T00:00:00.000Z') }),
+    ).toBe('The to-date must not be before the from-date');
+  });
+
+  // Only the days matter, so a same-day range must survive whatever times the
+  // client's two ends happen to carry, in either order.
+  it('accepts a same-day range whose ends run backwards in time', async () => {
+    const result = await actions.onAbsenceSubmit({
       ...valid,
-      to: new Date('2026-07-27T00:00:00.000Z'),
-    };
+      from: new Date('2026-07-28T18:00:00.000Z'),
+      to: new Date('2026-07-28T09:00:00.000Z'),
+    });
 
-    await expect(actions.onAbsenceSubmit(reversed)).rejects.toThrow(
-      'The to-date must not be before the from-date',
-    );
-    expect(insertWorklogs).not.toHaveBeenCalled();
+    expect(result.status).toBe('success');
+    expect(insertWorklogs).toHaveBeenCalled();
   });
 
-  it('rejects an over-long comment and writes nothing', async () => {
-    const wordy = { ...valid, comment: 'x'.repeat(1001) };
-
-    await expect(actions.onAbsenceSubmit(wordy)).rejects.toThrow(
+  it('refuses an over-long comment and writes nothing', async () => {
+    expect(await refusal({ ...valid, comment: 'x'.repeat(1001) })).toBe(
       'Comment is too long (max 1000 characters)',
     );
-    expect(insertWorklogs).not.toHaveBeenCalled();
+  });
+
+  // @scenario absence/An over-long range is refused
+  // The date picker accepts any year, and the range becomes one record per day.
+  it('refuses a range longer than a year and writes nothing', async () => {
+    expect(
+      await refusal({
+        ...valid,
+        from: new Date('2026-01-01T00:00:00.000Z'),
+        to: new Date('2027-01-02T00:00:00.000Z'),
+      }),
+    ).toBe('An absence range cannot be longer than 366 days');
+  });
+
+  it('accepts a range of exactly the maximum length', async () => {
+    const result = await actions.onAbsenceSubmit({
+      ...valid,
+      from: new Date('2026-01-01T00:00:00.000Z'),
+      to: new Date('2027-01-01T00:00:00.000Z'),
+    });
+
+    expect(result.status).toBe('success');
+  });
+
+  // Settings carry the times every record is stored with, and their own format
+  // check is looser than the worklog's: 99:99 passes it.
+  it('refuses to write records the worklog rules would reject', async () => {
+    getSettings.mockResolvedValue({ ...settings, toDefault: '99:99' });
+
+    expect(await refusal(valid)).toBe(
+      'Your default start and end times are invalid. Check settings.',
+    );
   });
 });
 
@@ -129,7 +170,9 @@ describe('onAbsenceSubmit range expansion', () => {
   // @scenario absence/Three-day absence
   // @scenario absence/Records use the user's configured default times
   it('hands the repository one record per day, at the configured times', async () => {
-    await actions.onAbsenceSubmit(valid);
+    const result = await actions.onAbsenceSubmit(valid);
+
+    expect(result.status).toBe('success');
 
     expect(insertWorklogs).toHaveBeenCalledTimes(1);
     expect(insertWorklogs).toHaveBeenCalledWith([
@@ -191,21 +234,34 @@ describe('onAbsenceSubmit range expansion', () => {
   it('refuses to guess the times when the user has no settings', async () => {
     getSettings.mockResolvedValue(null);
 
-    await expect(actions.onAbsenceSubmit(valid)).rejects.toThrow(
-      'Settings not found',
+    expect(await refusal(valid)).toBe(
+      'Your settings could not be loaded, so nothing was saved.',
     );
-    expect(insertWorklogs).not.toHaveBeenCalled();
   });
 
-  // The rule itself lives in the repository; the action must let its message
-  // through untouched so the toast can name the conflicting day.
-  it('surfaces a conflict raised by the repository', async () => {
+  // @scenario absence/The message names the conflicting day
+  // The rule lives in the repository, which raises it. The action turns it into
+  // a returned message, because a raised one would not survive the trip to the
+  // browser in a production build.
+  it('returns the conflict the repository raised, message intact', async () => {
     insertWorklogs.mockRejectedValue(
-      new Error('An absence is already recorded for 30.7.2026.'),
+      new AbsenceConflictError(['2026-07-30' as Date_ISODay]),
     );
 
+    const result = await actions.onAbsenceSubmit(valid);
+
+    expect(result).toEqual({
+      status: 'error',
+      message: 'An absence is already recorded for 30.7.2026.',
+    });
+  });
+
+  // Anything else is not ours to show: it keeps travelling as a failure.
+  it('lets an unexpected failure propagate', async () => {
+    insertWorklogs.mockRejectedValue(new Error('connection reset'));
+
     await expect(actions.onAbsenceSubmit(valid)).rejects.toThrow(
-      'An absence is already recorded for 30.7.2026.',
+      'connection reset',
     );
   });
 });

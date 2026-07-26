@@ -7,7 +7,7 @@ import { Worklog, WorklogFormData } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
 import { getUserFromSession } from '@/auth/authSession';
-import { absenceConflictMessage } from '@/services';
+import { AbsenceConflictError } from '@/services';
 import { endOfDay, startOfDay } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 
@@ -87,17 +87,6 @@ async function absenceDaysFor(
   );
 }
 
-export async function getAbsenceDays(
-  from: Date,
-  to: Date,
-): Promise<Date_ISODay[]> {
-  const user = await getUserFromSession();
-  if (!user) {
-    throw new Error('User not found in session.');
-  }
-  return await absenceDaysFor(user.id, from, to);
-}
-
 // A day holds at most one absence. This is the invariant the write paths share,
 // enforced here beside the ownership check rather than in the actions, because
 // it needs a read of stored state and because not every write reaches the table
@@ -115,9 +104,15 @@ async function assertAbsenceDaysAreFree(userId: number, days: Date_ISODay[]) {
       endOfDay(sorted[sorted.length - 1]),
     ),
   );
-  const conflicts = sorted.filter((day) => taken.has(day));
+  // A day is taken either because one is already stored on it, or because the
+  // batch itself asks for it twice.
+  const conflicts = [
+    ...new Set(
+      sorted.filter((day, i) => taken.has(day) || sorted[i - 1] === day),
+    ),
+  ];
   if (conflicts.length > 0) {
-    throw new Error(absenceConflictMessage(conflicts));
+    throw new AbsenceConflictError(conflicts);
   }
 }
 

@@ -73,6 +73,19 @@ cannot see.
 **Reset per test.** The suite is serial and shares one user, so a leaked row
 surfaces in the next test. `resetUserData()` in `beforeEach`.
 
+**A test that asserts a message the server produced has to be run against a
+production build.** Locally the harness starts `next dev`; CI starts
+`npm run start` (`playwright.config.ts`). The difference is not cosmetic: a
+production build replaces the message of anything **thrown** out of a server
+action with an opaque digest, so a toast that reads fine in dev can say nothing
+at all in CI. Anything the user is meant to read must be **returned** from the
+action as a value — `onAbsenceSubmit` is the worked example. To check a message
+end to end the way CI will:
+
+```bash
+npm run build && CI=1 npm run test:e2e
+```
+
 ## Scenario → test traceability
 
 Which spec scenarios these tests cover is recorded in the generated coverage map

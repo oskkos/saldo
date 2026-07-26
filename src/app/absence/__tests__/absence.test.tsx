@@ -60,7 +60,7 @@ const dayOf = (date: Date | null) => date?.toISOString().slice(0, 10);
 
 beforeEach(() => {
   jest.clearAllMocks();
-  submit.mockResolvedValue([{ id: 1 }]);
+  submit.mockResolvedValue({ status: 'success', worklogs: [{ id: 1 }] });
 });
 
 describe('Absence form', () => {
@@ -121,10 +121,12 @@ describe('Absence form', () => {
     expect(entry.comment).toBe('Flu');
   });
 
+  // The refusal arrives as a value, not as a throw — see onAbsenceSubmit.
   it('reports a rejected submission with the reason it was rejected for', async () => {
-    submit.mockRejectedValue(
-      new Error('An absence is already recorded for 30.6.2026.'),
-    );
+    submit.mockResolvedValue({
+      status: 'error',
+      message: 'An absence is already recorded for 30.6.2026.',
+    });
     renderForm();
     setDate('from', '2026-06-29');
     setDate('to', '2026-07-01');
@@ -145,6 +147,24 @@ describe('Absence form', () => {
     expect(
       getByText('An absence is already recorded for 30.6.2026.'),
     ).toBeInTheDocument();
+  });
+
+  it('falls back to a plain failure when the call itself breaks', async () => {
+    submit.mockRejectedValue(new Error('connection reset'));
+    renderForm();
+    setDate('from', '2026-06-29');
+    setDate('to', '2026-06-29');
+    pickReason(AbsenceReason.holiday);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const msg = setMsg.mock.calls[0][0] as {
+      type?: string;
+      message: ReactNode;
+    };
+    const { getByText } = render(<>{msg.message}</>);
+    expect(getByText('Failed to add absence')).toBeInTheDocument();
   });
 
   // @scenario absence/Range normalization
