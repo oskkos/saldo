@@ -7,27 +7,40 @@ import {
   beforeEach,
 } from '@jest/globals';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { AbsenceReason, type WorklogFormData } from '@/types';
+import { AbsenceReason, type AbsenceData } from '@/types';
+import type { ReactNode } from 'react';
 
 // The absence form is a client component whose only write path is the
-// onWorklogSubmit server action, so mocking that action is what lets the
-// multi-day fan-out be asserted. The mock factory is not hoisted (this file
-// imports `jest` from @jest/globals), hence the dynamic import in beforeAll.
-jest.mock('@/actions', () => ({ onWorklogSubmit: jest.fn() }));
+// onAbsenceSubmit server action. It sends the range as one submission — the
+// expansion into one record per day, and the times each record is stored with,
+// belong to the server (see actions/__tests__/absenceActions.test.ts). The mock
+// factory is not hoisted (this file imports `jest` from @jest/globals), hence
+// the dynamic import in beforeAll.
+jest.mock('@/actions', () => ({ onAbsenceSubmit: jest.fn() }));
 
-type SubmitMock = jest.Mock<(data: WorklogFormData) => Promise<unknown>>;
+type SubmitMock = jest.Mock<(data: AbsenceData) => Promise<unknown>>;
 
 let Absence: typeof import('../absence').default;
+let ToastContext: typeof import('@/components/toastContext').ToastContext;
 let submit: SubmitMock;
 let container: HTMLElement;
 
+const setMsg = jest.fn<(msg: unknown) => void>();
+
 beforeAll(async () => {
   Absence = (await import('../absence')).default;
-  submit = (await import('@/actions')).onWorklogSubmit as unknown as SubmitMock;
+  ToastContext = (await import('@/components/toastContext')).ToastContext;
+  submit = (await import('@/actions')).onAbsenceSubmit as unknown as SubmitMock;
 });
 
+// The toast itself is rendered by the layout's provider, so the message is
+// asserted where the form hands it over.
 const renderForm = () => {
-  container = render(<Absence />).container;
+  container = render(
+    <ToastContext.Provider value={{ msg: null, setMsg }}>
+      <Absence />
+    </ToastContext.Provider>,
+  ).container;
 };
 
 // The From/To labels are sibling badges rather than <label for>, so the two
@@ -43,11 +56,11 @@ const setDate = (which: 'from' | 'to', value: string) =>
 const pickReason = (reason: AbsenceReason) =>
   fireEvent.change(screen.getByRole('combobox'), { target: { value: reason } });
 
-const dayOf = (entry: WorklogFormData) => entry.from.toISOString().slice(0, 10);
+const dayOf = (date: Date | null) => date?.toISOString().slice(0, 10);
 
 beforeEach(() => {
   jest.clearAllMocks();
-  submit.mockResolvedValue({ id: 1 });
+  submit.mockResolvedValue([{ id: 1 }]);
 });
 
 describe('Absence form', () => {
@@ -82,12 +95,12 @@ describe('Absence form', () => {
     // A holiday absence is an ordinary worklog carrying the reason: a day the
     // user took off. It is unrelated to the public-holiday calendar, which
     // already removes days from the expected-hours accrual.
-    expect(entry.absence).toBe(AbsenceReason.holiday);
-    expect(dayOf(entry)).toBe('2026-06-29');
+    expect(entry.reason).toBe(AbsenceReason.holiday);
+    expect(dayOf(entry.from)).toBe('2026-06-29');
+    expect(dayOf(entry.to)).toBe('2026-06-29');
   });
 
-  // @scenario absence/Three-day absence
-  it('creates one record per day across the range, all alike', async () => {
+  it('submits the whole range in a single call', async () => {
     renderForm();
     setDate('from', '2026-06-29');
     setDate('to', '2026-07-01');
@@ -98,17 +111,40 @@ describe('Absence form', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
 
-    await waitFor(() => expect(submit).toHaveBeenCalledTimes(3));
-    const entries = submit.mock.calls.map(([entry]) => entry);
-    expect(entries.map(dayOf)).toEqual([
-      '2026-06-29',
-      '2026-06-30',
-      '2026-07-01',
-    ]);
-    for (const entry of entries) {
-      expect(entry.absence).toBe(AbsenceReason.sick_leave);
-      expect(entry.comment).toBe('Flu');
-    }
+    // One submission, not one per day: the days are checked together so a
+    // conflict on any of them can reject all of them.
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+    const [entry] = submit.mock.calls[0];
+    expect(dayOf(entry.from)).toBe('2026-06-29');
+    expect(dayOf(entry.to)).toBe('2026-07-01');
+    expect(entry.reason).toBe(AbsenceReason.sick_leave);
+    expect(entry.comment).toBe('Flu');
+  });
+
+  it('reports a rejected submission with the reason it was rejected for', async () => {
+    submit.mockRejectedValue(
+      new Error('An absence is already recorded for 30.6.2026.'),
+    );
+    renderForm();
+    setDate('from', '2026-06-29');
+    setDate('to', '2026-07-01');
+    pickReason(AbsenceReason.holiday);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const msg = setMsg.mock.calls[0][0] as {
+      type?: string;
+      message: ReactNode;
+    };
+    expect(msg.type).toBe('error');
+    // The rejection's own words reach the user, not just a generic failure:
+    // that is what names the day the range collided on.
+    const { getByText } = render(<>{msg.message}</>);
+    expect(getByText('Failed to add absence')).toBeInTheDocument();
+    expect(
+      getByText('An absence is already recorded for 30.6.2026.'),
+    ).toBeInTheDocument();
   });
 
   // @scenario absence/Range normalization
