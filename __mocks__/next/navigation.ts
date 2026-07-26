@@ -11,3 +11,6 @@ const router = {
 };
 
 export const useRouter = jest.fn().mockImplementation(() => router);
+
+// Nav components highlight the current route, so this is settable per test.
+export const usePathname = jest.fn(() => '/');
