@@ -162,3 +162,42 @@ test('duration mode anchors at the default start and stores net time', async ({
   expect(worklogs[0].to.getUTCMinutes()).toBe(30);
   expect(worklogs[0].subtract_lunch_break).toBe(false);
 });
+
+// @scenario absence/Hours are saved on an absence day
+// @scenario absence/The absence is not altered
+// @scenario absence/The save is confirmed
+// @scenario absence/Notice on an absence day
+test('a day with an absence still takes hours, and keeps the absence', async ({
+  page,
+}) => {
+  await seedWorklog({
+    from: utcTimeOn(0, 8),
+    to: utcTimeOn(0, 16),
+    comment: 'Annual leave',
+    absence: 'holiday',
+  });
+
+  await entryPage(page);
+  await expect(
+    page.getByText(
+      'An absence is recorded for this day. Hours you log here are still added to your saldo.',
+    ),
+  ).toBeVisible();
+
+  await fillTimes(page, '17:00', '20:00');
+  await lunchToggle(page).uncheck();
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  await expect(page.getByText('Worklog created')).toBeVisible();
+  await expect(page.getByText('17:00 - 20:00')).toBeVisible();
+  // The absence is still there, untouched: same reason, same times, same
+  // comment, and still exactly one of it.
+  await expect(page.getByRole('heading', { name: 'Holiday' })).toBeVisible();
+  const worklogs = await getWorklogs();
+  expect(worklogs).toHaveLength(2);
+  const absence = worklogs.find((w) => w.absence);
+  expect(absence?.absence).toBe('holiday');
+  expect(absence?.comment).toBe('Annual leave');
+  expect(absence?.from.getUTCHours()).toBe(8);
+  expect(absence?.to.getUTCHours()).toBe(16);
+});

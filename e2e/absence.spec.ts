@@ -2,6 +2,7 @@ import { test, expect, type Page } from './fixtures';
 import {
   disconnect,
   getWorklogs,
+  pastWorkingDayOffsets,
   resetUserData,
   seedWorklog,
   utcDay,
@@ -14,6 +15,13 @@ import { expandMonths, visible } from './ui';
 
 const isoDay = (offsetDays = 0) =>
   utcDay(offsetDays).toISOString().slice(0, 10);
+
+// The conflict message names days the way the rest of the UI does (D.M.YYYY),
+// built here from the same offset the test seeded rather than hard-coded.
+const shownDay = (offsetDays = 0) => {
+  const day = utcDay(offsetDays);
+  return `${day.getUTCDate()}.${day.getUTCMonth() + 1}.${day.getUTCFullYear()}`;
+};
 
 const fromDate = (page: Page) => visible(page, 'input[type="date"]').nth(0);
 const toDate = (page: Page) => visible(page, 'input[type="date"]').nth(1);
@@ -128,4 +136,75 @@ test('an absence is listed by its readable label and its own icon', async ({
   // a glance rather than only by their text.
   await expect(reasonIcon(page, 'Flex hours')).toBeVisible();
   await expect(reasonIcon(page, 'Sick leave')).toBeVisible();
+});
+
+// @scenario absence/Second absence with the same reason is rejected
+// @scenario absence/The message names the conflicting day
+test('a day that already has an absence refuses a second one', async ({
+  page,
+}) => {
+  await seedWorklog({
+    from: utcTimeOn(0, 8),
+    to: utcTimeOn(0, 16),
+    absence: 'holiday',
+  });
+
+  await page.goto('/absence');
+  await fromDate(page).fill(isoDay(0));
+  await toDate(page).fill(isoDay(0));
+  await reason(page).selectOption('holiday');
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  await expect(page.getByText('Failed to add absence')).toBeVisible();
+  await expect(
+    page.getByText(`An absence is already recorded for ${shownDay(0)}.`),
+  ).toBeVisible();
+  // The day the user picked is still held by the one absence it started with.
+  expect(await getWorklogs()).toHaveLength(1);
+});
+
+// @scenario absence/One taken day rejects the whole range
+test('one taken day inside a range rejects every day of it', async ({
+  page,
+}) => {
+  await seedWorklog({
+    from: utcTimeOn(1, 8),
+    to: utcTimeOn(1, 16),
+    absence: 'sick_leave',
+  });
+
+  await page.goto('/absence');
+  await fromDate(page).fill(isoDay(0));
+  await toDate(page).fill(isoDay(2));
+  await reason(page).selectOption('holiday');
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  await expect(
+    page.getByText(`An absence is already recorded for ${shownDay(1)}.`),
+  ).toBeVisible();
+  // Not one of the three days was written, not even the two that were free.
+  const worklogs = await getWorklogs();
+  expect(worklogs).toHaveLength(1);
+  expect(worklogs[0].absence).toBe('sick_leave');
+});
+
+// @scenario absence/Hours worked on an absence day stay visible
+test('the calendar shows an absence day with the hours worked on it', async ({
+  page,
+}) => {
+  const [day] = pastWorkingDayOffsets(1);
+  await seedWorklog({
+    from: utcTimeOn(day, 8),
+    to: utcTimeOn(day, 16),
+    absence: 'holiday',
+  });
+  await seedWorklog({ from: utcTimeOn(day, 17), to: utcTimeOn(day, 20) });
+
+  await page.goto('/');
+
+  // Both, not one instead of the other. The figure counts only the three hours
+  // logged: the absence's own 08:00-16:00 would otherwise read as 10.5h.
+  await expect(reasonIcon(page, 'Holiday')).toBeVisible();
+  await expect(page.getByText('3h', { exact: true })).toBeVisible();
+  await expect(page.getByText('10.5h', { exact: true })).toBeHidden();
 });
