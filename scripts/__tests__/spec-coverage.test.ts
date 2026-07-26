@@ -512,13 +512,38 @@ describe('main', () => {
     expect(main([], root).exitCode).toBe(0);
   });
 
+  // @scenario spec-test-traceability/Exemption for a requirement needing no decision fails the run
+  it('fails when an end-to-end exemption names a requirement that needs no decision', () => {
+    // Beta is the only scenario of the second requirement, so exempting it
+    // leaves that requirement with nothing a browser test could ever cover.
+    write(
+      'scripts/spec-coverage.exemptions.json',
+      JSON.stringify({
+        scenarios: [
+          { scenario: 'demo/Beta happens', reason: 'cannot be automated' },
+        ],
+        requirementsWithoutE2e: NO_E2E.requirementsWithoutE2e,
+      }),
+    );
+
+    const result = main([], root);
+
+    expect(result.exitCode).toBe(1);
+    expect(result.output).toMatch(/demo\/Second requirement/);
+  });
+
   // @scenario spec-test-traceability/Exempt scenario is not a gap
   it('passes under --strict once the gap is exempt', () => {
     write(
       'scripts/spec-coverage.exemptions.json',
       JSON.stringify({
-        ...NO_E2E,
         scenarios: [{ scenario: 'demo/Beta happens', reason: 'manual only' }],
+        // Only the first requirement needs an end-to-end decision here: Beta is
+        // the second one's only scenario, and exempting it leaves that
+        // requirement with nothing to decide.
+        requirementsWithoutE2e: NO_E2E.requirementsWithoutE2e.filter(
+          (entry) => entry.requirement === 'demo/First requirement',
+        ),
       }),
     );
 
@@ -1008,9 +1033,14 @@ describe('resolveE2eExemptions', () => {
     entries: Record<string, unknown>[],
     covered: string[] = [],
     existingFiles: string[] = ['src/x/__tests__/a.test.ts'],
+    notApplicable: string[] = [],
   ) =>
-    resolveE2eExemptions(entries, requirementIds, covered, (file: string) =>
-      existingFiles.includes(file),
+    resolveE2eExemptions(
+      entries,
+      requirementIds,
+      covered,
+      (file: string) => existingFiles.includes(file),
+      notApplicable,
     );
 
   // @scenario spec-test-traceability/Exemption records a category and a reason
@@ -1126,5 +1156,31 @@ describe('resolveE2eExemptions', () => {
         ['demo/Journey'],
       ),
     ).toThrow(/demo\/Journey.*end-to-end.*remove/i);
+  });
+
+  // @scenario spec-test-traceability/Duplicate exemption entries for one requirement fail the run
+  it('rejects two entries naming the same requirement', () => {
+    expect(() =>
+      resolve([
+        { requirement: 'demo/Rule', category: 'no-ui', reason: 'first' },
+        {
+          requirement: 'demo/Rule',
+          category: 'unit-appropriate',
+          reason: 'second',
+        },
+      ]),
+    ).toThrow(/demo\/Rule.*more than once/i);
+  });
+
+  // @scenario spec-test-traceability/Exemption for a requirement needing no decision fails the run
+  it('rejects an entry for a requirement whose scenarios are all scenario-exempt', () => {
+    expect(() =>
+      resolve(
+        [{ requirement: 'demo/Rule', category: 'no-ui', reason: 'why' }],
+        [],
+        ['src/x/__tests__/a.test.ts'],
+        ['demo/Rule'],
+      ),
+    ).toThrow(/demo\/Rule.*no end-to-end decision/i);
   });
 });
