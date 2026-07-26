@@ -67,9 +67,17 @@ const created = (id: number): Worklog => ({
   comment: null,
 });
 
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 const renderEntry = (worklogs: Worklog[] = []) =>
@@ -127,8 +135,9 @@ describe('WorklogEntry', () => {
     const submitted = onSubmit.mock.calls[0][0];
     expect(submitted.from.toISOString()).toContain('2026-07-26');
     expect(submitted.to.toISOString()).toContain('2026-07-26');
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Worklog created')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Worklog created')).toBeInTheDocument();
   });
 
   it('adds what was created to the day without a reload', async () => {
@@ -150,10 +159,8 @@ describe('WorklogEntry', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to create worklog')).toBeInTheDocument();
-    expect(
-      screen.getByText('overlaps an existing worklog'),
-    ).toBeInTheDocument();
+    expect(toast.getByText('Failed to create worklog')).toBeInTheDocument();
+    expect(toast.getByText('overlaps an existing worklog')).toBeInTheDocument();
   });
 
   it('omits a detail line when the failure carries no message', async () => {
@@ -163,8 +170,8 @@ describe('WorklogEntry', () => {
     await submit();
 
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
-    shownToast();
-    expect(screen.getByText('Failed to create worklog')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.getByText('Failed to create worklog')).toBeInTheDocument();
   });
 
   it('takes a removed entry out of the day', async () => {

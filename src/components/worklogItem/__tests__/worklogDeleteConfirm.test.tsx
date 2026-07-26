@@ -34,9 +34,17 @@ const onDelete = jest.fn<(id: number) => void>();
 const setMsg = jest.fn<(msg: unknown) => void>();
 
 /** The toast the component asked for, rendered so its text can be read. */
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 beforeEach(() => {
@@ -76,7 +84,7 @@ describe('WorklogDeleteConfirm', () => {
     expect(remove).toHaveBeenCalledWith(7);
     const toast = shownToast();
     expect(toast.type).toBe('success');
-    expect(screen.getByText('Worklog deleted')).toBeInTheDocument();
+    expect(toast.getByText('Worklog deleted')).toBeInTheDocument();
   });
 
   it('reports the reason when the delete is refused', async () => {
@@ -87,9 +95,9 @@ describe('WorklogDeleteConfirm', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to delete worklog')).toBeInTheDocument();
+    expect(toast.getByText('Failed to delete worklog')).toBeInTheDocument();
     expect(
-      screen.getByText('worklog belongs to someone else'),
+      toast.getByText('worklog belongs to someone else'),
     ).toBeInTheDocument();
     // The row must stay on screen when the delete did not happen.
     expect(onDelete).not.toHaveBeenCalled();
@@ -103,6 +111,6 @@ describe('WorklogDeleteConfirm', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to delete worklog')).toBeInTheDocument();
+    expect(toast.getByText('Failed to delete worklog')).toBeInTheDocument();
   });
 });

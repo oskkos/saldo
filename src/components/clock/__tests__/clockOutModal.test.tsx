@@ -1,4 +1,5 @@
 import {
+  afterAll,
   beforeAll,
   beforeEach,
   describe,
@@ -40,9 +41,17 @@ beforeAll(async () => {
 const onDone = jest.fn();
 const setMsg = jest.fn<(msg: unknown) => void>();
 
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 const renderModal = ({
@@ -86,8 +95,9 @@ describe('ClockOutModal', () => {
     await userEvent.setup().click(button('Save'));
 
     await waitFor(() => expect(clockOut).toHaveBeenCalled());
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Worklog created')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Worklog created')).toBeInTheDocument();
   });
 
   it('reports the reason when saving is refused', async () => {
@@ -99,10 +109,8 @@ describe('ClockOutModal', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to save session')).toBeInTheDocument();
-    expect(
-      screen.getByText('overlaps an existing worklog'),
-    ).toBeInTheDocument();
+    expect(toast.getByText('Failed to save session')).toBeInTheDocument();
+    expect(toast.getByText('overlaps an existing worklog')).toBeInTheDocument();
   });
 });
 
@@ -125,10 +133,17 @@ describe('ClockOutModal when the session crossed midnight', () => {
 });
 
 describe('ClockOutModal discard', () => {
+  // The describe body runs during collection, so this replaces window.confirm for
+  // every test in the file — restored afterwards so a later test that does call it
+  // gets a real dialog rather than undefined.
   const confirmSpy = jest.spyOn(window, 'confirm');
 
   beforeEach(() => {
     confirmSpy.mockReset();
+  });
+
+  afterAll(() => {
+    confirmSpy.mockRestore();
   });
 
   it('does nothing if the confirmation is refused', async () => {
@@ -149,8 +164,9 @@ describe('ClockOutModal discard', () => {
     await userEvent.setup().click(button('Discard'));
 
     await waitFor(() => expect(discard).toHaveBeenCalled());
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Session discarded')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Session discarded')).toBeInTheDocument();
   });
 
   it('says so when discarding fails', async () => {
@@ -163,6 +179,6 @@ describe('ClockOutModal discard', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to discard session')).toBeInTheDocument();
+    expect(toast.getByText('Failed to discard session')).toBeInTheDocument();
   });
 });

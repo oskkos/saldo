@@ -41,9 +41,17 @@ const worklog: Worklog = {
 const onEdit = jest.fn();
 const setMsg = jest.fn<(msg: unknown) => void>();
 
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 beforeEach(() => {
@@ -82,8 +90,9 @@ describe('WorklogEditModal', () => {
     await waitFor(() =>
       expect(edit).toHaveBeenCalledWith(42, expect.anything()),
     );
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Worklog updated')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Worklog updated')).toBeInTheDocument();
   });
 
   it('reports the reason when the change is refused', async () => {
@@ -94,9 +103,9 @@ describe('WorklogEditModal', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to update worklog')).toBeInTheDocument();
+    expect(toast.getByText('Failed to update worklog')).toBeInTheDocument();
     expect(
-      screen.getByText('worklog belongs to someone else'),
+      toast.getByText('worklog belongs to someone else'),
     ).toBeInTheDocument();
   });
 });
