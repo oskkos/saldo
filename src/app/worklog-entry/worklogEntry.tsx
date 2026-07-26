@@ -109,7 +109,10 @@ export default function WorklogEntry({
               saldo. Derived from the same state the list below renders, so it
               clears as soon as the absence is deleted. */}
           {wl.some((worklog) => worklog.absence) ? (
-            <div role="note" className="alert alert-info text-sm w-full mt-3">
+            <div
+              role="note"
+              className="alert alert-info text-sm w-full mt-3 mb-4"
+            >
               An absence is recorded for this day. Hours you log here are still
               added to your saldo.
             </div>

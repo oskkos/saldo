@@ -134,6 +134,9 @@ describe('worklog calculator', () => {
 
   describe('calculateWorklogsSum', () => {
     // @scenario saldo/Sum over a mixed list
+    // The aggregation itself takes the list as given: every entry counts by its
+    // own stored times, absence or not. Deciding which entries belong in the
+    // list is the caller's job — see existingWorklogs, which leaves absences out.
     it('should calculate the sum of all worklogs correctly', () => {
       const worklogs = [
         {

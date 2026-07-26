@@ -17,7 +17,13 @@ export default function ExistingWorklogs({
         <h2 className="text-xl text-center sm:text-right m-3 w-64">
           Existing worklogs for day
         </h2>
-        {calculateWorklogsSum(worklogs).toBadge()}
+        {/* Hours the user logged, so an absence is left out: it is stored as a
+            full-day worklog and would add work nobody did. The mini-calendar's
+            border colour asks a different question — did the day meet its
+            obligation — and still counts the absence. */}
+        {calculateWorklogsSum(
+          worklogs.filter((worklog) => !worklog.absence),
+        ).toBadge()}
       </div>
       <div className="flex flex-wrap justify-between items-center m-3 w-80">
         {worklogs.map((x) => (
