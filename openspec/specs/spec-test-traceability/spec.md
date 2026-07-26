@@ -408,7 +408,10 @@ An end-to-end exemption naming a requirement that does not exist SHALL be a hard
 error, and an exemption for a requirement that does have Playwright coverage SHALL
 be a hard error, so coverage arriving later forces the exemption out. Requirement
 names therefore act as identifiers, and renaming a requirement SHALL break any
-exemption citing it.
+exemption citing it. Two entries naming the same requirement SHALL be a hard error
+rather than one silently overriding the other, and an exemption for a requirement
+whose every scenario is already scenario-exempt SHALL be a hard error, since such
+a requirement needs no end-to-end decision to begin with.
 
 #### Scenario: Exemption for an unknown requirement fails the run
 
@@ -425,6 +428,17 @@ exemption citing it.
 
 - **WHEN** a requirement is both end-to-end exempt and covered by a Playwright test
 - **THEN** the tool exits non-zero and reports that the exemption must be removed
+
+#### Scenario: Duplicate exemption entries for one requirement fail the run
+
+- **WHEN** two end-to-end exemptions name the same requirement
+- **THEN** the tool exits non-zero and names the duplicated requirement
+
+#### Scenario: Exemption for a requirement needing no decision fails the run
+
+- **GIVEN** a requirement whose every scenario carries a scenario exemption
+- **WHEN** an end-to-end exemption also names that requirement
+- **THEN** the tool exits non-zero and reports the exemption as unnecessary
 
 ### Requirement: Coverage map reports end-to-end coverage per requirement
 

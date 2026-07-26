@@ -512,15 +512,23 @@ export function parseExemptionsFile(json) {
  * `harness-cost` is the only category that asserts a judgement rather than a
  * fact about the requirement, so it must name the test that does cover it and
  * that file must exist — otherwise the claim is unfalsifiable.
+ *
+ * Every rejection here is about an exemption that has stopped meaning anything:
+ * it names something that no longer exists, it has been overtaken by real
+ * coverage, it is one of two entries disagreeing about the same requirement, or
+ * it decides a question that was never open. An exemption that says nothing is
+ * worse than none, because it reads as a decision.
  */
 export function resolveE2eExemptions(
   entries,
   requirementIds,
   e2eCoveredRequirementIds,
   fileExists,
+  notApplicableRequirementIds = [],
 ) {
   const known = new Set(requirementIds);
   const covered = new Set(e2eCoveredRequirementIds);
+  const notApplicable = new Set(notApplicableRequirementIds);
   const exemptions = new Map();
 
   for (const entry of entries) {
@@ -529,6 +537,11 @@ export function resolveE2eExemptions(
     if (!known.has(requirement)) {
       throw new Error(
         `End-to-end exemption names an unknown requirement: ${requirement}. Remove it or fix the name.`,
+      );
+    }
+    if (exemptions.has(requirement)) {
+      throw new Error(
+        `End-to-end exemption names ${requirement} more than once. Keep the one that states the real reason and delete the other.`,
       );
     }
     if (!E2E_EXEMPTION_CATEGORIES.includes(category)) {
@@ -556,6 +569,11 @@ export function resolveE2eExemptions(
     if (covered.has(requirement)) {
       throw new Error(
         `Requirement ${requirement} has end-to-end coverage. Remove its exemption.`,
+      );
+    }
+    if (notApplicable.has(requirement)) {
+      throw new Error(
+        `Requirement ${requirement} has no coverable scenarios — every one of them is scenario-exempt — so it needs no end-to-end decision. Remove its exemption.`,
       );
     }
 
@@ -725,20 +743,30 @@ export function main(argv, root) {
       links.map((link) => link.scenarioId),
     );
 
-    // Which requirements already have browser coverage, so an exemption for one
-    // of them can be rejected as superseded.
-    const e2eCovered = new Set(
-      links
-        .filter((link) => isE2eTest(link.file))
-        .map((link) => scenarios.find((s) => s.id === link.scenarioId))
-        .filter(Boolean)
-        .map((s) => `${s.capability}/${s.requirement}`),
-    );
+    // What the tests alone say about each requirement, before any end-to-end
+    // exemption is consulted. That single pass answers both validation
+    // questions: an exemption is superseded if the requirement is already
+    // covered in the browser, and unnecessary if none of its scenarios can be
+    // covered at all. Deriving them here rather than by a second hand-rolled
+    // traversal keeps one definition of each state.
+    const evidenceStates = analyzeRequirements({
+      requirements,
+      scenarios,
+      links,
+      scenarioExemptions: exemptions,
+      e2eExemptions: new Map(),
+    });
+    const withState = (state) =>
+      evidenceStates
+        .filter((requirement) => requirement.state === state)
+        .map((requirement) => requirement.id);
+
     e2eExemptions = resolveE2eExemptions(
       collected.e2eExemptionEntries,
       requirements.map((requirement) => requirement.id),
-      [...e2eCovered],
+      withState('e2e'),
       (file) => fs.existsSync(path.join(root, file)),
+      withState('not-applicable'),
     );
   } catch (error) {
     return { exitCode: 1, output: error.message };
