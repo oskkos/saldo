@@ -41,9 +41,9 @@
 
 ## 6. Saldo scenarios
 
-- [ ] 6.1 Unit-test in `src/services/__tests__` that a holiday plus a 3-hour worklog on a 450-minute working day nets +180
-- [ ] 6.2 Unit-test that a flex day plus a 3-hour worklog nets -270, and that an absence plus a 3-hour worklog on a Saturday nets +180
-- [ ] 6.3 Annotate with `@scenario saldo/Work during a holiday raises the balance by the hours worked`, `@scenario saldo/Work during a flex day draws down only the unworked part`, `@scenario saldo/Work on an absence day that is not a working day`
+- [x] 6.1 Unit-test in `src/services/__tests__` that a holiday plus a 3-hour worklog on a 450-minute working day nets +180
+- [x] 6.2 Unit-test that a flex day plus a 3-hour worklog nets -270, and that an absence plus a 3-hour worklog on a Saturday nets +180
+- [x] 6.3 Annotate with `@scenario saldo/Work during a holiday raises the balance by the hours worked`, `@scenario saldo/Work during a flex day draws down only the unworked part`, `@scenario saldo/Work on an absence day that is not a working day`
 
 ## 7. End-to-end coverage
 

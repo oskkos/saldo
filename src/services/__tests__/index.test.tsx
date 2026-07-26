@@ -535,6 +535,76 @@ describe('saldo specification scenarios', () => {
     const { container } = render(saldo.toBadge());
     expect(container.firstChild).toHaveClass('badge-success');
   });
+
+  // Hours logged on a day that also carries an absence. No rule is special-cased
+  // for the pair: each record contributes what its own rule says, and the day
+  // charges its expectation once.
+  const threeHoursOn = (day: string) =>
+    worklog({
+      from: new Date(`${day}T17:00:00.000Z`),
+      to: new Date(`${day}T20:00:00.000Z`),
+      subtractLunchBreak: false,
+    });
+  const absenceOn = (day: string, absence: AbsenceReason) =>
+    worklog({
+      absence,
+      from: new Date(`${day}T08:00:00.000Z`),
+      to: new Date(`${day}T16:00:00.000Z`),
+      subtractLunchBreak: true,
+    });
+
+  // @scenario saldo/Work during a holiday raises the balance by the hours worked
+  it('adds the hours worked during a holiday on top of a neutral day', () => {
+    at('2023-10-16T22:00:00.000Z');
+
+    // 450 credited by the holiday + 180 worked, against 450 expected.
+    const saldo = calculateCurrentSaldo(
+      settingsFor(MONDAY),
+      [
+        absenceOn('2023-10-16', AbsenceReason.holiday),
+        threeHoursOn('2023-10-16'),
+      ],
+      [],
+    );
+
+    expect(saldo.toString()).toBe('3h 0min');
+  });
+
+  // @scenario saldo/Work during a flex day draws down only the unworked part
+  it('offsets a flex day by the hours actually worked on it', () => {
+    at('2023-10-16T22:00:00.000Z');
+
+    // A flex day credits nothing, so the 180 worked reduce the 450 drawdown.
+    const saldo = calculateCurrentSaldo(
+      settingsFor(MONDAY),
+      [
+        absenceOn('2023-10-16', AbsenceReason.flex_hours),
+        threeHoursOn('2023-10-16'),
+      ],
+      [],
+    );
+
+    expect(saldo.toString()).toBe('-4h 30min');
+  });
+
+  // @scenario saldo/Work on an absence day that is not a working day
+  it('counts hours worked on an absence that falls on a Saturday', () => {
+    const SATURDAY = '2023-10-14T00:00:00.000Z';
+    at('2023-10-14T22:00:00.000Z');
+
+    // The Saturday expects nothing and the absence credits nothing, so only
+    // the worked hours remain.
+    const saldo = calculateCurrentSaldo(
+      settingsFor(SATURDAY),
+      [
+        absenceOn('2023-10-14', AbsenceReason.holiday),
+        threeHoursOn('2023-10-14'),
+      ],
+      [],
+    );
+
+    expect(saldo.toString()).toBe('3h 0min');
+  });
 });
 
 describe('absence conflict helpers', () => {
