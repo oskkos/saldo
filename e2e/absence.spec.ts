@@ -188,23 +188,30 @@ test('one taken day inside a range rejects every day of it', async ({
   expect(worklogs[0].absence).toBe('sick_leave');
 });
 
-// @scenario absence/Hours worked on an absence day stay visible
-test('the calendar shows an absence day with the hours worked on it', async ({
+// @scenario absence/Work on an absence day marks the icon
+// @scenario absence/An absence-only day shows a plain icon
+test('the calendar marks an absence day that also carries logged hours', async ({
   page,
 }) => {
-  const [day] = pastWorkingDayOffsets(1);
+  const [worked, untouched] = pastWorkingDayOffsets(2);
   await seedWorklog({
-    from: utcTimeOn(day, 8),
-    to: utcTimeOn(day, 16),
+    from: utcTimeOn(worked, 8),
+    to: utcTimeOn(worked, 16),
     absence: 'holiday',
   });
-  await seedWorklog({ from: utcTimeOn(day, 17), to: utcTimeOn(day, 20) });
+  await seedWorklog({ from: utcTimeOn(worked, 17), to: utcTimeOn(worked, 20) });
+  await seedWorklog({
+    from: utcTimeOn(untouched, 8),
+    to: utcTimeOn(untouched, 16),
+    absence: 'sick_leave',
+  });
 
   await page.goto('/');
 
-  // Both, not one instead of the other. The figure counts only the three hours
-  // logged: the absence's own 08:00-16:00 would otherwise read as 10.5h.
-  await expect(reasonIcon(page, 'Holiday')).toBeVisible();
-  await expect(page.getByText('3h', { exact: true })).toBeVisible();
+  // The worked day's icon names the three hours logged on top of the holiday.
+  // Its own 08:00-16:00 are left out, or the label would read 10.5h.
+  await expect(reasonIcon(page, 'Holiday, 3h logged')).toBeVisible();
   await expect(page.getByText('10.5h', { exact: true })).toBeHidden();
+  // The day nothing was worked on keeps the plain label of its reason.
+  await expect(reasonIcon(page, 'Sick leave')).toBeVisible();
 });

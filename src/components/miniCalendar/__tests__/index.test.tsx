@@ -82,7 +82,7 @@ describe('MiniCalendar', () => {
     expect(router.push).toHaveBeenCalledWith(`/?month=2023-02`);
   });
 
-  test('shows the hours worked on an absence day next to its icon', () => {
+  test('marks an absence day on which work was also logged', () => {
     const date = new Date('2023-01-01T00:00:00Z');
     const worklogs: Worklog[] = [
       {
@@ -113,12 +113,11 @@ describe('MiniCalendar', () => {
       />,
     );
 
-    // The absence carries 450 synthetic minutes of its own; the cell must
-    // report only the 180 the user actually logged on top of it.
-    expect(screen.getByText('3h')).toBeInTheDocument();
+    // The absence carries 450 synthetic minutes of its own; the label must
+    // report only the 180 the user actually logged on top of it. react-icons
+    // renders the label as an SVG <title> child, which getByTitle matches.
+    expect(screen.getByTitle('Holiday, 3h logged')).toBeInTheDocument();
+    expect(screen.queryByTitle('Holiday')).toBeNull();
     expect(screen.queryByText('10.5h')).toBeNull();
-    // react-icons renders the label as an SVG <title> child, which getByTitle
-    // matches; the month-navigation icons carry titles of their own.
-    expect(screen.getByTitle('Holiday')).toBeInTheDocument();
   });
 });

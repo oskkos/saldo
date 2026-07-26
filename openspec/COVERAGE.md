@@ -118,8 +118,8 @@ None — every requirement has end-to-end coverage or a stated exemption.
 | Notice clears with the absence | Day view flags an existing absence | `93ccd9e50f5f` | `src/app/worklog-entry/__tests__/worklogEntry.test.tsx` — disappears when the absence is deleted, without a reload |
 | Label formatting | Human-readable reason labels | `63714891b7be` | `src/services/__tests__/index.test.tsx` — should convert an absence reason to a human-friendly string<br>`e2e/absence.spec.ts` — an absence is listed by its readable label and its own icon |
 | Icon per reason | Reason iconography | `7534966c30be` | `src/components/worklogItem/__tests__/absenceIcon.test.tsx` — renders a distinct icon for every reason<br>`src/components/worklogItem/__tests__/absenceIcon.test.tsx` — labels each icon with its human-readable reason<br>`e2e/absence.spec.ts` — an absence is listed by its readable label and its own icon |
-| Hours worked on an absence day stay visible | Reason iconography | `d146ba91a331` | `src/components/miniCalendar/__tests__/dayItem.test.tsx` — shows the icon and the hours worked on top of an absence<br>`e2e/absence.spec.ts` — the calendar shows an absence day with the hours worked on it |
-| An absence-only day shows no hours | Reason iconography | `b100a68731cb` | `src/components/miniCalendar/__tests__/dayItem.test.tsx` — shows the icon alone when nothing was worked on the absence day |
+| Work on an absence day marks the icon | Reason iconography | `5c1a92d66fd2` | `src/components/miniCalendar/__tests__/dayItem.test.tsx` — tints the icon and names the hours when work was done on the absence<br>`e2e/absence.spec.ts` — the calendar marks an absence day that also carries logged hours |
+| An absence-only day shows a plain icon | Reason iconography | `aab7e7aeb1ed` | `src/components/miniCalendar/__tests__/dayItem.test.tsx` — leaves the icon plain when nothing was worked on the absence day<br>`e2e/absence.spec.ts` — the calendar marks an absence day that also carries logged hours |
 
 ## auth
 
