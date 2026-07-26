@@ -37,6 +37,10 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
           flags: unit
+          # `files` adds to whatever the uploader finds by itself, so without this it
+          # also ships coverage-final.json, clover.xml and any unrelated JSON in the
+          # tree — all filed under this flag as though they were coverage.
+          disable_search: true
       - name: Build
         run: npm run build
 
@@ -105,6 +109,8 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage-e2e/server/lcov.info,./coverage-e2e/browser/lcov.info
           flags: e2e
+          # Without this the raw V8 profiles under coverage-e2e/v8-* are swept up too.
+          disable_search: true
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4

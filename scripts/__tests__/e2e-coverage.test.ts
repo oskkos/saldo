@@ -107,6 +107,17 @@ describe('each layer is published under its own flag', () => {
     expect(upload).toBeGreaterThan(report);
   });
 
+  // @scenario coverage-reporting/Only the named reports are uploaded
+  it('sends only the named reports, not whatever else is in the tree', () => {
+    // Naming `files` is not enough on its own: the uploader adds them to its own
+    // search. Left on, the unit flag received scripts/spec-coverage.exemptions.json
+    // and the e2e flag received four raw V8 profiles — 4 and 6 files uploaded where
+    // 1 and 2 were intended, and CI stayed green throughout.
+    for (const name of ['build-and-test', 'e2e'] as const) {
+      expect(job(name)).toMatch(/disable_search:\s*true/);
+    }
+  });
+
   // @scenario coverage-reporting/A layer that did not run is carried forward
   it('carries each flag forward so a job that did not run reads as absent', () => {
     const config = fs.readFileSync(path.join(repoRoot, 'codecov.yml'), 'utf8');

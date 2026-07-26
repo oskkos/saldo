@@ -165,6 +165,11 @@ does not run, so a job that did not report cannot be read as a layer covering no
 The end-to-end job SHALL generate the report before uploading it, and SHALL upload only
 after a passing suite — a failed run's coverage is not a fact worth publishing.
 
+Each upload SHALL send only the reports it names. Naming files is not on its own
+sufficient: the uploader adds named files to whatever else it finds in the working tree,
+which sweeps up raw profiler output and unrelated JSON and files them under the flag as
+though they were coverage.
+
 #### Scenario: Unit coverage is published under its own flag
 
 - **WHEN** the unit job uploads coverage
@@ -181,6 +186,14 @@ after a passing suite — a failed run's coverage is not a fact worth publishing
 - **GIVEN** the end-to-end job's steps
 - **WHEN** the workflow runs
 - **THEN** the report is generated after the suite and before the upload
+
+#### Scenario: Only the named reports are uploaded
+
+- **GIVEN** a working tree holding raw profiler output and other JSON beside the
+  generated reports
+- **WHEN** a job uploads coverage
+- **THEN** only the reports it names are sent, and the uploader's own search for other
+  files is disabled
 
 #### Scenario: A layer that did not run is carried forward
 
