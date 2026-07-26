@@ -13,7 +13,7 @@ import {
   isNonWorkingDay,
   startOfDay,
 } from '@/util/date';
-import { Date_ISODay, toISODay } from '@/util/dateFormatter';
+import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
 
 // Index the per-date overrides by UTC calendar day for O(1) lookup.
 export function expectedMinutesByDay(
@@ -148,4 +148,36 @@ export function absenceReasonToString(reason: AbsenceReason) {
     '_',
     ' ',
   );
+}
+
+// The inclusive UTC calendar days a from/to pair spans. Both ends are taken
+// down to their start of day, so the times carried by an absence range (which
+// are the user's default work hours, not range boundaries) cannot shorten or
+// lengthen it.
+export function daysInRange(from: Date, to: Date): Date_ISODay[] {
+  const days: Date_ISODay[] = [];
+  const last = startOfDay(to).getTime();
+  let day = startOfDay(from);
+  while (day.getTime() <= last) {
+    days.push(toISODay(day));
+    day = add(day, 1, 'day');
+  }
+  return days;
+}
+
+// A month-long range can collide on every day; naming them all would produce a
+// toast nobody reads. Name the first few and count the rest.
+const MAX_LISTED_CONFLICT_DAYS = 3;
+
+export function absenceConflictMessage(days: Date_ISODay[]) {
+  if (days.length === 0) {
+    return 'An absence is already recorded for the selected days.';
+  }
+  const listed = days.slice(0, MAX_LISTED_CONFLICT_DAYS).map(toDayMonthYear);
+  const remaining = days.length - listed.length;
+  const rest =
+    remaining > 0
+      ? ` and ${remaining} more ${remaining === 1 ? 'day' : 'days'}`
+      : '';
+  return `An absence is already recorded for ${listed.join(', ')}${rest}.`;
 }

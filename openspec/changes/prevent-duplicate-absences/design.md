@@ -106,7 +106,7 @@ a sentence, are side-effect-free and belong in `src/services`. They are the
 parts most worth unit-testing and the parts that would otherwise be duplicated
 between the range path and the single-record path.
 
-The message reads `An absence is already recorded for 28.07.2026.`, formatted
+The message reads `An absence is already recorded for 28.7.2026.`, formatted
 with `toDayMonthYear` so it matches how days are shown elsewhere in the UI. More
 than three conflicting days are truncated to the first three plus a count, so a
 month-long range does not produce an unreadable toast.

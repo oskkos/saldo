@@ -9,6 +9,8 @@ import {
   expectedMinutesByDay,
   minutesToSaldoObject,
   worklogMinutes,
+  daysInRange,
+  absenceConflictMessage,
 } from '../index';
 import {
   AbsenceReason,
@@ -532,5 +534,107 @@ describe('saldo specification scenarios', () => {
     expect(saldo.toString()).toBe('2h 5min');
     const { container } = render(saldo.toBadge());
     expect(container.firstChild).toHaveClass('badge-success');
+  });
+});
+
+describe('absence conflict helpers', () => {
+  const isoDay = (day: string) => day as Date_ISODay;
+
+  describe('daysInRange', () => {
+    it('returns the single day a one-day range covers', () => {
+      expect(
+        daysInRange(
+          new Date('2026-07-28T08:00:00.000Z'),
+          new Date('2026-07-28T08:00:00.000Z'),
+        ),
+      ).toEqual(['2026-07-28']);
+    });
+
+    it('returns every day of an inclusive multi-day range', () => {
+      expect(
+        daysInRange(
+          new Date('2026-07-28T08:00:00.000Z'),
+          new Date('2026-07-30T08:00:00.000Z'),
+        ),
+      ).toEqual(['2026-07-28', '2026-07-29', '2026-07-30']);
+    });
+
+    // The range's ends carry the user's default work hours, not boundaries: a
+    // range ending at 08:00 must not be a day shorter than one ending at 16:00.
+    it('ignores the times carried by either end', () => {
+      const endsEarly = daysInRange(
+        new Date('2026-07-28T16:00:00.000Z'),
+        new Date('2026-07-29T08:00:00.000Z'),
+      );
+      const endsLate = daysInRange(
+        new Date('2026-07-28T08:00:00.000Z'),
+        new Date('2026-07-29T16:00:00.000Z'),
+      );
+
+      expect(endsEarly).toEqual(['2026-07-28', '2026-07-29']);
+      expect(endsLate).toEqual(endsEarly);
+    });
+
+    it('returns nothing when the range runs backwards', () => {
+      expect(
+        daysInRange(
+          new Date('2026-07-30T08:00:00.000Z'),
+          new Date('2026-07-28T08:00:00.000Z'),
+        ),
+      ).toEqual([]);
+    });
+  });
+
+  describe('absenceConflictMessage', () => {
+    // @scenario absence/The message names the conflicting day
+    it('names the day a single conflict falls on', () => {
+      expect(absenceConflictMessage([isoDay('2026-07-28')])).toBe(
+        'An absence is already recorded for 28.7.2026.',
+      );
+    });
+
+    it('lists three conflicting days in full', () => {
+      expect(
+        absenceConflictMessage([
+          isoDay('2026-07-28'),
+          isoDay('2026-07-29'),
+          isoDay('2026-07-30'),
+        ]),
+      ).toBe(
+        'An absence is already recorded for 28.7.2026, 29.7.2026, 30.7.2026.',
+      );
+    });
+
+    // @scenario absence/Many taken days are summarized
+    it('names the first three and counts the rest', () => {
+      expect(
+        absenceConflictMessage([
+          isoDay('2026-07-28'),
+          isoDay('2026-07-29'),
+          isoDay('2026-07-30'),
+          isoDay('2026-07-31'),
+          isoDay('2026-08-01'),
+        ]),
+      ).toBe(
+        'An absence is already recorded for 28.7.2026, 29.7.2026, 30.7.2026 and 2 more days.',
+      );
+    });
+
+    it('counts a single remaining day in the singular', () => {
+      expect(
+        absenceConflictMessage([
+          isoDay('2026-07-28'),
+          isoDay('2026-07-29'),
+          isoDay('2026-07-30'),
+          isoDay('2026-07-31'),
+        ]),
+      ).toContain('and 1 more day.');
+    });
+
+    it('stays a well-formed sentence when given no days', () => {
+      expect(absenceConflictMessage([])).toBe(
+        'An absence is already recorded for the selected days.',
+      );
+    });
   });
 });

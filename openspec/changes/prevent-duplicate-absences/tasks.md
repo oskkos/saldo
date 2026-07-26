@@ -1,9 +1,9 @@
 ## 1. Conflict rule as pure logic
 
-- [ ] 1.1 Add a range-expansion helper to `src/services` turning a from/to pair into the inclusive list of `Date_ISODay` values, replacing the loop currently inlined in `absence.tsx`
-- [ ] 1.2 Add a conflict-message helper formatting a list of taken days with `toDayMonthYear` into `An absence is already recorded for 28.07.2026.`, naming at most three days and reporting the count of any remainder
-- [ ] 1.3 Unit-test both helpers: single day, multi-day range, one conflict, three conflicts, more than three (truncation and count), empty list
-- [ ] 1.4 Annotate the message tests with `@scenario absence/The message names the conflicting day` and `@scenario absence/Many taken days are summarized`
+- [x] 1.1 Add a range-expansion helper to `src/services` turning a from/to pair into the inclusive list of `Date_ISODay` values, replacing the loop currently inlined in `absence.tsx`
+- [x] 1.2 Add a conflict-message helper formatting a list of taken days with `toDayMonthYear` into `An absence is already recorded for 28.7.2026.`, naming at most three days and reporting the count of any remainder
+- [x] 1.3 Unit-test both helpers: single day, multi-day range, one conflict, three conflicts, more than three (truncation and count), empty list
+- [x] 1.4 Annotate the message tests with `@scenario absence/The message names the conflicting day` and `@scenario absence/Many taken days are summarized`
 
 ## 2. Repository guard and transactional insert
 
