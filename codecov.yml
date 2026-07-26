@@ -1,0 +1,31 @@
+# Two test layers report separately: Jest as `unit`, the Playwright suite as `e2e`.
+# They cover near-complementary halves of the codebase — Jest holds the pure and
+# server layers, Playwright holds the pages and components — so the project total is
+# only meaningful with both.
+#
+# The `e2e` flag receives one report per runtime (server and browser), because the
+# converter cannot union them locally without one runtime's zero masking the other's
+# hit. Codecov unions uploads within a flag, which is why that works.
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        # The e2e layer is structurally more fragile than the unit one — it depends on
+        # process shutdown and on source maps resolving — so a small dip should not
+        # fail a pull request. A collapse is caught by the report step instead, which
+        # exits non-zero rather than publishing an empty report.
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+        threshold: 1%
+
+flags:
+  unit:
+    # Carry the last known report forward when a job did not run, so "this layer did
+    # not report" is never read as "this layer covers nothing".
+    carryforward: true
+  e2e:
+    carryforward: true

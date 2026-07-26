@@ -62,6 +62,63 @@ describe('every end-to-end test file is instrumented', () => {
   });
 });
 
+describe('each layer is published under its own flag', () => {
+  const workflow = () =>
+    fs.readFileSync(
+      path.join(repoRoot, '.github', 'workflows', 'build.yml'),
+      'utf8',
+    );
+
+  /** The steps of one job, sliced out of the workflow by the next job's key. */
+  const job = (name: 'build-and-test' | 'e2e') => {
+    const text = workflow();
+    const start = text.indexOf(`  ${name}:`);
+    const nextJob = text.indexOf('\n  e2e:', start + 1);
+    return text.slice(start, name === 'build-and-test' ? nextJob : undefined);
+  };
+
+  // @scenario coverage-reporting/Unit coverage is published under its own flag
+  it('flags the unit upload as the unit layer', () => {
+    const unitJob = job('build-and-test');
+
+    expect(unitJob).toContain('codecov/codecov-action');
+    expect(unitJob).toMatch(/flags:\s*unit/);
+  });
+
+  // @scenario coverage-reporting/End-to-end coverage is published under its own flag
+  it('flags the end-to-end upload as the end-to-end layer, with both runtimes', () => {
+    const e2eJob = job('e2e');
+
+    expect(e2eJob).toMatch(/flags:\s*e2e/);
+    // Both runtimes are uploaded under that one flag; the service unions them.
+    expect(e2eJob).toContain('coverage-e2e/server/lcov.info');
+    expect(e2eJob).toContain('coverage-e2e/browser/lcov.info');
+  });
+
+  // @scenario coverage-reporting/The end-to-end job reports before uploading
+  it('generates the report after the suite and before the upload', () => {
+    const e2eJob = job('e2e');
+    const suite = e2eJob.indexOf('npm run test:e2e:coverage');
+    const report = e2eJob.indexOf('npm run coverage:e2e:report');
+    const upload = e2eJob.indexOf('codecov/codecov-action');
+
+    expect(suite).toBeGreaterThan(-1);
+    expect(report).toBeGreaterThan(suite);
+    expect(upload).toBeGreaterThan(report);
+  });
+
+  // @scenario coverage-reporting/A layer that did not run is carried forward
+  it('carries each flag forward so a job that did not run reads as absent', () => {
+    const config = fs.readFileSync(path.join(repoRoot, 'codecov.yml'), 'utf8');
+    const flags = config.slice(config.indexOf('flags:'));
+
+    for (const flag of ['unit', 'e2e']) {
+      const section = flags.slice(flags.indexOf(`${flag}:`));
+      expect(section).toMatch(/carryforward:\s*true/);
+    }
+  });
+});
+
 describe('collection is opt-in', () => {
   const scripts = () =>
     JSON.parse(
