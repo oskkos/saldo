@@ -11,7 +11,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 
 import type { Date_ISODay, Date_Time } from '@/util/dateFormatter';
-import type { Worklog, WorklogFormData } from '@/types';
+import { AbsenceReason, type Worklog, type WorklogFormData } from '@/types';
 
 // The day view's own work is turning the form's day-and-time strings into real dates
 // before submitting, keeping the day's list current afterwards, and offering the
@@ -183,5 +183,55 @@ describe('WorklogEntry', () => {
 
     expect(screen.getByText('existing:1')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'drop-1' })).toBeNull();
+  });
+});
+
+describe('the notice for a day that already has an absence', () => {
+  const absence = (id: number): Worklog => ({
+    ...created(id),
+    absence: AbsenceReason.holiday,
+  });
+  const notice = () =>
+    screen.queryByText(
+      'An absence is recorded for this day. Hours you log here are still added to your saldo.',
+    );
+
+  // @scenario absence/Notice on an absence day
+  it('says the day is spoken for and that hours still count', () => {
+    renderEntry([absence(1)]);
+
+    expect(notice()).toBeInTheDocument();
+  });
+
+  // @scenario absence/No notice on an ordinary day
+  it('stays quiet on a day with only regular entries', () => {
+    renderEntry([created(1)]);
+
+    expect(notice()).toBeNull();
+  });
+
+  it('stays quiet on an empty day', () => {
+    renderEntry();
+
+    expect(notice()).toBeNull();
+  });
+
+  // @scenario absence/Notice clears with the absence
+  it('disappears when the absence is deleted, without a reload', async () => {
+    renderEntry([absence(1), created(2)]);
+    expect(notice()).toBeInTheDocument();
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: 'drop-1' }));
+
+    expect(notice()).toBeNull();
+  });
+
+  // The day is not closed to entry: the form is still there to be used.
+  it('leaves the entry form usable', () => {
+    renderEntry([absence(1)]);
+
+    expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
   });
 });

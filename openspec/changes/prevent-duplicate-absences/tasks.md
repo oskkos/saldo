@@ -27,10 +27,10 @@
 
 ## 4. Day view notice
 
-- [ ] 4.1 Derive the notice in `worklogEntry.tsx` from the `wl` state already held, so it clears when the day's absence is deleted without a reload
-- [ ] 4.2 Render it as an informational note above the inputs: an absence is recorded for this day, and hours logged here are still added to the saldo
-- [ ] 4.3 Unit-test: shown on a day with an absence, absent on an ordinary day, gone after the absence is removed from the list
-- [ ] 4.4 Annotate with `@scenario absence/Notice on an absence day`, `@scenario absence/No notice on an ordinary day`, `@scenario absence/Notice clears with the absence`
+- [x] 4.1 Derive the notice in `worklogEntry.tsx` from the `wl` state already held, so it clears when the day's absence is deleted without a reload
+- [x] 4.2 Render it as an informational note above the inputs: an absence is recorded for this day, and hours logged here are still added to the saldo
+- [x] 4.3 Unit-test: shown on a day with an absence, absent on an ordinary day, gone after the absence is removed from the list
+- [x] 4.4 Annotate with `@scenario absence/Notice on an absence day`, `@scenario absence/No notice on an ordinary day`, `@scenario absence/Notice clears with the absence`
 
 ## 5. Calendar shows hours worked on an absence day
 

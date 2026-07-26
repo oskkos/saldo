@@ -104,6 +104,16 @@ export default function WorklogEntry({
               override={override}
             />
           </div>
+          {/* An absence claims the whole day, but it does not close the day to
+              entry: hours logged on top are additional work and raise the
+              saldo. Derived from the same state the list below renders, so it
+              clears as soon as the absence is deleted. */}
+          {wl.some((worklog) => worklog.absence) ? (
+            <div role="note" className="alert alert-info text-sm w-full mt-3">
+              An absence is recorded for this day. Hours you log here are still
+              added to your saldo.
+            </div>
+          ) : null}
           <WorklogInputs
             value={value}
             setValue={setValue}
