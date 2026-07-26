@@ -39,7 +39,7 @@
     {
       "requirement": "auth/Server-side auth gate",
       "category": "harness-cost",
-      "reason": "The gate is only observable from an unauthenticated request, and the whole Playwright suite runs behind one shared signed-in storage state. Exercising it needs a second project with no storage state, set up and reset independently — deliberately out of scope, since auth journeys are covered in Jest.",
+      "reason": "The gate is only observable from an unauthenticated request, and the whole Playwright suite runs behind one shared signed-in storage state. Exercising it needs a second project with no storage state, set up and reset independently \u2014 deliberately out of scope, since auth journeys are covered in Jest.",
       "coveredAt": "src/auth/__tests__/authSession.test.ts"
     },
     {
@@ -62,7 +62,7 @@
     {
       "requirement": "auth/Reset password with a valid token",
       "category": "harness-cost",
-      "reason": "The raw token only ever reaches the user by email, so a browser test would have to read it out of the database and visit the reset link by hand — and then do it from an unauthenticated context. Left to Jest with the other auth journeys.",
+      "reason": "The raw token only ever reaches the user by email, so a browser test would have to read it out of the database and visit the reset link by hand \u2014 and then do it from an unauthenticated context. Left to Jest with the other auth journeys.",
       "coveredAt": "src/actions/__tests__/authActions.test.ts"
     },
     {
@@ -78,7 +78,7 @@
     {
       "requirement": "data-load-performance/Server request duration guards against premature termination",
       "category": "no-ui",
-      "reason": "The guard is a route-segment duration declaration read by the hosting platform. It has no runtime behaviour to drive locally — the e2e server never enforces a platform timeout."
+      "reason": "The guard is a route-segment duration declaration read by the hosting platform. It has no runtime behaviour to drive locally \u2014 the e2e server never enforces a platform timeout."
     },
     {
       "requirement": "data-load-performance/Repeated holiday lookups over a date range are cached",
@@ -88,7 +88,7 @@
     {
       "requirement": "saldo/Running balance from begin date",
       "category": "harness-cost",
-      "reason": "The worked example fixes both the begin date and the current date, and the e2e server runs on the real clock — page.clock reaches only the browser. The rest of the capability is covered end to end by comparing two begin dates, but a single named total cannot be asserted without owning the clock.",
+      "reason": "The worked example fixes both the begin date and the current date, and the e2e server runs on the real clock \u2014 page.clock reaches only the browser. The rest of the capability is covered end to end by comparing two begin dates, but a single named total cannot be asserted without owning the clock.",
       "coveredAt": "src/services/__tests__/index.test.tsx"
     },
     {
@@ -99,57 +99,57 @@
     {
       "requirement": "spec-test-traceability/Tests declare covered scenarios by annotation",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the annotation syntax and how it is scanned. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the annotation syntax and how it is scanned. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Scenario identity is capability and title",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about how a scenario is named in an annotation. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about how a scenario is named in an annotation. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Scenario content hash surfaces wording drift",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the hash written into the generated map. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the hash written into the generated map. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Generated coverage map is a committed artifact",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the shape of the file the tool writes. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the shape of the file the tool writes. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Exemptions are declared as data with a reason",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the exemptions file format. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the exemptions file format. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Exemptions cannot rot",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the validation that rejects a stale exemption. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the validation that rejects a stale exemption. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Dangling and malformed annotations fail loudly",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the errors the tool raises. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the errors the tool raises. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Coverage tool runs in generate and check modes",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the tool's command-line modes. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the tool's command-line modes. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/CI gates every scenario on coverage",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the workflow step that runs the tool. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the workflow step that runs the tool. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Coverage tooling adds no dependencies",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the tool's import list. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the tool's import list. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Generated map is the single traceability source",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about where traceability is recorded. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about where traceability is recorded. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "worklog/Map storage rows to the domain type",
@@ -159,37 +159,67 @@
     {
       "requirement": "spec-test-traceability/Every requirement has end-to-end coverage or a stated exemption",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the rule this tool enforces. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the rule this tool enforces. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/End-to-end coverage is derived from the test's location",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about how the tool classifies a test by its path. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about how the tool classifies a test by its path. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/End-to-end exemptions are categorised",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the exemption categories the tool accepts. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the exemption categories the tool accepts. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Cost-based exemptions name the layer that covers them",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the extra field a harness-cost exemption carries. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the extra field a harness-cost exemption carries. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/End-to-end exemptions cannot rot",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the validation that forces a stale exemption out. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the validation that forces a stale exemption out. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/Coverage map reports end-to-end coverage per requirement",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the end-to-end section the tool writes into the map. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the end-to-end section the tool writes into the map. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
     },
     {
       "requirement": "spec-test-traceability/CI gates every requirement on end-to-end coverage",
       "category": "no-ui",
-      "reason": "This capability is a Node script and a CI step, not application behaviour — the requirement is about the strict check the CI step runs. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about the strict check the CI step runs. There is no page to open, and its own Jest tests run the tool directly against fixture specs."
+    },
+    {
+      "requirement": "coverage-reporting/End-to-end coverage is collected from both runtimes",
+      "category": "no-ui",
+      "reason": "This capability is a Node script and a CI step, not application behaviour \u2014 the requirement is about which runtimes' profiles the report reads. There is no page to open, and its own Jest tests drive the conversion against synthetic profiles in the shapes both runtimes emit."
+    },
+    {
+      "requirement": "coverage-reporting/Collection is opt-in",
+      "category": "no-ui",
+      "reason": "The switch governs how the test run itself is invoked, not anything the application renders. A browser test cannot observe whether the run that launched it was profiling, and the wiring is asserted directly against package.json and the build config."
+    },
+    {
+      "requirement": "coverage-reporting/Report paths match the repository layout",
+      "category": "no-ui",
+      "reason": "A property of the generated lcov file: paths repository-relative and resolving on disk. Nothing about it reaches a page, and its Jest tests assert the normalisation and the on-disk check against fixture profiles."
+    },
+    {
+      "requirement": "coverage-reporting/Report scope matches the unit layer",
+      "category": "no-ui",
+      "reason": "A filtering rule over source paths in a generated file. There is no user-facing surface, and the Jest tests assert both the inclusion of src/ and the exclusion of generated code."
+    },
+    {
+      "requirement": "coverage-reporting/An empty or partial report fails the run",
+      "category": "no-ui",
+      "reason": "The requirement is that a script exits non-zero. Its outcome is a red build rather than anything rendered, and each failure mode is asserted directly by running the generator over profiles missing one runtime."
+    },
+    {
+      "requirement": "coverage-reporting/Each test layer is published under its own flag",
+      "category": "no-ui",
+      "reason": "This is workflow and coverage-service configuration \u2014 which flag each upload carries and whether it carries forward. It has no runtime behaviour in the app at all, and is asserted by reading build.yml and codecov.yml."
     }
   ]
 }

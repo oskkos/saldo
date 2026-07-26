@@ -124,10 +124,21 @@ const writeBrowserProfile = (
   counts: { first: number; second: number },
   { url = 'http://localhost:3100/_next/static/chunks/bundle.js' } = {},
 ) => {
-  // The browser has no file to read, so the map rides along as a data URI exactly
-  // as Turbopack's client bundles carry theirs.
-  const map = fs.readFileSync(path.join(root, 'dist', 'bundle.js.map'), 'utf8');
-  const inlined = `${SOURCE}//# sourceMappingURL=data:application/json;base64,${Buffer.from(map).toString('base64')}\n`;
+  // The shape e2e/fixtures.ts writes: the source as served, plus the map it fetched
+  // while the server was still up. The report is what inlines it.
+  //
+  // Client chunk maps name sources with a bundler prefix rather than relative to the
+  // map, since a browser has no directory to be relative to — so the on-disk map's
+  // `../x` paths are rewritten to the form Turbopack actually emits.
+  const onDisk = JSON.parse(
+    fs.readFileSync(path.join(root, 'dist', 'bundle.js.map'), 'utf8'),
+  ) as { sources: string[] };
+  const map = {
+    ...onDisk,
+    sources: onDisk.sources.map((source) =>
+      source.replace(/^\.\.\//, 'turbopack:///[project]/'),
+    ),
+  };
 
   fs.writeFileSync(
     path.join(root, 'v8-browser', '1-0.json'),
@@ -136,7 +147,8 @@ const writeBrowserProfile = (
       entries: [
         {
           url,
-          source: inlined,
+          source: `${SOURCE}//# sourceMappingURL=bundle.js.map\n`,
+          sourceMap: map,
           functions: functionsFor(bundle, counts),
         },
       ],
@@ -214,7 +226,7 @@ describe('both runtimes reach the report', () => {
     expect(covered['src/greet.ts']).toContain(5);
   });
 
-  // @scenario coverage-reporting/A file executed in both runtimes is reported once
+  // @scenario coverage-reporting/A file executed in both runtimes keeps both runtimes' lines
   it('reports a file executed in both runtimes once, as the union', async () => {
     writeServerProfile(project, { first: 1, second: 0 });
     writeBrowserProfile(project, { first: 0, second: 1 });
@@ -235,22 +247,16 @@ describe('both runtimes reach the report', () => {
 
 describe('paths match the repository layout', () => {
   // @scenario coverage-reporting/Bundler-prefixed source paths are normalised
-  it('strips the bundler prefix Turbopack puts on client sources', async () => {
+  it("strips webpack's prefix too, not only Turbopack's", async () => {
     writeServerProfile(project, { first: 1, second: 0 });
     // Rewrite the inlined map to the prefixed form Turbopack actually emits.
     writeBrowserProfile(project, { first: 0, second: 1 });
     const profile = path.join(project.root, 'v8-browser', '1-0.json');
-    const raw = fs.readFileSync(profile, 'utf8');
-    const decoded = JSON.parse(raw) as {
-      entries: { source: string }[];
+    const decoded = JSON.parse(fs.readFileSync(profile, 'utf8')) as {
+      entries: { sourceMap: { sources: string[] } }[];
     };
-    const map = JSON.parse(
-      fs.readFileSync(path.join(project.root, 'dist', 'bundle.js.map'), 'utf8'),
-    ) as { sources: string[] };
-    map.sources = ['turbopack:///[project]/src/greet.ts'];
-    decoded.entries[0].source = `${SOURCE}//# sourceMappingURL=data:application/json;base64,${Buffer.from(
-      JSON.stringify(map),
-    ).toString('base64')}\n`;
+    // The default fixture already uses Turbopack's form; assert the other one.
+    decoded.entries[0].sourceMap.sources = ['webpack://_N_E/./src/greet.ts'];
     fs.writeFileSync(profile, JSON.stringify(decoded));
 
     const covered = linesFor(await run(), 'browser');

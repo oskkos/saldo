@@ -90,5 +90,11 @@ export default defineConfig({
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: serverEnv,
+    // Playwright kills the web server with SIGKILL by default, which skips Node's
+    // exit path and throws the V8 coverage profile away — the server contributes
+    // nothing and only the report step notices. SIGTERM lets it shut down and write.
+    ...(COLLECT_COVERAGE
+      ? { gracefulShutdown: { signal: 'SIGTERM' as const, timeout: 15_000 } }
+      : {}),
   },
 });

@@ -77,8 +77,8 @@ export function normaliseSourcePath(sourcePath) {
  * `src/` tree, so a prefix test alone silently pulls its internals into the
  * report. Generated code is excluded to match Jest's `collectCoverageFrom`.
  */
-export function isProjectSource(sourcePath, repoRoot) {
-  const absolute = path.resolve(repoRoot, sourcePath);
+export function isProjectSource(sourcePath, repoRoot, baseDir = repoRoot) {
+  const absolute = path.resolve(baseDir, sourcePath);
   return (
     absolute.startsWith(path.join(repoRoot, 'src') + path.sep) &&
     !absolute.startsWith(path.join(repoRoot, 'src', 'generated') + path.sep) &&
@@ -107,6 +107,96 @@ export function isOwnEntryUrl(url, repoRoot) {
   }
   // The app's client bundles are the only http(s) scripts worth reading.
   return url.includes('/_next/');
+}
+
+/**
+ * Whether a server-side script's map names any of our sources.
+ *
+ * Needed because a script with no *project* source is still reported — as itself.
+ * Turbopack's per-route entry points are thin loaders with empty maps, so without
+ * this the report fills up with the built `page.js` files under `build/server/app/`,
+ * which pass the resolves-on-disk check precisely because the build output exists.
+ *
+ * Server maps name their sources relative to the map, so they resolve against the
+ * map's directory rather than the repository root. Browser entries are filtered
+ * before they get here and pass through.
+ */
+export function entryCoversProjectSource(url, repoRoot) {
+  if (!url.startsWith('file://')) {
+    return true;
+  }
+
+  let mapPath;
+  try {
+    mapPath = `${fileURLToPath(url)}.map`;
+  } catch {
+    return false;
+  }
+  if (!fs.existsSync(mapPath)) {
+    return false;
+  }
+
+  let sourceMap;
+  try {
+    sourceMap = JSON.parse(fs.readFileSync(mapPath, 'utf8'));
+  } catch {
+    return false;
+  }
+
+  const baseDir = path.dirname(mapPath);
+  return sourceMapSources(sourceMap).some((source) =>
+    isProjectSource(normaliseSourcePath(source), repoRoot, baseDir),
+  );
+}
+
+/**
+ * Every source a map names, flat or sectioned.
+ *
+ * Turbopack emits *indexed* maps for its chunks: the top-level `sources` array is
+ * empty and the real paths live under `sections[].map.sources`. Reading only the
+ * top level makes every chunk look sourceless.
+ */
+export function sourceMapSources(sourceMap) {
+  if (!sourceMap) {
+    return [];
+  }
+  if (Array.isArray(sourceMap.sections)) {
+    return sourceMap.sections.flatMap((section) => section.map?.sources ?? []);
+  }
+  return sourceMap.sources ?? [];
+}
+
+/**
+ * Browser entries worth converting, with their maps inlined.
+ *
+ * Two things happen here, both learned the hard way against real profiles:
+ *
+ * Chunks whose map names none of our sources are dropped. A framework-only chunk
+ * otherwise reaches the report as its own URL — `localhost-3100/_next/static/...` —
+ * because an entry with no *project* source is reported as a dist file, and
+ * `sourceFilter` is never consulted for it.
+ *
+ * The map is then inlined into the source as a data URI rather than passed as an
+ * object, because the object path cannot handle indexed maps: it fails inside the
+ * converter with "Cannot destructure property 'length'". The data URI takes the same
+ * route a map fetched over HTTP would.
+ */
+export function prepareBrowserEntries(entries, repoRoot) {
+  return entries
+    .filter((entry) =>
+      sourceMapSources(entry.sourceMap).some((source) =>
+        isProjectSource(normaliseSourcePath(source), repoRoot),
+      ),
+    )
+    .map(({ sourceMap, ...entry }) => ({
+      ...entry,
+      source: entry.source?.replace(
+        /\/\/# sourceMappingURL=\S+/,
+        `//# sourceMappingURL=data:application/json;base64,${Buffer.from(
+          JSON.stringify(sourceMap),
+        ).toString('base64')}`,
+      ),
+    }));
 }
 
 /** JSON files in a directory, or [] when the directory is absent. */
@@ -141,23 +231,28 @@ async function buildRuntimeReport({ repoRoot, runtime, outputDir, load }) {
     cleanCache: true,
     sourcePath: (sourcePath) => normaliseSourcePath(sourcePath),
     sourceFilter: (sourcePath) => isProjectSource(sourcePath, repoRoot),
-    // Unmapped scripts never reach sourceFilter, so they are dropped by origin here.
-    entryFilter: (entry) => isOwnEntryUrl(entry.url, repoRoot),
+    // Unmapped scripts never reach sourceFilter — they are reported as themselves —
+    // so they are dropped here, by origin and by whether they carry any of our
+    // source at all.
+    entryFilter: (entry) =>
+      isOwnEntryUrl(entry.url, repoRoot) &&
+      entryCoversProjectSource(entry.url, repoRoot),
   });
 
   await load(report);
   await report.generate();
 
   const lcovPath = path.join(outputDir, 'lcov.info');
-  if (!fs.existsSync(lcovPath)) {
-    throw new Error(`Report generation wrote no lcov to ${lcovPath}.`);
-  }
 
-  const files = fs
-    .readFileSync(lcovPath, 'utf8')
-    .split('\n')
-    .filter((line) => line.startsWith('SF:'))
-    .map((line) => line.slice(3));
+  // No lcov at all and an lcov naming nothing of ours are the same condition to
+  // whoever has to fix it: this runtime covered none of our code.
+  const files = fs.existsSync(lcovPath)
+    ? fs
+        .readFileSync(lcovPath, 'utf8')
+        .split('\n')
+        .filter((line) => line.startsWith('SF:'))
+        .map((line) => line.slice(3))
+    : [];
 
   if (files.length === 0) {
     throw new Error(
@@ -235,12 +330,14 @@ export async function generateReport({
           outputDir: path.join(outputDir, 'server'),
           load: (report) => report.addFromDir(serverDir),
         }),
-        // The browser profiles carry each script's source, so they add directly.
+        // The browser profiles carry each script's source and the map the fixture
+        // fetched while the server was still up, so they add directly.
         await buildRuntimeReport({
           repoRoot,
           runtime: 'browser',
           outputDir: path.join(outputDir, 'browser'),
-          load: (report) => report.add(browserEntries),
+          load: (report) =>
+            report.add(prepareBrowserEntries(browserEntries, repoRoot)),
         }),
       ],
     };

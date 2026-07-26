@@ -33,6 +33,28 @@ to prove the clock scenarios are timezone-independent.
 - **`global-setup.ts`** — `prisma migrate deploy` + seed, once per run.
 - **`auth.setup.ts`** — signs in once via the Credentials form and saves the
   session (`e2e/.auth/user.json`); every test reuses it.
+- **`fixtures.ts`** — where every spec gets its `test` from. It wraps the `page`
+  fixture to collect browser coverage; without coverage enabled it hands the page
+  through untouched.
+
+## Coverage
+
+Off by default. `npm run test:e2e:coverage` turns on one switch (`E2E_COVERAGE`) that
+the build reads for source maps, `playwright.config.ts` reads to point the app server at
+a `NODE_V8_COVERAGE` directory, and `fixtures.ts` reads to start `page.coverage`. Then
+`npm run coverage:e2e:report` converts both runtimes' profiles into
+`coverage-e2e/{server,browser}/lcov.info`. CI does this and uploads both under the `e2e`
+flag; see the coverage-reporting section of [`CLAUDE.md`](../CLAUDE.md) for why the two
+runtimes stay separate.
+
+**Take `test` from `./fixtures`, never from `@playwright/test`.** That import is what
+starts the profiler, and a spec that bypasses it is silently left out of coverage — so
+`scripts/__tests__/e2e-coverage.test.ts` scans this directory and fails the build on one.
+Importing `expect` or `type Page` from the runner is fine; only `test` matters.
+
+**Coverage here measures execution, not assertion.** A component counts as covered
+because a test rendered it, not because anything asserted its behaviour. What a test
+actually proves is recorded through the scenario annotations below.
 
 ## Writing a test here
 
