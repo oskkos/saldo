@@ -1,6 +1,7 @@
 import { test, expect, type Page } from './fixtures';
 import {
   disconnect,
+  getWorklogs,
   pastSundayOffset,
   pastWorkingDayOffsets,
   resetUserData,
@@ -292,4 +293,30 @@ test('hours worked on an absence that falls on a Sunday still count', async ({
   // Nothing is expected and the absence credits nothing, so only the worked
   // hours remain.
   expect(await dayContribution(page, sunday)).toBe(180);
+});
+
+// @scenario absence/Pre-existing duplicates are left in place
+test('duplicate absences already in the database are left alone', async ({
+  page,
+}) => {
+  const [workingDay] = pastWorkingDayOffsets(1);
+  // Seeded straight into the database, which is the only way to produce this
+  // now: the rule refuses the second one through every application path. This
+  // is the state a database written before the rule existed can still be in.
+  await seedWorklog({
+    from: utcTimeOn(workingDay, 8),
+    to: utcTimeOn(workingDay, 16),
+    absence: 'holiday',
+  });
+  await seedWorklog({
+    from: utcTimeOn(workingDay, 8),
+    to: utcTimeOn(workingDay, 16),
+    absence: 'holiday',
+  });
+
+  // Both still count, so the day credits its expectation twice and invents a
+  // full day of balance. Deliberately not repaired: blocking new writes does
+  // not rewrite history. Should that ever change, this is the test that says so.
+  expect(await dayContribution(page, workingDay)).toBe(450);
+  expect(await getWorklogs()).toHaveLength(2);
 });

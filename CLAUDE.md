@@ -140,18 +140,24 @@ Planning and investigation only. No git actions.
 - Generate the artifacts (proposal/design/specs/tasks).
 - Once planning is complete, propose: **commit the proposal** (`docs(openspec): propose <change-name>`), **push**, and **open a new PR** against `develop`. The PR exists from the proposal stage; apply commits land on it.
 
-### `/opsx:apply` — commit per task, verify, then push
+### `/opsx:apply` — commit per task, sync the specs, verify, then push
 - Review the diff; never blind-commit.
 - **Commit once per top-level task group** in `tasks.md` (each commit carries that group's code plus its `tasks.md` checkbox updates). Intermediate commits need not independently build — only the branch tip must be green (tests + lint + typecheck).
+- **Finish with the spec sync**, in its own commit:
+  ```
+  docs(openspec): sync <capability> spec(s) for <change-name>
+  ```
+  Run `/opsx:sync`, then `npm run spec:coverage`, and commit the synced specs together with the regenerated `openspec/COVERAGE.md`. This has to happen here, not at archive: `scripts/spec-coverage.mjs` reads only `openspec/specs/`, so a change that adds scenarios leaves every annotation citing them unresolvable — and CI's `spec:coverage:ci` step red — until the delta reaches the canonical specs. Archiving is supposed to wait for green CI, so the sync cannot wait for archiving.
+  - The sync applies the delta's requirements. **Open Questions the change resolves are yours to remove by hand** — the delta format has no operation for them, and a resolved question left in place is a false statement in the canonical spec. Check every capability the change touches, not only those with a delta.
 - When apply is done, **pause and ask the user to manually verify** the implementation and for any change suggestions. **Push only once the user gives the OK.**
 - **Do not archive in this step.**
 
-### `/opsx:archive` — sync + archive while the PR is open
+### `/opsx:archive` — archive while the PR is open
 - **Timing:** run it while the **PR is still open**, once everything is **reconciled and mergeable** (CI green, review addressed) — it does not wait for formal approval.
-- When prompted, choose **"Sync now"** before the folder move — otherwise canonical specs drift from the change being archived.
-- **One dedicated commit** covering **both** the spec sync and the folder move:
+- The specs were already synced at the end of apply. If the change was edited after that, **re-run the sync first** so canonical specs do not drift from the change being archived; otherwise the prompt's "Sync now" is a no-op.
+- **One dedicated commit** for the folder move:
   ```
-  docs(openspec): sync <capability> spec(s) and archive <change-name>
+  docs(openspec): archive <change-name>
   ```
-  Commit it **verbatim** — generated output (sync deltas + the `mv` to `changes/archive/YYYY-MM-DD-<name>`). Don't hand-edit; if a synced spec looks wrong, fix the delta spec and re-run. Keep it **isolated from implementation commits** so the move renders as a rename and reverts as a unit.
+  Commit it **verbatim** — generated output (the `mv` to `changes/archive/YYYY-MM-DD-<name>`). Keep it **isolated from implementation commits** so the move renders as a rename and reverts as a unit.
 - After the archive commit, **push**.
