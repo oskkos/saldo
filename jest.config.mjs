@@ -27,6 +27,10 @@ const config = {
     // Server-layer modules (repositories, auth) import it as a build guard; map
     // it to a no-op so those modules can be exercised under jsdom.
     '^server-only$': '<rootDir>/__mocks__/empty.ts',
+    // Chart.js's dayjs date adapter ships ESM only, so Jest cannot parse it. It only
+    // matters for rendering a real time axis; the chart's data and options can be
+    // asserted without it, so it maps to a no-op.
+    '^chartjs-adapter-dayjs-4/.*$': '<rootDir>/__mocks__/empty.ts',
   },
 
   // Declaration files hold no runtime code, so counting their lines only depresses
