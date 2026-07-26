@@ -17,13 +17,13 @@
 
 ## 3. Absence range action and `/absence` wiring
 
-- [ ] 3.1 Add `AbsenceSchema` to `src/schemas`: from and to required, from not after to, reason one of the four, comment at most 1000 characters
-- [ ] 3.2 Add an `onAbsenceSubmit` action validating with that schema, expanding the range, and delegating to `insertWorklogs`
-- [ ] 3.3 Rewrite `absence.tsx` to call the action once, removing the per-day `Promise.all` and the `// TODO: Handle all in one call`; the existing catch already renders the thrown message in the error toast
-- [ ] 3.4 Read settings in `absence/page.tsx` via `getSettings()` and pass `fromDefault`/`toDefault` into `Absence`, replacing the `NEW_WORKLOG_DEFAULT_*` constants used for the stored times
-- [ ] 3.5 Unit-test the action: a range with one taken day persists nothing, a clean range persists every day, invalid input is rejected before any repository call
-- [ ] 3.6 Unit-test that a submitted absence carries the user's configured default times rather than the module constants
-- [ ] 3.7 Annotate with `@scenario absence/One taken day rejects the whole range` and `@scenario absence/Records use the user's configured default times`
+- [x] 3.1 Add `AbsenceSchema` to `src/schemas`: from and to required, from not after to, reason one of the four, comment at most 1000 characters
+- [x] 3.2 Add an `onAbsenceSubmit` action validating with that schema, expanding the range, and delegating to `insertWorklogs`
+- [x] 3.3 Rewrite `absence.tsx` to call the action once, removing the per-day `Promise.all` and the `// TODO: Handle all in one call`; the existing catch already renders the thrown message in the error toast
+- [x] 3.4 Derive the stored times from the user's settings **in the action** rather than threading them through `absence/page.tsx`: only the chosen days now cross the wire, so the client cannot influence what an absence is stored as, and the `NEW_WORKLOG_DEFAULT_*` constants leave `absence.tsx` entirely
+- [x] 3.5 Unit-test the action: a range with one taken day persists nothing, a clean range persists every day, invalid input is rejected before any repository call
+- [x] 3.6 Unit-test that a submitted absence carries the user's configured default times rather than the module constants
+- [x] 3.7 Annotate the action test with `@scenario absence/Records use the user's configured default times` and `@scenario absence/Three-day absence`; `One taken day rejects the whole range` is claimed by the repository test, which is where "nothing is written" is actually observable
 
 ## 4. Day view notice
 

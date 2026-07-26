@@ -1,12 +1,11 @@
 'use client';
-import { onWorklogSubmit } from '@/actions';
+import { onAbsenceSubmit } from '@/actions';
 import DateInput from '@/components/form/dateInput';
 import { ToastContext } from '@/components/toastContext';
-import { NEW_WORKLOG_DEFAULT_FROM, NEW_WORKLOG_DEFAULT_TO } from '@/constants';
 import { absenceReasonToString } from '@/services';
-import { AbsenceData, AbsenceReason, WorklogFormData } from '@/types';
-import { assertExists, assertIsAbsenceReason } from '@/util/assertionFunctions';
-import { add, toDate } from '@/util/date';
+import { AbsenceData, AbsenceReason } from '@/types';
+import { assertIsAbsenceReason } from '@/util/assertionFunctions';
+import { startOfDay } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useContext, useState } from 'react';
@@ -14,14 +13,17 @@ import { useContext, useState } from 'react';
 export default function Absence() {
   const [, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
+  // Only the chosen days matter here: the times each record is stored with come
+  // from the user's settings, on the server. Both ends are held at the start of
+  // their day so the range comparisons below cannot be skewed by a time.
   const [data, setData] = useState<AbsenceData>({
-    from: toDate(toISODay(), NEW_WORKLOG_DEFAULT_FROM),
-    to: toDate(toISODay(), NEW_WORKLOG_DEFAULT_TO),
+    from: startOfDay(),
+    to: startOfDay(),
     comment: '',
   });
 
   const onFromChange = (value?: Date_ISODay) => {
-    const newFrom = value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null;
+    const newFrom = value ? startOfDay(value) : null;
     const newTo = newFrom && data.to && newFrom > data.to ? newFrom : data.to;
     setData({
       ...data,
@@ -31,7 +33,7 @@ export default function Absence() {
   };
 
   const onToChange = (value?: Date_ISODay) => {
-    const newTo = value ? toDate(value, NEW_WORKLOG_DEFAULT_FROM) : null;
+    const newTo = value ? startOfDay(value) : null;
     const newFrom = newTo && data.from && newTo < data.from ? newTo : data.from;
     setData({
       ...data,
@@ -40,19 +42,6 @@ export default function Absence() {
     });
   };
 
-  const toWorklogFormData = (
-    day: Date_ISODay,
-    reason: AbsenceReason,
-    comment: string,
-  ): WorklogFormData => {
-    return {
-      from: toDate(day, NEW_WORKLOG_DEFAULT_FROM),
-      to: toDate(day, NEW_WORKLOG_DEFAULT_TO),
-      comment: comment,
-      subtractLunchBreak: true,
-      absence: reason,
-    };
-  };
   return (
     <div className="flex flex-wrap justify-center items-start mt-3">
       <div className="flex justify-between items-center w-full max-w-xs">
@@ -109,22 +98,7 @@ export default function Absence() {
         <button
           className="btn btn-secondary mt-3 w-full"
           onClick={() => {
-            const action = () => {
-              assertExists(data.reason, 'Reason is required');
-              assertExists(data.from, 'From date is required');
-              assertExists(data.to, 'To date is required');
-              const worklogs: WorklogFormData[] = [];
-              let x = data.from;
-              while (x <= data.to) {
-                worklogs.push(
-                  toWorklogFormData(toISODay(x), data.reason, data.comment),
-                );
-                x = add(x, 1, 'day');
-              }
-              // TODO: Handle all in one call
-              return Promise.all(worklogs.map((ret) => onWorklogSubmit(ret)));
-            };
-            startTransitionWrapper(action)
+            startTransitionWrapper(() => onAbsenceSubmit(data))
               .then(() => {
                 setMsg({ type: 'success', message: 'Absence added' });
               })

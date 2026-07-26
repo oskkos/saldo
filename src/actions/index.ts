@@ -1,6 +1,7 @@
 'use server';
 
 import {
+  AbsenceData,
   AuthUser,
   ExpectedHoursOverrideData,
   SettingsData,
@@ -21,9 +22,10 @@ import {
 import {
   deleteWorklog,
   insertWorklog,
+  insertWorklogs,
   updateWorklog,
 } from '@/repository/worklogRepository';
-import { startOfDay } from '@/util/date';
+import { startOfDay, toDate } from '@/util/date';
 import {
   DEFAULT_EXPECTED_MINUTES_PER_DAY,
   NEW_WORKLOG_DEFAULT_FROM,
@@ -41,7 +43,11 @@ import {
   ResetPasswordSchema,
 } from '@/schemas/resetPasswordSchema';
 import { WorklogSchema } from '@/schemas/worklogSchema';
+import { AbsenceSchema } from '@/schemas/absenceSchema';
 import { SettingsSchema } from '@/schemas/settingsSchema';
+import { getSettings } from '@/repository/settingsRepository';
+import { daysInRange } from '@/services';
+import { assertExists } from '@/util/assertionFunctions';
 import { ExpectedHoursOverrideSchema } from '@/schemas/expectedHoursOverrideSchema';
 import {
   deleteExpectedHoursOverride,
@@ -101,6 +107,30 @@ export async function onWorklogSubmit(data: WorklogFormData) {
   validateOrThrow(WorklogSchema, data, 'Invalid worklog');
   const worklog = await insertWorklog(data);
   return worklog;
+}
+
+// One call for the whole range, so the days are checked together and written
+// together. The stored times come from the user's own settings rather than from
+// the client: only the chosen days travel over the wire.
+export async function onAbsenceSubmit(data: AbsenceData) {
+  validateOrThrow(AbsenceSchema, data, 'Invalid absence');
+  const { from, to, reason, comment } = data;
+  assertExists(from);
+  assertExists(to);
+  assertExists(reason);
+
+  const settings = await getSettings();
+  assertExists(settings, 'Settings not found');
+
+  const worklogs: WorklogFormData[] = daysInRange(from, to).map((day) => ({
+    from: toDate(day, settings.fromDefault),
+    to: toDate(day, settings.toDefault),
+    comment,
+    subtractLunchBreak: true,
+    absence: reason,
+  }));
+
+  return await insertWorklogs(worklogs);
 }
 
 export async function onWorklogDelete(worklogId: number) {
