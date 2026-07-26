@@ -56,6 +56,46 @@ Constraints discovered in the stack:
 - The `spec-test-traceability` scanner reads `import { … } from '<anything>'`, so
   re-pointing the specs' `test` import breaks no annotation.
 
+## Spike Outcome
+
+Run before anything was built on it, against a real `E2E_COVERAGE=1` production build
+(Turbopack) serving on port 3100. **Outcome 1: Turbopack's maps resolve. No `--webpack`
+fallback is needed.** Server-side V8 coverage resolved to real repo-relative paths
+including `src/app/(calendar)/page.tsx`, `src/actions/index.ts`, `src/auth/authSession.ts`
+and the whole `repository`/`services`/`util` set; the browser profile resolved 31 files
+including `credentialsSignin.tsx`, `themeSwitcher.tsx` and the form inputs.
+
+Five findings changed the design:
+
+1. **The two runtimes name sources differently.** Server ssr chunk maps are *sectioned*
+   (indexed) maps — the top-level `sources` array is empty and the real paths live in
+   `sections[].map.sources` as paths relative to the map, which monocart resolves to
+   `src/…` on its own. Client chunk maps are prefixed: `turbopack:///[project]/src/…`.
+   Normalisation has to strip `[project]/` and leave the already-relative form alone.
+   A first pass that only read top-level `sources` concluded the maps were empty.
+
+2. **Next ships source maps referencing its own `src/` tree.** A `startsWith('src/')`
+   filter silently pulled in `src/server/lib/utils.ts`, `src/cli/next-test.ts` and the
+   rest of Next's internals. Resolving against the repo root and requiring the file to
+   exist is what separates ours from theirs — the same on-disk check the spec already
+   requires for a different reason, which is a good sign it belongs there.
+
+3. **`sourceFilter` does not govern unmapped scripts.** Anything without a source map
+   arrives as an entry and needs `entryFilter`. Unrelated Node processes inheriting
+   `NODE_V8_COVERAGE` — the `npx` wrapper, in the spike — wrote profiles into the same
+   directory and put 740 files of npm's own source into the lcov.
+
+4. **`SIGTERM` already flushes.** `next start` exits gracefully and Node writes the
+   profile on the way out; a `coverage-<pid>-*.json` appeared without any hook. The
+   explicit `v8.takeCoverage()` in `instrumentation.ts` is therefore defence-in-depth
+   against a future change in Next's signal handling, not the load-bearing mechanism it
+   was designed as. Kept, because the alternative is discovering the regression as a red
+   build during an upgrade.
+
+5. **`src/proxy.ts` is covered after all.** The prediction that middleware would be
+   structurally uncoverable was wrong: `next start` runs the Edge runtime in-process, and
+   V8 sees it. The proposal's "known limitation" is withdrawn.
+
 ## Goals / Non-Goals
 
 **Goals:**
@@ -81,7 +121,6 @@ Constraints discovered in the stack:
 - **A single merged upload.** Two flags keep the layers separable, which is the whole
   reason the number is worth fixing.
 - **Source instrumentation.** See below.
-- **Covering the Edge runtime** (`src/proxy.ts`).
 - **Parallelising the e2e suite.**
 
 ## Decisions
@@ -206,25 +245,19 @@ pull request.
 
 ## Risks / Trade-offs
 
-- **Turbopack server source maps are unproven.** → The first task is a spike that must
-  show a server-side lcov naming real `src/**` files with plausible hits. Fallback:
-  build the e2e app with `--webpack` under the switch, accepting that the e2e build then
-  differs from the shipped one. If neither resolves, the change stops — shipping
-  browser-only coverage as if it covered both runtimes would make the number a lie in a
-  new direction.
+- ~~**Turbopack server source maps are unproven.**~~ Settled by the spike: they resolve,
+  and the e2e build stays the bundler that ships. See Spike Outcome.
 - **The published total jumps and then ratchets.** → Expected, and the reason for the
   threshold. Worth stating plainly: the new floor is held up partly by execution
   coverage nobody asserts.
 - **Execution is not assertion.** → Stated as a non-goal, documented in
   `e2e/README.md`, and left to `spec-test-traceability`, which measures it properly.
-- **The shutdown flush is the fragile link.** → Guarded by the empty-report check;
-  degradation shows as a flag-level drop.
-- **`src/proxy.ts` stays at 0% while being the most-executed file in the app**, because
-  middleware runs in the Edge runtime rather than the profiled Node process. → Accepted
-  and documented, so nobody spends an afternoon on it.
-- **Sentry may delete source maps after upload.** CI has no `SENTRY_AUTH_TOKEN`, so the
-  upload is skipped and the maps survive — but this is an assumption about a build plugin
-  and belongs in the spike's checklist.
+- **The shutdown flush is the fragile link.** → Less fragile than assumed — `SIGTERM`
+  flushes unaided — but still guarded by the empty-report check, with degradation showing
+  as a flag-level drop.
+- ~~**Sentry may delete source maps after upload.**~~ Checked in the spike: with no
+  `SENTRY_AUTH_TOKEN` the upload is skipped and all 112 server maps plus 27 client maps
+  survive the build.
 - **One new devDependency.** → `monocart-coverage-reports`, dev-only, and the
   hand-rolled fallback stays viable if it goes unmaintained.
 

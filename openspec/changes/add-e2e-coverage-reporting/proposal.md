@@ -90,15 +90,11 @@ no requirement to any product capability.
   and goes green without any test asserting anything about it. This change does not ask
   coverage to answer "is it asserted" — `spec-test-traceability` already answers that,
   and better. Coverage's job here is reachability.
-- **Risk — one unproven mechanism.** Next 16 builds with Turbopack by default, and
-  whether `experimental.serverSourceMaps` yields maps that resolve back to `src/**` is
-  not established. The string appears inside `next-swc.linux-x64-gnu.node`, so the Rust
-  side knows the option, but that is not proof. The first task is a spike; the fallback
-  is building the e2e app with `--webpack`. If neither works, the change stops rather
-  than shipping browser-only coverage under a name that claims both.
-- **Known limitation**: `src/proxy.ts` is the most-executed file in the app — every
-  request passes `withAuth` — and will stay at 0%, because middleware runs in the Edge
-  runtime rather than the Node process being profiled. Maximally exercised,
-  structurally uncoverable.
+- **Resolved before building on it.** Whether Turbopack's `experimental.serverSourceMaps`
+  yields maps that resolve back to `src/**` was the one unproven link. The spike settled
+  it: they do, so the e2e build stays the bundler that ships. It also corrected two
+  assumptions — `SIGTERM` already flushes the V8 profile unaided, and `src/proxy.ts` *is*
+  covered, because `next start` runs the Edge runtime in-process. See `design.md`,
+  Spike Outcome.
 - **Unchanged**: the e2e suite itself. No test assertions change; the specs only
   re-point their `test` import.
