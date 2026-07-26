@@ -181,22 +181,36 @@ export function sourceMapSources(sourceMap) {
  * converter with "Cannot destructure property 'length'". The data URI takes the same
  * route a map fetched over HTTP would.
  */
-export function prepareBrowserEntries(entries, repoRoot) {
-  return entries
-    .filter((entry) =>
-      sourceMapSources(entry.sourceMap).some((source) =>
-        isProjectSource(normaliseSourcePath(source), repoRoot),
-      ),
-    )
-    .map(({ sourceMap, ...entry }) => ({
-      ...entry,
-      source: entry.source?.replace(
-        /\/\/# sourceMappingURL=\S+/,
-        `//# sourceMappingURL=data:application/json;base64,${Buffer.from(
-          JSON.stringify(sourceMap),
-        ).toString('base64')}`,
-      ),
-    }));
+export function prepareBrowserEntries(entries, repoRoot, scripts = new Map()) {
+  return (
+    entries
+      // The fixture stores each chunk's source and map once per run rather than per
+      // test, so the execution counts are joined back to them here.
+      .map((entry) => {
+        const script = scripts.get(entry.url);
+        return script
+          ? { ...entry, source: script.source, sourceMap: script.sourceMap }
+          : entry;
+      })
+      .filter(
+        (entry) =>
+          // Both are required: an entry missing either cannot be attributed to a
+          // source, and a chunk absent from the script store arrives with neither.
+          entry.source &&
+          sourceMapSources(entry.sourceMap).some((source) =>
+            isProjectSource(normaliseSourcePath(source), repoRoot),
+          ),
+      )
+      .map(({ sourceMap, ...entry }) => ({
+        ...entry,
+        source: entry.source?.replace(
+          /\/\/# sourceMappingURL=\S+/,
+          `//# sourceMappingURL=data:application/json;base64,${Buffer.from(
+            JSON.stringify(sourceMap),
+          ).toString('base64')}`,
+        ),
+      }))
+  );
 }
 
 /** JSON files in a directory, or [] when the directory is absent. */
@@ -208,6 +222,16 @@ function readProfiles(dir) {
     .readdirSync(dir)
     .filter((name) => name.endsWith('.json'))
     .map((name) => JSON.parse(fs.readFileSync(path.join(dir, name), 'utf8')));
+}
+
+/** The run's client chunks, keyed by URL: `{ source, sourceMap }` per chunk. */
+function readScriptStore(dir) {
+  return new Map(
+    readProfiles(dir).map((script) => [
+      script.url,
+      { source: script.source, sourceMap: script.sourceMap },
+    ]),
+  );
 }
 
 /**
@@ -289,6 +313,7 @@ export async function generateReport({
   repoRoot,
   serverDir,
   browserDir,
+  browserScriptsDir,
   outputDir,
 }) {
   // Node writes one profile per process, so unrelated processes that inherited
@@ -337,7 +362,13 @@ export async function generateReport({
           runtime: 'browser',
           outputDir: path.join(outputDir, 'browser'),
           load: (report) =>
-            report.add(prepareBrowserEntries(browserEntries, repoRoot)),
+            report.add(
+              prepareBrowserEntries(
+                browserEntries,
+                repoRoot,
+                readScriptStore(browserScriptsDir),
+              ),
+            ),
         }),
       ],
     };
@@ -359,6 +390,7 @@ export async function main(repoRoot) {
     repoRoot,
     serverDir: path.join(root, 'v8-server'),
     browserDir: path.join(root, 'v8-browser'),
+    browserScriptsDir: path.join(root, 'v8-browser-scripts'),
     outputDir: root,
   });
 

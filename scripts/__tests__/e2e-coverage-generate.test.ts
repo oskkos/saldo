@@ -55,6 +55,7 @@ const setUpProject = (): Project => {
 
   fs.mkdirSync(path.join(root, 'v8-server'), { recursive: true });
   fs.mkdirSync(path.join(root, 'v8-browser'), { recursive: true });
+  fs.mkdirSync(path.join(root, 'v8-browser-scripts'), { recursive: true });
 
   return { root, bundle, bundlePath: path.join(dist, 'bundle.js') };
 };
@@ -140,18 +141,22 @@ const writeBrowserProfile = (
     ),
   };
 
+  // The fixture stores each chunk's source and map once, in its own directory, and
+  // keeps only the execution counts per test. The report joins them back together.
+  fs.writeFileSync(
+    path.join(root, 'v8-browser-scripts', 'chunk.json'),
+    JSON.stringify({
+      url,
+      source: `${SOURCE}//# sourceMappingURL=bundle.js.map\n`,
+      sourceMap: map,
+    }),
+  );
+
   fs.writeFileSync(
     path.join(root, 'v8-browser', '1-0.json'),
     JSON.stringify({
       testTitle: 'synthetic',
-      entries: [
-        {
-          url,
-          source: `${SOURCE}//# sourceMappingURL=bundle.js.map\n`,
-          sourceMap: map,
-          functions: functionsFor(bundle, counts),
-        },
-      ],
+      entries: [{ url, functions: functionsFor(bundle, counts) }],
     }),
   );
 };
@@ -161,6 +166,7 @@ const run = (overrides: Record<string, unknown> = {}) =>
     repoRoot: project.root,
     serverDir: path.join(project.root, 'v8-server'),
     browserDir: path.join(project.root, 'v8-browser'),
+    browserScriptsDir: path.join(project.root, 'v8-browser-scripts'),
     outputDir: path.join(project.root, 'report'),
     ...overrides,
   });
@@ -251,13 +257,13 @@ describe('paths match the repository layout', () => {
     writeServerProfile(project, { first: 1, second: 0 });
     // Rewrite the inlined map to the prefixed form Turbopack actually emits.
     writeBrowserProfile(project, { first: 0, second: 1 });
-    const profile = path.join(project.root, 'v8-browser', '1-0.json');
-    const decoded = JSON.parse(fs.readFileSync(profile, 'utf8')) as {
-      entries: { sourceMap: { sources: string[] } }[];
+    const stored = path.join(project.root, 'v8-browser-scripts', 'chunk.json');
+    const decoded = JSON.parse(fs.readFileSync(stored, 'utf8')) as {
+      sourceMap: { sources: string[] };
     };
     // The default fixture already uses Turbopack's form; assert the other one.
-    decoded.entries[0].sourceMap.sources = ['webpack://_N_E/./src/greet.ts'];
-    fs.writeFileSync(profile, JSON.stringify(decoded));
+    decoded.sourceMap.sources = ['webpack://_N_E/./src/greet.ts'];
+    fs.writeFileSync(stored, JSON.stringify(decoded));
 
     const covered = linesFor(await run(), 'browser');
 
@@ -316,6 +322,40 @@ describe('report scope matches the unit layer', () => {
 
     expect(reported).toContain('src/greet.ts');
     expect(reported).not.toContain('vendor/dep.ts');
+  });
+
+  // @scenario coverage-reporting/A script carrying none of our sources is excluded
+  it('excludes a script whose map names none of our sources', async () => {
+    // Turbopack's per-route entry points are exactly this: a thin loader with an
+    // empty map. Reported as itself, it fills the report with build/server/app
+    // paths that pass the resolves-on-disk check because the build output exists.
+    const dist = path.join(project.root, 'dist');
+    fs.writeFileSync(
+      path.join(dist, 'entry.js.map'),
+      JSON.stringify({
+        version: 3,
+        file: 'entry.js',
+        sources: [],
+        names: [],
+        mappings: '',
+      }),
+    );
+    fs.writeFileSync(
+      path.join(dist, 'entry.js'),
+      `${SOURCE}//# sourceMappingURL=entry.js.map\n`,
+    );
+
+    writeServerProfile(
+      project,
+      { first: 1, second: 0 },
+      { extraScripts: [path.join(dist, 'entry.js')] },
+    );
+    writeBrowserProfile(project, { first: 0, second: 1 });
+
+    const reported = allReportedFiles(await run());
+
+    expect(reported).toContain('src/greet.ts');
+    expect(reported.some((file) => file.includes('entry.js'))).toBe(false);
   });
 
   // @scenario coverage-reporting/Generated code is excluded

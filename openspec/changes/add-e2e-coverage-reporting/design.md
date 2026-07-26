@@ -206,6 +206,19 @@ alive and attaches it to the entry, leaving the report a pure offline transform.
 report to a build layout that differs on Vercel, when the fixture already runs at the one
 moment the map is fetchable.
 
+### Each client chunk is stored once, not once per test
+
+The suite loads the same 18 chunks in every test, and the first working version stored
+each chunk's source and map alongside every test's execution counts. Measured on a real
+run: **734 MB** of browser profiles for 44 tests, and **603 map fetches for 18 distinct
+URLs** — each map fetched 33 times over, which is most of the minute the suite gained.
+
+So the fixture writes each chunk once to `coverage-e2e/v8-browser-scripts/`, keyed by a
+hash of its URL, and the per-test files keep only `url` and `functions`. The report joins
+them back before conversion. Writes go through a temporary name and a rename so a reader
+never sees half a file, and an existing file is left alone — which also makes the store
+correct if the suite is ever run with more than one worker.
+
 ### Browser collection hangs off a shared fixture
 
 `e2e/fixtures.ts` extends `test` with a `page` fixture that starts

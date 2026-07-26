@@ -19,4 +19,12 @@ export const COVERAGE_DIRS = {
   server: path.join(COVERAGE_ROOT, 'v8-server'),
   /** The page fixture writes one profile per test here. */
   browser: path.join(COVERAGE_ROOT, 'v8-browser'),
+  /**
+   * Each distinct client chunk's source and map, written once.
+   *
+   * The suite loads the same ~18 chunks in every test, so storing them per test
+   * cost 734 MB for a 44-test run and re-fetched each map 33 times over. Kept out
+   * of `browser/` so the report's per-test scan does not pick them up.
+   */
+  browserScripts: path.join(COVERAGE_ROOT, 'v8-browser-scripts'),
 } as const;
