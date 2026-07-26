@@ -3,7 +3,7 @@ import { render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import MiniCalendar from '../index';
 import { useRouter } from 'next/navigation';
-import { Worklog } from '@/types';
+import { AbsenceReason, Worklog } from '@/types';
 
 // Mock useRouter:
 jest.mock('next/navigation');
@@ -80,5 +80,45 @@ describe('MiniCalendar', () => {
     await userEvent.click(screen.getByText('Next month'));
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(router.push).toHaveBeenCalledWith(`/?month=2023-02`);
+  });
+
+  test('shows the hours worked on an absence day next to its icon', () => {
+    const date = new Date('2023-01-01T00:00:00Z');
+    const worklogs: Worklog[] = [
+      {
+        id: 1,
+        from: new Date('2023-01-04T08:00:00Z'),
+        to: new Date('2023-01-04T16:00:00Z'),
+        subtractLunchBreak: true,
+        absence: AbsenceReason.holiday,
+        comment: null,
+      },
+      {
+        id: 2,
+        from: new Date('2023-01-04T17:00:00Z'),
+        to: new Date('2023-01-04T20:00:00Z'),
+        subtractLunchBreak: false,
+        absence: null,
+        comment: null,
+      },
+    ];
+
+    render(
+      <MiniCalendar
+        date={date}
+        beginDate={date}
+        worklogs={worklogs}
+        expectedMinutesPerDay={450}
+        overrides={[]}
+      />,
+    );
+
+    // The absence carries 450 synthetic minutes of its own; the cell must
+    // report only the 180 the user actually logged on top of it.
+    expect(screen.getByText('3h')).toBeInTheDocument();
+    expect(screen.queryByText('10.5h')).toBeNull();
+    // react-icons renders the label as an SVG <title> child, which getByTitle
+    // matches; the month-navigation icons carry titles of their own.
+    expect(screen.getByTitle('Holiday')).toBeInTheDocument();
   });
 });

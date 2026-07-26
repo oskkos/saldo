@@ -11,6 +11,7 @@ export default function DayItem({
   date,
   status,
   saldo,
+  workedMinutes,
   absence,
   beginDate,
   expectedMinutes,
@@ -19,13 +20,17 @@ export default function DayItem({
   date: Date;
   status: string;
   saldo: { hours: number; minutes: number; toString: () => string };
+  workedMinutes: number;
   absence?: AbsenceReason;
   beginDate: Date;
   expectedMinutes: number;
   hasOverride: boolean;
 }) {
   const minutes = saldo.hours * 60 + saldo.minutes;
-  const hoursCompact = Math.round((minutes * 10) / 60) / 10;
+  // The cell reports hours actually logged. On an absence day the total above
+  // includes the absence's own stored times, which would read as work nobody
+  // did; on every other day the two are the same number.
+  const hoursCompact = Math.round((workedMinutes * 10) / 60) / 10;
   // Solid border on normal days; dashed marks a day with a custom expected value.
   // Color answers "did I meet this day's expected"; style answers "is it special".
   const style = hasOverride ? 'border-dashed' : 'border-solid';
