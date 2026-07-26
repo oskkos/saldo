@@ -1,4 +1,4 @@
-import { test as setup, expect } from '@playwright/test';
+import { test as setup, expect } from './fixtures';
 import { TEST_USER } from './db';
 import { STORAGE_STATE } from './constants';
 

@@ -163,6 +163,14 @@ process is Playwright's to manage, and the same flush problem applies.
 *Consequence.* This is the fragile part. A Next upgrade that changes signal handling
 breaks collection, which is precisely why the guard below exists.
 
+*Implementation trap.* `instrumentation.ts` is compiled for the Edge runtime as well,
+where `process.on` and `process.exit` do not exist. The runtime check therefore has to
+be a positive condition **wrapping** the Node calls rather than an early return:
+Turbopack inlines `NEXT_RUNTIME`, so the wrapped form is dead code in the Edge build and
+gets dropped, while a guard clause leaves the calls reachable and the build warns on
+each one. Verified both ways — `takeCoverage` is present in the Node chunk and absent
+from the Edge chunk.
+
 ### The report is generated after the run, as its own step
 
 The server's profile does not exist until Playwright kills it, which happens during
