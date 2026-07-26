@@ -88,3 +88,16 @@ needing control of the server clock.
 - [x] 11.4 Turn on requirement-level enforcement under `--strict` and confirm `npm run spec:coverage:ci` passes with no workflow change
 - [x] 11.5 Document the requirement-level rule, the four categories and the `coveredAt` field in `CLAUDE.md` and `e2e/README.md`
 - [x] 11.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`, `npm run spec:coverage:ci`, and `npm run test:e2e`
+
+## 12. Review fixes
+
+- [x] 12.1 Cover the override journeys end to end and drop the `expected-hours`
+      exemption. Its stated reason was wrong: the "Special days" collapse is
+      drivable from Playwright, and the failure behind the exemption was a
+      locator matching both date inputs on the page, not an invisible field
+- [x] 12.2 Reject a second end-to-end exemption for the same requirement, rather
+      than letting it silently overwrite the first
+- [x] 12.3 Reject an end-to-end exemption for a requirement whose scenarios are
+      all scenario-exempt — such a requirement has no decision to make — and
+      derive both that check and the superseded check from one pass of
+      `analyzeRequirements` instead of a second hand-rolled traversal

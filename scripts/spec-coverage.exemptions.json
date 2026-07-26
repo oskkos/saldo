@@ -27,12 +27,6 @@
   ],
   "requirementsWithoutE2e": [
     {
-      "requirement": "expected-hours/Per-date expected-hours overrides",
-      "category": "harness-cost",
-      "reason": "The only UI that creates an override is the \"Special days\" panel on /settings, a daisyUI <details> collapse whose fields never become visible to Playwright — not by clicking the summary, and not by forcing the element open. Driving it would mean reworking the component for testability, which is a change to production markup this change does not make.",
-      "coveredAt": "src/repository/__tests__/expectedHoursOverrideRepository.test.ts"
-    },
-    {
       "requirement": "auth/OAuth sign-in",
       "category": "external-dependency",
       "reason": "Completing a Google or GitHub sign-in means driving a third-party authorization server from the browser. Stubbing it would leave the test asserting the stub rather than the provider wiring, which is the only part this requirement is about."
