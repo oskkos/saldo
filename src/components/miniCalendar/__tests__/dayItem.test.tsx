@@ -103,30 +103,38 @@ describe('DayItem sub-line', () => {
       />,
     );
 
-  // @scenario absence/Hours worked on an absence day stay visible
-  test('shows the icon and the hours worked on top of an absence', () => {
+  // @scenario absence/Work on an absence day marks the icon
+  test('tints the icon and names the hours when work was done on the absence', () => {
     // A holiday (450 synthetic minutes) plus a 3-hour worklog: the total the
-    // border uses is 630, but the figure shown must be the 180 actually worked.
+    // border uses is 630, but what the icon reports is the 180 actually worked.
     const { container } = cell({
       saldoMinutes: 630,
       workedMinutes: 180,
       absence: AbsenceReason.holiday,
     });
 
-    expect(within(container).getByText('3h')).toBeInTheDocument();
-    expect(container.querySelector('svg > title')?.textContent).toBe('Holiday');
+    const icon = container.querySelector('svg');
+    expect(icon).toHaveClass('text-success');
+    expect(icon?.querySelector('title')?.textContent).toBe(
+      'Holiday, 3h logged',
+    );
+    // No second figure competes with the icon for the sub-line; the hours
+    // appear in the icon's label, not as text of their own.
+    expect(within(container).queryByText('3h')).toBeNull();
   });
 
-  // @scenario absence/An absence-only day shows no hours
-  test('shows the icon alone when nothing was worked on the absence day', () => {
+  // @scenario absence/An absence-only day shows a plain icon
+  test('leaves the icon plain when nothing was worked on the absence day', () => {
     const { container } = cell({
       saldoMinutes: 450,
       workedMinutes: 0,
       absence: AbsenceReason.holiday,
     });
 
-    expect(container.querySelector('svg > title')?.textContent).toBe('Holiday');
-    expect(container.textContent).not.toMatch(/\d+(\.\d+)?h/);
+    const icon = container.querySelector('svg');
+    expect(icon).not.toHaveClass('text-success');
+    expect(icon?.querySelector('title')?.textContent).toBe('Holiday');
+    expect(within(container).queryByText(/\dh/)).toBeNull();
   });
 
   test('shows the hours on an ordinary day, as before', () => {

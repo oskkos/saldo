@@ -202,29 +202,34 @@ first letter and replacing underscores with spaces (e.g. `sick_leave` →
 ### Requirement: Reason iconography
 
 The system SHALL display a distinct icon per absence reason in worklog listings
-and in the month calendar. On a calendar day that holds both an absence and
-regular worklogs, the icon SHALL NOT displace the day's logged hours: both SHALL
-be shown together. The hours shown on such a day SHALL count the day's regular
-worklogs only, excluding the absence's own stored times, so the figure reads as
-the work done on top of the absence.
+and in the month calendar.
+
+A calendar day is a small circle whose sub-line is its narrowest part, with no
+room for the reason icon and an hours figure side by side. So when regular
+worklogs fall on an absence day the system SHALL mark the icon rather than add a
+second figure: the icon SHALL be tinted to distinguish it from an absence day on
+which nothing was worked, and its accessible label SHALL name the hours logged,
+so the cue does not rest on colour alone. Those hours SHALL count the day's
+regular worklogs only, excluding the absence's own stored times. The figure
+itself belongs to the day view (see the `saldo` capability).
 
 #### Scenario: Icon per reason
 
 - **WHEN** an absence appears in a worklog list
 - **THEN** an icon corresponding to its reason is shown
 
-#### Scenario: Hours worked on an absence day stay visible
+#### Scenario: Work on an absence day marks the icon
 
 - **GIVEN** a calendar day with a `holiday` absence and a 3-hour regular worklog
 - **WHEN** the month calendar is rendered
-- **THEN** the day shows both the holiday icon and 3 hours
-- **AND** the absence's own stored times are not included in that figure
+- **THEN** the day's icon is tinted and its label names the 3 hours logged
+- **AND** the absence's own stored times are not counted in that figure
 
-#### Scenario: An absence-only day shows no hours
+#### Scenario: An absence-only day shows a plain icon
 
 - **GIVEN** a calendar day with an absence and no regular worklogs
 - **WHEN** the month calendar is rendered
-- **THEN** the day shows the reason icon and no hours figure
+- **THEN** the day shows the reason icon untinted, labelled with the reason alone, and no hours figure
 
 ## Open Questions
 
