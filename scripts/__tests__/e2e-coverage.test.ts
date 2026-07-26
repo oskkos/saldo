@@ -62,6 +62,25 @@ describe('every end-to-end test file is instrumented', () => {
   });
 });
 
+describe('collection is opt-in', () => {
+  const scripts = () =>
+    JSON.parse(
+      fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'),
+    ) as { scripts: Record<string, string> };
+
+  // @scenario coverage-reporting/The default end-to-end script enables nothing
+  it('leaves the switch unset in the default end-to-end script', () => {
+    expect(scripts().scripts['test:e2e']).not.toContain('E2E_COVERAGE');
+  });
+
+  // @scenario coverage-reporting/A dedicated script enables collection
+  it('sets the switch in the coverage script', () => {
+    // One switch: the build reads it for source maps, playwright.config.ts for the
+    // server profiler, and e2e/fixtures.ts for the browser collector.
+    expect(scripts().scripts['test:e2e:coverage']).toContain('E2E_COVERAGE=1');
+  });
+});
+
 describe('build configuration', () => {
   // @scenario coverage-reporting/Source maps are emitted only under the switch
   it('emits no additional source maps when the switch is unset', () => {

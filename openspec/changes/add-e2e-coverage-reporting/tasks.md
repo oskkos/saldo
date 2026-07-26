@@ -45,19 +45,19 @@ group 2.
 
 ## 4. Report generation and its guards
 
-- [ ] 4.1 Write failing tests over fixture profiles: a server profile puts its source
+- [x] 4.1 Write failing tests over fixture profiles: a server profile puts its source
       file in the lcov, a browser profile does the same, and a file executed in both
       appears once with the union of covered lines
-- [ ] 4.2 Write failing tests for paths: bundler-prefixed sources are normalised to the
+- [x] 4.2 Write failing tests for paths: bundler-prefixed sources are normalised to the
       repo-relative form the Jest report uses, and a normalised path naming no file on
       disk fails the run
-- [ ] 4.3 Write failing tests for scope: only sources under `src/` appear, and the
+- [x] 4.3 Write failing tests for scope: only sources under `src/` appear, and the
       generated Prisma client is excluded, matching Jest's `collectCoverageFrom`
-- [ ] 4.4 Write failing tests for the emptiness guards: a missing server profile, a
+- [x] 4.4 Write failing tests for the emptiness guards: a missing server profile, a
       missing browser profile, and profiles yielding no project source each exit
       non-zero naming what is missing
-- [ ] 4.5 Implement `scripts/e2e-coverage-report.mjs` to satisfy 4.1–4.4
-- [ ] 4.6 Add `test:e2e:coverage` and the report script to `package.json`, and assert
+- [x] 4.5 Implement `scripts/e2e-coverage-report.mjs` to satisfy 4.1–4.4
+- [x] 4.6 Add `test:e2e:coverage` and the report script to `package.json`, and assert
       that the default `test:e2e` script sets no switch while the coverage one does
 
 ## 5. Publish each layer under its own flag

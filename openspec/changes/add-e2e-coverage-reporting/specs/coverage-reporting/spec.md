@@ -2,13 +2,20 @@
 
 ### Requirement: End-to-end coverage is collected from both runtimes
 
-The end-to-end coverage report SHALL include code executed in the application's server
-process and code executed in the browser, merged per source file.
+End-to-end coverage SHALL include code executed in the application's server process and
+code executed in the browser.
 
 Both runtimes are required rather than preferred. Pages are async server components and
 every mutation goes through a server action, so a browser-only profile would omit the
 layers the end-to-end suite uniquely exercises — which is the reason for collecting
 anything at all.
+
+Each runtime SHALL be reported separately and published under the same end-to-end flag,
+leaving the union to the coverage service. Combining them locally is not equivalent: the
+converter resolves both runtimes to the same source path but does not union their
+execution counts, so an unexecuted range from one runtime masks a hit from the other for
+every file both touch — shared utilities, and every client component that is
+server-rendered and then hydrated.
 
 Collection SHALL cover every browser context the suite drives, including the
 authentication setup that signs the shared test user in. A test file under `e2e/` that
@@ -27,11 +34,12 @@ error, since it would otherwise drop out of collection silently.
 - **WHEN** the end-to-end report is generated
 - **THEN** that file appears in the report with the executed lines marked covered
 
-#### Scenario: A file executed in both runtimes is reported once
+#### Scenario: A file executed in both runtimes keeps both runtimes' lines
 
 - **GIVEN** both profiles record execution in the same source file, on different lines
 - **WHEN** the end-to-end report is generated
-- **THEN** the file appears as a single entry whose covered lines are the union of both
+- **THEN** each runtime's report records that file with its own executed lines, so no
+  line executed by either runtime is left uncovered by the pair
 
 #### Scenario: A test file bypassing the instrumented fixture is rejected
 
@@ -70,8 +78,13 @@ be exactly as fast as it was before this capability existed.
 ### Requirement: Report paths match the repository layout
 
 Every source path in the generated report SHALL be repository-relative — matching the
-form the unit report writes — and SHALL resolve to a file on disk. The report step SHALL
-fail when a path does not resolve.
+form the unit report writes — and SHALL resolve to a file on disk. A path that does not
+resolve SHALL be excluded rather than published, and the report step SHALL fail if
+exclusion leaves no project source at all.
+
+Requiring the file to exist is also what tells this project's sources apart from the
+framework's: Next ships source maps naming its own `src/` tree, so a prefix test alone
+pulls its internals in.
 
 Bundlers name sources with their own prefixes, such as
 `turbopack:///[project]/src/app/settings/page.tsx`. Per-file merging between the two
@@ -87,11 +100,12 @@ invisible.
 - **THEN** each path is written repository-relative, in the same form the unit report
   uses
 
-#### Scenario: A path that does not resolve fails the run
+#### Scenario: A path that does not resolve stays out of the report
 
-- **GIVEN** a normalised path that names no file on disk
+- **GIVEN** a source path that names no file on disk
 - **WHEN** the report is generated
-- **THEN** the step exits non-zero, naming the path
+- **THEN** it does not appear in the report, and a report left with no project source
+  at all fails the run rather than being published
 
 ### Requirement: Report scope matches the unit layer
 
@@ -159,7 +173,8 @@ after a passing suite — a failed run's coverage is not a fact worth publishing
 #### Scenario: End-to-end coverage is published under its own flag
 
 - **WHEN** the end-to-end job uploads coverage
-- **THEN** it is flagged as the end-to-end layer
+- **THEN** both runtimes' reports are uploaded, each flagged as the end-to-end layer, so
+  the service unions them into one layer
 
 #### Scenario: The end-to-end job reports before uploading
 

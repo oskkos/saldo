@@ -17,6 +17,8 @@
     "test:ci": "jest --ci --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:e2e:coverage": "E2E_COVERAGE=1 playwright test",
+    "coverage:e2e:report": "node scripts/e2e-coverage-report.mjs",
     "spec:coverage": "node scripts/spec-coverage.mjs",
     "spec:coverage:ci": "node scripts/spec-coverage.mjs --check --strict"
   },

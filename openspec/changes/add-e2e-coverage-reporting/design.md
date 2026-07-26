@@ -238,6 +238,30 @@ when no browser profile was written, when no source file survives filtering, or 
 covers less than it did. That surfaces as a coverage drop on the `e2e` flag instead,
 which is a confusing thing to debug but the right alarm to have.
 
+### One report per runtime, unioned by the coverage service
+
+Discovered while implementing, not designed: **monocart does not union execution counts
+across entries.** Both runtimes resolve to the same source path — `sourceFilter` is
+called twice with `src/greet.ts` — but the merged output keeps one runtime's result and
+discards the other's. A synthetic profile pair where the server records
+`first: 1, second: 0` and the browser records the opposite yields `FNDA:1,first` and
+`FNDA:0,second`: the server's zero masks the browser's hit, in either add order.
+
+Untreated this would understate every file both runtimes touch — `src/util/date.ts`,
+`src/services/index.tsx`, and every client component that is server-rendered and then
+hydrated, which is most of them.
+
+So the script writes **one lcov per runtime**, and both are uploaded under the same `e2e`
+flag. Codecov unions uploads within a flag, correctly, and the layer still reads as one
+in the UI.
+
+*Alternatives considered.* **Merging locally with `istanbul-lib-coverage`**, which does
+union properly — rejected as two more dependencies and a second conversion step to own,
+to reach the same number the service computes for free. **Two distinct flags**
+(`e2e-server`, `e2e-browser`) would make each runtime separately visible, which is
+genuinely informative; rejected for now because it puts a mechanical detail of collection
+into the reporting vocabulary, and it can be split later without touching the script.
+
 ### Scope matches the unit layer exactly
 
 The e2e report includes `src/**` and excludes the generated Prisma client, mirroring
