@@ -47,9 +47,17 @@ const settings = (overrides: Partial<SettingsType> = {}): SettingsType => ({
   ...overrides,
 });
 
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 const renderSettings = (overrides: Partial<SettingsType> = {}) =>
@@ -102,8 +110,9 @@ describe('Settings', () => {
         }),
       ),
     );
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Settings saved')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Settings saved')).toBeInTheDocument();
   });
 
   it('refuses times in the wrong order', async () => {
@@ -116,7 +125,7 @@ describe('Settings', () => {
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(
-      screen.getByText('From time must be before to time'),
+      toast.getByText('From time must be before to time'),
     ).toBeInTheDocument();
   });
 
@@ -130,8 +139,8 @@ describe('Settings', () => {
 
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     expect(update).not.toHaveBeenCalled();
-    shownToast();
-    expect(screen.getByText('Begin date is required')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.getByText('Begin date is required')).toBeInTheDocument();
   });
 
   it('treats cleared numbers as zero rather than refusing', async () => {
@@ -162,8 +171,8 @@ describe('Settings', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to save settings')).toBeInTheDocument();
-    expect(screen.getByText('database unavailable')).toBeInTheDocument();
+    expect(toast.getByText('Failed to save settings')).toBeInTheDocument();
+    expect(toast.getByText('database unavailable')).toBeInTheDocument();
   });
 
   it('omits a detail line when the failure carries no message', async () => {
@@ -173,7 +182,7 @@ describe('Settings', () => {
     await submit();
 
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
-    shownToast();
-    expect(screen.getByText('Failed to save settings')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.getByText('Failed to save settings')).toBeInTheDocument();
   });
 });

@@ -47,9 +47,17 @@ const override = (
   label: string | null = null,
 ): ExpectedHoursOverride => ({ id, date: new Date(date), minutes, label });
 
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 const renderOverrides = (overrides: ExpectedHoursOverride[] = []) =>
@@ -104,8 +112,9 @@ describe('ExpectedHoursOverrides', () => {
     await userEvent.setup().click(saveButton());
 
     await waitFor(() => expect(upsert).toHaveBeenCalled());
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Special day saved')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Special day saved')).toBeInTheDocument();
     // The form resets, so the next entry does not inherit this date.
     await waitFor(() => expect(dateField()).toHaveValue(''));
   });
@@ -133,8 +142,8 @@ describe('ExpectedHoursOverrides', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to save special day')).toBeInTheDocument();
-    expect(screen.getByText('date is in the past')).toBeInTheDocument();
+    expect(toast.getByText('Failed to save special day')).toBeInTheDocument();
+    expect(toast.getByText('date is in the past')).toBeInTheDocument();
   });
 
   it('removes only the row asked for', async () => {
@@ -164,9 +173,7 @@ describe('ExpectedHoursOverrides', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(
-      screen.getByText('Failed to remove special day'),
-    ).toBeInTheDocument();
+    expect(toast.getByText('Failed to remove special day')).toBeInTheDocument();
   });
 
   it('loads an existing day back into the form when it is clicked', async () => {

@@ -1,4 +1,4 @@
-import { describe, expect, it, jest } from '@jest/globals';
+import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
@@ -78,13 +78,24 @@ describe('Modal', () => {
 });
 
 describe('showModal / closeModal', () => {
+  const stubbedIds: string[] = [];
+
   // The helpers reach the dialog through the id-keyed global that browsers expose
   // for elements, so a stub standing in for the element is what can be observed.
   const stubDialog = (id: string) => {
     const dialog = { showModal: jest.fn(), close: jest.fn() };
     Object.assign(window, { [id]: dialog });
+    stubbedIds.push(id);
     return dialog;
   };
+
+  // Taken back off the global afterwards: these names would otherwise stay set for
+  // the rest of the file.
+  afterEach(() => {
+    for (const id of stubbedIds.splice(0)) {
+      delete (window as unknown as Record<string, unknown>)[id];
+    }
+  });
 
   it('opens the dialog named by id', () => {
     const dialog = stubDialog('open-me');

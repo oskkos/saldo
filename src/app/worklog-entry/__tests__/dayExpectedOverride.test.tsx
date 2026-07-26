@@ -52,9 +52,17 @@ beforeAll(async () => {
 const day = '2026-07-26' as Date_ISODay;
 const setMsg = jest.fn<(msg: unknown) => void>();
 
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 const renderOverride = (
@@ -141,8 +149,9 @@ describe('DayExpectedOverride', () => {
     await userEvent.setup().click(button('Save'));
 
     await waitFor(() => expect(upsert).toHaveBeenCalled());
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Expected hours updated')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Expected hours updated')).toBeInTheDocument();
   });
 
   it('reports a refused save', async () => {
@@ -155,7 +164,7 @@ describe('DayExpectedOverride', () => {
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(
-      screen.getByText('Failed to update expected hours'),
+      toast.getByText('Failed to update expected hours'),
     ).toBeInTheDocument();
   });
 
@@ -174,8 +183,9 @@ describe('DayExpectedOverride', () => {
     await userEvent.setup().click(button('Clear'));
 
     await waitFor(() => expect(remove).toHaveBeenCalledWith(7));
-    expect(shownToast().type).toBe('success');
-    expect(screen.getByText('Override cleared')).toBeInTheDocument();
+    const toast = shownToast();
+    expect(toast.type).toBe('success');
+    expect(toast.getByText('Override cleared')).toBeInTheDocument();
   });
 
   it('reports a refused clear', async () => {
@@ -195,6 +205,6 @@ describe('DayExpectedOverride', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to clear override')).toBeInTheDocument();
+    expect(toast.getByText('Failed to clear override')).toBeInTheDocument();
   });
 });

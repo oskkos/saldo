@@ -35,9 +35,17 @@ const onSubmit = jest.fn();
 const setMsg = jest.fn<(msg: unknown) => void>();
 
 /** The toast the modal asked for, rendered so its text can be read. */
+/**
+ * The toast the component asked for, rendered on its own so its text can be read.
+ *
+ * The returned queries are bound to that render, not to the document — asserting
+ * through `screen` here would also search the component's own tree, so a message that
+ * happened to appear in both would pass for the wrong reason.
+ */
 const shownToast = () => {
   const [msg] = setMsg.mock.calls[0] as [{ type: string; message: ReactNode }];
-  return { type: msg.type, ...render(<>{msg.message}</>) };
+  const { getByText } = render(<>{msg.message}</>);
+  return { type: msg.type, getByText };
 };
 
 beforeEach(() => {
@@ -76,7 +84,7 @@ describe('QuickAddWorklogModal', () => {
     expect(setMsg).toHaveBeenCalled();
     const toast = shownToast();
     expect(toast.type).toBe('success');
-    expect(screen.getByText('Worklog created')).toBeInTheDocument();
+    expect(toast.getByText('Worklog created')).toBeInTheDocument();
   });
 
   it('reports the reason when the save is refused', async () => {
@@ -87,9 +95,7 @@ describe('QuickAddWorklogModal', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.type).toBe('error');
-    expect(screen.getByText('Failed to create worklog')).toBeInTheDocument();
-    expect(
-      screen.getByText('overlaps an existing worklog'),
-    ).toBeInTheDocument();
+    expect(toast.getByText('Failed to create worklog')).toBeInTheDocument();
+    expect(toast.getByText('overlaps an existing worklog')).toBeInTheDocument();
   });
 });
