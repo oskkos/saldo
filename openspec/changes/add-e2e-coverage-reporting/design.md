@@ -85,12 +85,20 @@ Five findings changed the design:
    `NODE_V8_COVERAGE` — the `npx` wrapper, in the spike — wrote profiles into the same
    directory and put 740 files of npm's own source into the lcov.
 
-4. **`SIGTERM` already flushes.** `next start` exits gracefully and Node writes the
-   profile on the way out; a `coverage-<pid>-*.json` appeared without any hook. The
-   explicit `v8.takeCoverage()` in `instrumentation.ts` is therefore defence-in-depth
-   against a future change in Next's signal handling, not the load-bearing mechanism it
-   was designed as. Kept, because the alternative is discovering the regression as a red
-   build during an upgrade.
+4. **`SIGTERM` already flushes** — but only if the process is sent one. Signalling
+   `next-server` by hand produced a `coverage-<pid>-*.json` with no hook at all, which
+   made the `v8.takeCoverage()` hook in `instrumentation.ts` look like defence-in-depth.
+
+   **That conclusion was wrong about the real run.** Playwright terminates its web server
+   with `SIGKILL` by default, which skips Node's exit path entirely: the first full
+   coverage run passed all 44 tests and collected 44 browser profiles and **zero** server
+   profiles. Nothing in the suite noticed — the report step is what caught it. The fix is
+   `webServer.gracefulShutdown: { signal: 'SIGTERM', timeout: 15_000 }`, set only when
+   collecting.
+
+   Worth stating plainly: the guard designed for this failure is the only reason it was
+   found before merge rather than after, and a spike that signals a process by hand does
+   not tell you how the test runner will end it.
 
 5. **`src/proxy.ts` is covered after all.** The prediction that middleware would be
    structurally uncoverable was wrong: `next start` runs the Edge runtime in-process, and
@@ -180,6 +188,24 @@ teardown hook; it runs as a separate command after `playwright test` exits.
 In CI that is two steps, and a failing suite therefore uploads nothing. That is correct:
 a failed run's coverage is not a fact worth publishing.
 
+### The browser's source maps are captured during the run, not at report time
+
+Client bundles reference their map by URL, so resolving one is an HTTP request to the
+app. The report runs after Playwright has killed the server, when that request can only
+fail — and the spike missed this because it converted the browser profile while the
+server was still up.
+
+The second full coverage run is what surfaced it: 44 tests passed, both runtimes
+contributed, and every browser path degraded to the chunk URL
+(`localhost-3100/_next/static/chunks/2qjucoizy5zar.js`), which the resolves-on-disk check
+rejected. So the fixture now fetches each map through `page.request` while the server is
+alive and attaches it to the entry, leaving the report a pure offline transform.
+
+*Alternative considered.* Resolving maps from the build output on disk —
+`/_next/static/chunks/x.js` → `build/static/chunks/x.js.map`. Rejected as coupling the
+report to a build layout that differs on Vercel, when the fixture already runs at the one
+moment the map is fetchable.
+
 ### Browser collection hangs off a shared fixture
 
 `e2e/fixtures.ts` extends `test` with a `page` fixture that starts
@@ -189,8 +215,11 @@ stopped profile to a per-test file. The eight spec files and `auth.setup.ts` imp
 yields the page untouched.
 
 **`auth.setup.ts` is included deliberately.** It drives the real credentials sign-in form
-on every run, so excluding it would leave `signin/page.tsx` and `credentialsSignin.tsx`
-dark in a report whose whole claim is that it records what the suite executes.
+on every run, so excluding it would leave that work out of a report whose whole claim is
+that it records what the suite executes. Measured: it lights `card.tsx`,
+`credentialsSignin.tsx` and `signinSchema.tsx`. It does **not** light
+`signin/page.tsx` — the page module itself never appears in either profile, so the
+prediction that including the setup project would cover the sign-in page was half right.
 
 *This makes coverage and requirement-level traceability disagree*, and the disagreement
 is correct rather than a defect to reconcile. `auth/Email/password sign-in` is covered

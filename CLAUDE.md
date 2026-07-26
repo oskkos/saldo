@@ -19,6 +19,8 @@ npm test             # jest in WATCH mode — does not exit
 npm run test:ci      # jest --ci --coverage — use this for a single run
 npm run test:e2e     # playwright (time-clock e2e; see one-time setup below)
 npm run test:e2e:ui  # playwright --ui (watch/debug)
+npm run test:e2e:coverage   # same suite, collecting V8 coverage (slower; opt-in)
+npm run coverage:e2e:report # convert the collected profiles into lcov
 npm run lint         # eslint (max-warnings=0) + prettier --check
 npm run lint:fix     # eslint --fix + prettier --write
 ```
@@ -33,6 +35,36 @@ npm run lint:fix     # eslint --fix + prettier --write
   ```
   It boots the app on port **3100** against `saldo_test` (never the dev DB), applies migrations, and seeds a test user. See `e2e/README.md` for the harness and scenario→spec traceability.
 - Husky pre-commit runs `lint-staged`; commit-msg enforces Conventional Commits (commitlint). Keep commits conventional or they will be rejected.
+
+### Coverage reporting
+
+Both layers report line coverage to Codecov, each under its own flag — Jest as `unit`,
+the Playwright suite as `e2e`. They cover near-complementary halves of the codebase
+(Jest holds `services`/`repository`/`util`; Playwright drives every `page.tsx` and
+component), so only the pair describes the whole.
+
+```bash
+npm run test:e2e:coverage    # E2E_COVERAGE=1: source maps, server profiler, browser collector
+npm run coverage:e2e:report  # writes coverage-e2e/{server,browser}/lcov.info
+```
+
+- **Opt-in.** One switch (`E2E_COVERAGE`) drives the build's source maps,
+  `NODE_V8_COVERAGE` on the app server, and the `page.coverage` collector in
+  `e2e/fixtures.ts`. A plain `npm run test:e2e` is unaffected and writes nothing.
+- **Every spec takes `test` from `e2e/fixtures.ts`,** not `@playwright/test` — that is
+  what starts the browser profiler. A file that imports the runner directly is not
+  collected and nothing about it looks wrong, so a Jest test fails the build on one.
+- **One report per runtime, both uploaded under `e2e`.** They are not merged locally:
+  the converter resolves both runtimes to the same source path but does not union their
+  execution counts, so the server's zero would mask a browser hit for every file both
+  touch. Codecov unions uploads within a flag.
+- **The report step fails loudly** when a runtime contributed nothing, when no project
+  source survives filtering, or when a path does not resolve on disk. Silent-empty is
+  this mechanism's characteristic failure: the coverage service would carry the previous
+  report forward and the number would stay plausible while ceasing to be true.
+- **Execution is not assertion.** A file is green here because it ran, not because
+  anything checked what it did — `navbar.tsx` renders on every page. Whether a scenario
+  is actually asserted is what spec-to-test traceability below answers.
 
 ### Spec-to-test traceability
 

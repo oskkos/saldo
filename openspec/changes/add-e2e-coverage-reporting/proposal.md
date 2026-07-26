@@ -80,11 +80,18 @@ no requirement to any product capability.
   a separate tool and stays dependency-free.
 - **CI cost**: an extra build with source maps and V8 collection overhead in the e2e
   job, plus one upload step. Single-digit minutes at most; the suite is unchanged.
-- **The published total will jump**, plausibly to somewhere near 80%. That is the
-  point, but it is also a one-way ratchet: `target: auto` then holds the new floor on a
-  flag that is structurally more fragile than Jest's. `codecov.yml` carries a threshold
-  so a legitimate small dip does not fire, and the empty-report guard turns total
-  collapse into a red build rather than a slow drift.
+- **The published total rises from 51.0% to 64.0%** (1092/1705 lines), measured on a real
+  run: the e2e layer covers 80.7% of the 727 lines across the 85 files it reaches. That is
+  well short of the ~80% total first guessed here — the browser layer reaches fewer files
+  than the dark-file count suggested, because a page being rendered does not execute most
+  of the component code beneath it. It is still a one-way ratchet: `target: auto` then
+  holds the new floor on a flag structurally more fragile than Jest's. `codecov.yml`
+  carries a threshold so a legitimate small dip does not fire, and the empty-report guard
+  turns total collapse into a red build rather than a slow drift.
+- **16 files are covered by neither layer**, and 14 of them are the sign-up,
+  forgot-password and reset-password trees that `requirementsWithoutE2e` already exempts
+  by name. The other two are `src/app/manifest.ts` and `src/types/next-auth.d.ts`. Two
+  records written independently, agreeing.
 - **Risk — the coverage number gets weaker as a quality signal even as it gets more
   accurate.** V8 measures execution, not assertion: `navbar.tsx` renders on every page
   and goes green without any test asserting anything about it. This change does not ask

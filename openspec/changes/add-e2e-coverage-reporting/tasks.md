@@ -75,17 +75,17 @@ group 2.
 
 ## 6. Make the capability canonical and document it
 
-- [ ] 6.1 Sync the delta into `openspec/specs/coverage-reporting/spec.md`, so the new
+- [x] 6.1 Sync the delta into `openspec/specs/coverage-reporting/spec.md`, so the new
       requirements are canonical before the coverage gate has to pass
-- [ ] 6.2 Annotate the new Jest tests with the `coverage-reporting` scenarios they
+- [x] 6.2 Annotate the new Jest tests with the `coverage-reporting` scenarios they
       assert
-- [ ] 6.3 Add `no-ui` end-to-end exemptions for all six requirements — a CI script and
+- [x] 6.3 Add `no-ui` end-to-end exemptions for all six requirements — a CI script and
       a workflow have no user-visible surface
-- [ ] 6.4 Regenerate `openspec/COVERAGE.md` and confirm every new scenario is covered
+- [x] 6.4 Regenerate `openspec/COVERAGE.md` and confirm every new scenario is covered
       and every new requirement decided
-- [ ] 6.5 Document in `CLAUDE.md` and `e2e/README.md`: the opt-in script, what each
+- [x] 6.5 Document in `CLAUDE.md` and `e2e/README.md`: the opt-in script, what each
       flag measures, and that execution coverage is not assertion coverage —
       `spec-test-traceability` remains the answer to that question
-- [ ] 6.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`,
+- [x] 6.6 Verify the branch tip is green: `npm run test:ci`, `npm run lint`,
       `npm run spec:coverage:ci`, `npm run test:e2e`, and one full
       `npm run test:e2e:coverage` producing a non-empty report whose paths all resolve
