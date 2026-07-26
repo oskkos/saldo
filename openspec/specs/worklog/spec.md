@@ -244,8 +244,3 @@ as intended requirements until resolved.
   non-existent id throws a "not found" error, while an existing-but-foreign id
   throws "user mismatch" — the differing errors could distinguish which ids
   exist. Low severity, but worth a deliberate decision.
-- **Multi-day absence creation is non-transactional.** The absence workflow
-  issues one create per day with no surrounding transaction (`absence.tsx` even
-  carries a `// TODO: Handle all in one call`). A partial failure leaves some days
-  persisted and others not. This belongs to the absence capability but originates
-  in repeated worklog creates.

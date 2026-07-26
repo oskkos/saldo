@@ -56,7 +56,7 @@
 
 ## 8. Traceability and verification
 
-- [ ] 8.1 Run `npm run spec:coverage` and commit the regenerated `openspec/COVERAGE.md`
-- [ ] 8.2 Add a categorised `requirementsWithoutE2e` entry for any new requirement that ends up without a Playwright test, or confirm none is needed
-- [ ] 8.3 Confirm each `@scenario` claim actually asserts that scenario's THEN, re-reading any annotation that spans layers
-- [ ] 8.4 Run `npm run lint`, `npm run test:ci` and `npm run test:e2e` and confirm all three are green
+- [x] 8.1 Sync the delta into the canonical specs, remove the Open Questions it resolves, run `npm run spec:coverage` and commit the regenerated `openspec/COVERAGE.md`. Syncing has to happen at the end of apply, not at archive: the coverage tool reads only `openspec/specs/`, so CI stays red until the delta lands there — and archive is supposed to wait for green CI. `CLAUDE.md` now says so
+- [x] 8.2 No exemption needed: all four new requirements have a Playwright test, and the one scenario that first came up uncovered — pre-existing duplicates — turned out to be testable by seeding straight into the database, past the rule
+- [x] 8.3 Confirm each `@scenario` claim actually asserts that scenario's THEN, re-reading any annotation that spans layers
+- [x] 8.4 Run `npm run lint`, `npm run test:ci` and `npm run test:e2e` and confirm all three are green
