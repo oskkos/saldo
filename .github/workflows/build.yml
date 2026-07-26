@@ -32,9 +32,11 @@ jobs:
       - name: Run tests
         run: npm run test:ci
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unit
       - name: Build
         run: npm run build
 
@@ -60,6 +62,9 @@ jobs:
       POSTGRES_PRISMA_URL: postgres://postgres:password@localhost:5432/saldo_test
       POSTGRES_URL_NON_POOLING: postgres://postgres:password@localhost:5432/saldo_test
       NEXTAUTH_SECRET: e2e-test-secret-not-for-production
+      # Set for the whole job: the build reads it to emit source maps, and the suite
+      # needs the build it profiles to have them.
+      E2E_COVERAGE: '1'
 
     steps:
       - uses: actions/checkout@v4
@@ -88,7 +93,18 @@ jobs:
       - name: Build app
         run: npm run build
       - name: Run e2e tests
-        run: npm run test:e2e
+        run: npm run test:e2e:coverage
+      # A separate step, not a Playwright reporter: the app server only writes its V8
+      # profile when Playwright kills it, which happens during Playwright's shutdown.
+      # Exits non-zero if either runtime contributed nothing.
+      - name: Build coverage report from both runtimes
+        run: npm run coverage:e2e:report
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage-e2e/server/lcov.info,./coverage-e2e/browser/lcov.info
+          flags: e2e
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4

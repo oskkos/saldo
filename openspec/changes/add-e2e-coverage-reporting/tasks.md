@@ -62,16 +62,16 @@ group 2.
 
 ## 5. Publish each layer under its own flag
 
-- [ ] 5.1 Write failing Jest tests reading `.github/workflows/build.yml` and
+- [x] 5.1 Write failing Jest tests reading `.github/workflows/build.yml` and
       `codecov.yml`: unit coverage uploads under the unit flag, end-to-end under the
       e2e flag, the report step sits between the suite and the upload, and both flags
       carry forward
-- [ ] 5.2 Add `codecov.yml` declaring both flags with `carryforward: true` and a
+- [x] 5.2 Add `codecov.yml` declaring both flags with `carryforward: true` and a
       threshold, so a legitimate small dip does not fail a pull request
-- [ ] 5.3 Wire the workflow: flag the existing upload, set the switch for the e2e job's
+- [x] 5.3 Wire the workflow: flag the existing upload, set the switch for the e2e job's
       build and run, add the report and flagged upload steps, and bump
       `codecov/codecov-action` to v5 while the step is being edited
-- [ ] 5.4 Confirm 5.1 passes against the real files
+- [x] 5.4 Confirm 5.1 passes against the real files
 
 ## 6. Make the capability canonical and document it
 
