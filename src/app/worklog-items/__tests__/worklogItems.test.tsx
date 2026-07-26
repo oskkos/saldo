@@ -121,7 +121,26 @@ describe('WorklogItems', () => {
     expect(screen.getByTestId('row-2')).toHaveAttribute('data-ignored', 'no');
   });
 
-  it('drops a deleted row once the server data catches up', async () => {
+  it('drops a deleted row straight away', async () => {
+    const both = [
+      worklog(1, dayOffset(-1), 'first'),
+      worklog(2, dayOffset(-1), 'second'),
+    ];
+    render(
+      <WorklogItems worklogs={both} settings={settings(dayOffset(-90))} />,
+    );
+
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: 'delete-1' }));
+
+    // No waiting for the server: the row goes now. This is what the resync used to
+    // undo, by reading a shorter local list as a new server list.
+    expect(screen.queryByTestId('row-1')).not.toBeInTheDocument();
+    expect(screen.getByTestId('row-2')).toBeInTheDocument();
+  });
+
+  it('restores a row the server still reports after a failed delete', async () => {
     const both = [
       worklog(1, dayOffset(-1), 'first'),
       worklog(2, dayOffset(-1), 'second'),
@@ -133,20 +152,15 @@ describe('WorklogItems', () => {
     await userEvent
       .setup()
       .click(screen.getByRole('button', { name: 'delete-1' }));
+    expect(screen.queryByTestId('row-1')).not.toBeInTheDocument();
 
-    // Documenting current behaviour, not endorsing it: the local removal is undone
-    // immediately, because the length resync sees `worklogs` still holding two and
-    // overwrites the shortened state. The row only goes when router.refresh() has
-    // re-rendered the parent with one fewer worklog — so the optimistic update is
-    // dead code and the refresh is what the user actually waits for.
-    expect(screen.getByTestId('row-1')).toBeInTheDocument();
-
+    // The refresh brings back a list that still has it, and the server wins — the
+    // optimistic removal must not outlive a delete that did not happen.
     rerender(
-      <WorklogItems worklogs={[both[1]]} settings={settings(dayOffset(-90))} />,
+      <WorklogItems worklogs={[...both]} settings={settings(dayOffset(-90))} />,
     );
 
-    expect(screen.queryByTestId('row-1')).not.toBeInTheDocument();
-    expect(screen.getByTestId('row-2')).toBeInTheDocument();
+    expect(screen.getByTestId('row-1')).toBeInTheDocument();
   });
 
   it('shows the new value of an edited row in place', async () => {

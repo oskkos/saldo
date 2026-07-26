@@ -99,9 +99,17 @@ export default function WorklogItems({
 }) {
   const [wl, setWl] = useState<Worklog[]>(worklogs);
 
-  if (worklogs.length !== wl.length) {
-    // Don't really understand why this is required but without this
-    // new worklog added with QuickAdd modal isn't shown without refresh
+  // Adopt the server's list whenever a new one arrives. Quick-add inserts a worklog
+  // and refreshes the route without remounting this component, so without this the
+  // new entry would not appear until a full reload.
+  //
+  // The comparison is against the previous *prop*, not against `wl`. Comparing
+  // lengths made any local edit that changed the count — deleting a row — look like
+  // a new server list, so the removal was overwritten on the very next render and
+  // the row reappeared until the refresh landed.
+  const [lastFromServer, setLastFromServer] = useState<Worklog[]>(worklogs);
+  if (worklogs !== lastFromServer) {
+    setLastFromServer(worklogs);
     setWl(worklogs);
   }
 
