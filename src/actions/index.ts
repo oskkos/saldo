@@ -2,6 +2,7 @@
 
 import {
   AbsenceData,
+  AbsenceSubmitResult,
   AuthUser,
   ExpectedHoursOverrideData,
   SettingsData,
@@ -46,8 +47,7 @@ import { WorklogSchema } from '@/schemas/worklogSchema';
 import { AbsenceSchema } from '@/schemas/absenceSchema';
 import { SettingsSchema } from '@/schemas/settingsSchema';
 import { getSettings } from '@/repository/settingsRepository';
-import { daysInRange } from '@/services';
-import { assertExists } from '@/util/assertionFunctions';
+import { AbsenceConflictError, daysInRange } from '@/services';
 import { ExpectedHoursOverrideSchema } from '@/schemas/expectedHoursOverrideSchema';
 import {
   deleteExpectedHoursOverride,
@@ -112,15 +112,30 @@ export async function onWorklogSubmit(data: WorklogFormData) {
 // One call for the whole range, so the days are checked together and written
 // together. The stored times come from the user's own settings rather than from
 // the client: only the chosen days travel over the wire.
-export async function onAbsenceSubmit(data: AbsenceData) {
-  validateOrThrow(AbsenceSchema, data, 'Invalid absence');
-  const { from, to, reason, comment } = data;
-  assertExists(from);
-  assertExists(to);
-  assertExists(reason);
+//
+// Every outcome the user is meant to read comes back as a value. Raising it
+// would not survive the trip: a production build replaces the message of
+// anything thrown out of a server action with an opaque digest, so the toast
+// would say nothing about which day was already taken.
+export async function onAbsenceSubmit(
+  data: AbsenceData,
+): Promise<AbsenceSubmitResult> {
+  const parsed = AbsenceSchema.safeParse(data);
+  if (!parsed.success) {
+    return {
+      status: 'error',
+      message: parsed.error.issues[0]?.message ?? 'Invalid absence',
+    };
+  }
+  const { from, to, reason, comment } = parsed.data;
 
   const settings = await getSettings();
-  assertExists(settings, 'Settings not found');
+  if (!settings) {
+    return {
+      status: 'error',
+      message: 'Your settings could not be loaded, so nothing was saved.',
+    };
+  }
 
   const worklogs: WorklogFormData[] = daysInRange(from, to).map((day) => ({
     from: toDate(day, settings.fromDefault),
@@ -130,7 +145,24 @@ export async function onAbsenceSubmit(data: AbsenceData) {
     absence: reason,
   }));
 
-  return await insertWorklogs(worklogs);
+  // The generated records face the same validation as one entered by hand. The
+  // times come from settings, whose own format check is looser than this one,
+  // so a malformed pair there would otherwise reach the database unexamined.
+  if (worklogs.some((worklog) => !WorklogSchema.safeParse(worklog).success)) {
+    return {
+      status: 'error',
+      message: 'Your default start and end times are invalid. Check settings.',
+    };
+  }
+
+  try {
+    return { status: 'success', worklogs: await insertWorklogs(worklogs) };
+  } catch (e) {
+    if (e instanceof AbsenceConflictError) {
+      return { status: 'error', message: e.message };
+    }
+    throw e;
+  }
 }
 
 export async function onWorklogDelete(worklogId: number) {

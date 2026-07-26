@@ -108,6 +108,10 @@ whole submission SHALL be rejected with nothing persisted. A message SHALL name
 the conflicting days; when there are many, it SHALL name the first few and count
 the rest rather than listing all of them.
 
+Because each day becomes its own record, the system SHALL cap the length of a
+range and refuse one that exceeds it, rather than expanding an unbounded span
+into a single enormous write.
+
 #### Scenario: Three-day absence
 
 - **GIVEN** a from-date and a to-date three days apart
@@ -137,6 +141,13 @@ the rest rather than listing all of them.
 - **GIVEN** a range in which more days already have absences than the message lists individually
 - **WHEN** the range is submitted
 - **THEN** the message names the first few conflicting days and reports how many more there are
+
+#### Scenario: An over-long range is refused
+
+- **GIVEN** a range spanning more than a year
+- **WHEN** it is submitted
+- **THEN** it is refused before any record is written
+- **AND** the message states the longest range allowed
 
 ### Requirement: Hours may be logged on a day that has an absence
 

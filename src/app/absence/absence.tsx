@@ -1,6 +1,7 @@
 'use client';
 import { onAbsenceSubmit } from '@/actions';
 import DateInput from '@/components/form/dateInput';
+import { errorToastMessage } from '@/components/errorToast';
 import { ToastContext } from '@/components/toastContext';
 import { absenceReasonToString } from '@/services';
 import { AbsenceData, AbsenceReason } from '@/types';
@@ -98,25 +99,30 @@ export default function Absence() {
         <button
           className="btn btn-secondary mt-3 w-full"
           onClick={() => {
-            startTransitionWrapper(() => onAbsenceSubmit(data))
-              .then(() => {
-                setMsg({ type: 'success', message: 'Absence added' });
-              })
-              .catch((e) => {
-                const errorMsg =
-                  e instanceof Error ? (
-                    <div className="text-sm">{e.message}</div>
-                  ) : null;
+            startTransitionWrapper(async () => {
+              const result = await onAbsenceSubmit(data);
+              if (result.status === 'error') {
+                // A refusal the server wrote for this user, so it is shown as
+                // it stands — unlike a thrown failure, whose message is not
+                // ours and may carry nothing worth reading.
                 setMsg({
                   type: 'error',
                   message: (
                     <div>
                       <div>Failed to add absence</div>
-                      {errorMsg}
+                      <div className="text-sm">{result.message}</div>
                     </div>
                   ),
                 });
+                return;
+              }
+              setMsg({ type: 'success', message: 'Absence added' });
+            }).catch((e) => {
+              setMsg({
+                type: 'error',
+                message: errorToastMessage('Failed to add absence', e),
               });
+            });
           }}
         >
           Submit

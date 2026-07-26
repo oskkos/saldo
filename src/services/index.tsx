@@ -169,6 +169,19 @@ export function daysInRange(from: Date, to: Date): Date_ISODay[] {
 // toast nobody reads. Name the first few and count the rest.
 const MAX_LISTED_CONFLICT_DAYS = 3;
 
+// Thrown by the write paths so callers can tell a rejected absence apart from a
+// genuine failure. That distinction matters at the action boundary: this
+// message is meant for the user, and everything else is not.
+export class AbsenceConflictError extends Error {
+  readonly days: Date_ISODay[];
+
+  constructor(days: Date_ISODay[]) {
+    super(absenceConflictMessage(days));
+    this.name = 'AbsenceConflictError';
+    this.days = days;
+  }
+}
+
 export function absenceConflictMessage(days: Date_ISODay[]) {
   if (days.length === 0) {
     return 'An absence is already recorded for the selected days.';

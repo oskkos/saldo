@@ -7,6 +7,7 @@ import {
   beforeEach,
 } from '@jest/globals';
 import { AbsenceReason, type WorklogFormData } from '@/types';
+import { AbsenceConflictError } from '@/services';
 
 // Same server-layer harness as clockRepository.test.ts: the Prisma client, the
 // auth gate and the Sentry span wrapper are mocked, React's per-request `cache`
@@ -284,6 +285,29 @@ describe('insertWorklogs', () => {
         ]),
       ),
     ).rejects.toThrow('An absence is already recorded for 30.7.2026.');
+    expect(db.worklog.createManyAndReturn).not.toHaveBeenCalled();
+  });
+
+  // The action tells a refusal apart from a failure by its type, so the type is
+  // part of the contract, not an implementation detail.
+  it('raises a conflict the caller can recognize', async () => {
+    db.worklog.findMany.mockResolvedValue([
+      { from: new Date('2026-07-28T08:00:00.000Z') },
+    ]);
+
+    await expect(
+      repo.insertWorklogs(range(['2026-07-28'])),
+    ).rejects.toBeInstanceOf(AbsenceConflictError);
+  });
+
+  // The range expansion cannot produce a repeated day, but this is an exported
+  // entry point now: a batch that asks for one twice is the same violation.
+  it('rejects a batch that asks for the same day twice', async () => {
+    db.worklog.findMany.mockResolvedValue([]);
+
+    await expect(
+      repo.insertWorklogs(range(['2026-07-28', '2026-07-28'])),
+    ).rejects.toThrow('An absence is already recorded for 28.7.2026.');
     expect(db.worklog.createManyAndReturn).not.toHaveBeenCalled();
   });
 
