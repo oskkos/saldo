@@ -1,6 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'node:path';
-import { STORAGE_STATE } from './e2e/constants';
+import {
+  COLLECT_COVERAGE,
+  COVERAGE_DIRS,
+  STORAGE_STATE,
+} from './e2e/constants';
 
 // Load the e2e env (dedicated test DB, NextAuth secret) before anything reads
 // process.env — global setup, the DB helpers, and the app server all rely on it.
@@ -44,6 +48,10 @@ const serverEnv = {
   // captures the wall-clock (pinned to UTC below) and the server must not shift
   // it.
   TZ: 'America/New_York',
+
+  // Node writes the server's V8 profile into this directory on exit. Only set when
+  // collecting, so an ordinary run starts no profiler.
+  ...(COLLECT_COVERAGE ? { NODE_V8_COVERAGE: COVERAGE_DIRS.server } : {}),
 };
 
 export default defineConfig({
