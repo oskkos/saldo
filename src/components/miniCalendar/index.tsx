@@ -117,6 +117,7 @@ export default function MiniCalendar({
             key={'d-' + day.date.getTime().toString()}
             date={day.date}
             saldo={day.saldo}
+            workedMinutes={day.workedMinutes}
             status={day.status}
             absence={day.absence}
             beginDate={beginDate}

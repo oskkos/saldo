@@ -34,10 +34,10 @@
 
 ## 5. Calendar shows hours worked on an absence day
 
-- [ ] 5.1 In `miniCalendar/util.tsx`, compute the day's regular-worklog total separately from the existing `calculateWorklogsSum` figure, which counts the absence's synthetic times and must keep feeding the border colouring unchanged
-- [ ] 5.2 In `calendarCell.tsx`, show the reason icon and the hours together instead of the icon replacing the hours; a day with an absence and no regular worklogs still shows the icon alone
-- [ ] 5.3 Unit-test: absence plus a 3-hour worklog shows both and the figure excludes the absence's own times, absence-only day shows the icon and no hours, ordinary day is unchanged
-- [ ] 5.4 Annotate with `@scenario absence/Hours worked on an absence day stay visible` and `@scenario absence/An absence-only day shows no hours`
+- [x] 5.1 In `miniCalendar/util.tsx`, compute the day's regular-worklog total separately from the existing `calculateWorklogsSum` figure, which counts the absence's synthetic times and must keep feeding the border colouring unchanged
+- [x] 5.2 In `calendarCell.tsx`, show the reason icon and the hours together instead of the icon replacing the hours; a day with an absence and no regular worklogs still shows the icon alone
+- [x] 5.3 Unit-test: absence plus a 3-hour worklog shows both and the figure excludes the absence's own times, absence-only day shows the icon and no hours, ordinary day is unchanged
+- [x] 5.4 Annotate with `@scenario absence/Hours worked on an absence day stay visible` and `@scenario absence/An absence-only day shows no hours`
 
 ## 6. Saldo scenarios
 

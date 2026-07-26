@@ -1,4 +1,8 @@
-import { calculateWorklogsSum, resolveExpectedMinutes } from '@/services';
+import {
+  calculateWorklogsSum,
+  resolveExpectedMinutes,
+  worklogMinutes,
+} from '@/services';
 import { AbsenceReason, SaldoForDay, Worklog } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import {
@@ -24,6 +28,7 @@ const dailyDataForCalendar = (
   date: Date;
   status: string;
   saldo: SaldoForDay;
+  workedMinutes: number;
   absence: AbsenceReason | undefined;
   expectedMinutes: number;
   hasOverride: boolean;
@@ -36,6 +41,13 @@ const dailyDataForCalendar = (
     date,
     status,
     saldo: calculateWorklogsSum(worklogs),
+    // What the user actually logged, excluding an absence's synthetic full-day
+    // times. This is the figure the cell shows; the total above keeps feeding
+    // the border colour, so day colours do not move.
+    workedMinutes: worklogs.reduce(
+      (sum, wl) => (wl.absence ? sum : sum + worklogMinutes(wl)),
+      0,
+    ),
     absence: absence ?? undefined,
     expectedMinutes: resolveExpectedMinutes(
       date,
