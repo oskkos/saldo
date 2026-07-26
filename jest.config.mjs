@@ -29,7 +29,13 @@ const config = {
     '^server-only$': '<rootDir>/__mocks__/empty.ts',
   },
 
-  collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/generated/**'],
+  // Declaration files hold no runtime code, so counting their lines only depresses
+  // the figure with statements nothing could ever execute.
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/generated/**',
+    '!src/**/*.d.ts',
+  ],
 
   // The e2e/ suite is Playwright's (its *.spec.ts would otherwise be picked up
   // by Jest's default testMatch and fail on @playwright/test imports).
