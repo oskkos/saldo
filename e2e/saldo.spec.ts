@@ -236,3 +236,60 @@ test('the day total sums raw worklog times, absences included', async ({
     page.locator('h2:has-text("Existing worklogs for day") + div.badge'),
   ).toHaveText('5h 0min');
 });
+
+// @scenario saldo/Work during a holiday raises the balance by the hours worked
+test('hours worked during a holiday raise the balance by those hours', async ({
+  page,
+}) => {
+  const [workingDay] = pastWorkingDayOffsets(1);
+  await seedWorklog({
+    from: utcTimeOn(workingDay, 8),
+    to: utcTimeOn(workingDay, 16),
+    absence: 'holiday',
+  });
+  await seedWorklog({
+    from: utcTimeOn(workingDay, 17),
+    to: utcTimeOn(workingDay, 20),
+  });
+
+  // The holiday still settles the day to zero; the three hours worked on top
+  // are what is left. No manual correction, and the absence is untouched.
+  expect(await dayContribution(page, workingDay)).toBe(180);
+});
+
+// @scenario saldo/Work during a flex day draws down only the unworked part
+test('hours worked on a flex day offset part of its drawdown', async ({
+  page,
+}) => {
+  const [workingDay] = pastWorkingDayOffsets(1);
+  await seedWorklog({
+    from: utcTimeOn(workingDay, 8),
+    to: utcTimeOn(workingDay, 16),
+    absence: 'flex_hours',
+  });
+  await seedWorklog({
+    from: utcTimeOn(workingDay, 17),
+    to: utcTimeOn(workingDay, 20),
+  });
+
+  // A flex day credits nothing, so the day still expects 450; the 180 worked
+  // reduce the drawdown rather than cancelling it.
+  expect(await dayContribution(page, workingDay)).toBe(-270);
+});
+
+// @scenario saldo/Work on an absence day that is not a working day
+test('hours worked on an absence that falls on a Sunday still count', async ({
+  page,
+}) => {
+  const sunday = pastSundayOffset();
+  await seedWorklog({
+    from: utcTimeOn(sunday, 8),
+    to: utcTimeOn(sunday, 16),
+    absence: 'holiday',
+  });
+  await seedWorklog({ from: utcTimeOn(sunday, 17), to: utcTimeOn(sunday, 20) });
+
+  // Nothing is expected and the absence credits nothing, so only the worked
+  // hours remain.
+  expect(await dayContribution(page, sunday)).toBe(180);
+});

@@ -421,7 +421,7 @@ describe('updateWorklog', () => {
     expect(db.worklog.update).toHaveBeenCalled();
   });
 
-  // @scenario absence/Moving a regular worklog onto an absence day is allowed
+  // @scenario absence/A regular worklog is never blocked by the rule
   it('lets a regular worklog move onto a day that has an absence', async () => {
     db.worklog.findUniqueOrThrow.mockResolvedValue(row());
     db.worklog.update.mockResolvedValue(row({ comment: 'Worked anyway' }));

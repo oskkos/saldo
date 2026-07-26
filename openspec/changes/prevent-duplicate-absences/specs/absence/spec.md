@@ -42,11 +42,11 @@ effect are neither reported nor repaired.
 - **WHEN** one of those absences is edited onto the other's day
 - **THEN** the edit is rejected and neither record changes
 
-#### Scenario: Moving a regular worklog onto an absence day is allowed
+#### Scenario: A regular worklog is never blocked by the rule
 
-- **GIVEN** a regular worklog on one day and an absence on another
-- **WHEN** the regular worklog is edited onto the absence's day
-- **THEN** the edit succeeds and both records exist on that day
+- **GIVEN** a day that already has an absence
+- **WHEN** a regular worklog is created on that day, or an existing regular worklog is edited
+- **THEN** the write is allowed and the day's absence is unaffected
 
 #### Scenario: Pre-existing duplicates are left in place
 

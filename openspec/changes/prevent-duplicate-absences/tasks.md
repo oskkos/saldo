@@ -47,12 +47,12 @@
 
 ## 7. End-to-end coverage
 
-- [ ] 7.1 `e2e/absence.spec.ts`: seed an absence, submit a range covering that day, assert the warning names the day and that the stored worklog count is unchanged
-- [ ] 7.2 `e2e/worklog.spec.ts`: on a seeded absence day, log hours, assert the success notification, that the absence row is still listed, and that the day notice is visible
-- [ ] 7.3 `e2e/saldo.spec.ts`: assert the balance rises by the hours logged on an absence day
-- [ ] 7.4 Assert on the month calendar that an absence day with logged hours shows both the icon and the hours
-- [ ] 7.5 Move a regular worklog onto a day that has an absence and assert both records end up listed on that day — the repository test asserts only that the edit is not blocked, so the two jointly cover the scenario
-- [ ] 7.6 Confirm every touched spec imports `test` from `e2e/fixtures.ts`, not `@playwright/test`
+- [x] 7.1 `e2e/absence.spec.ts`: seed an absence, submit a range covering that day, assert the warning names the day and that the stored worklog count is unchanged
+- [x] 7.2 `e2e/worklog.spec.ts`: on a seeded absence day, log hours, assert the success notification, that the absence row is still listed, and that the day notice is visible
+- [x] 7.3 `e2e/saldo.spec.ts`: assert the balance rises by the hours logged on an absence day
+- [x] 7.4 Assert on the month calendar that an absence day with logged hours shows both the icon and the hours
+- [x] 7.5 Dropped: `WorklogInputs` renders no date field, so a worklog's day cannot be changed from the UI and no browser test can move one. The scenario was reworded to the claim that is observable — a regular worklog is never blocked by the rule — covered by the repository test (edit path) and 7.2 (creation on an absence day)
+- [x] 7.6 Confirm every touched spec imports `test` from `e2e/fixtures.ts`, not `@playwright/test`
 
 ## 8. Traceability and verification
 
