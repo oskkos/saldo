@@ -211,8 +211,8 @@ test('the badge is styled by the sign of the balance', async ({ page }) => {
   await expect(positive).toHaveText(/^\d+h \d+min$/);
 });
 
-// @scenario saldo/Sum over a mixed list
-test('the day total sums raw worklog times, absences included', async ({
+// @scenario saldo/A day with an absence and real hours
+test('the day total reports the hours logged, leaving the absence out', async ({
   page,
 }) => {
   const [day] = pastWorkingDayOffsets(1);
@@ -223,7 +223,7 @@ test('the day total sums raw worklog times, absences included', async ({
     from: utcTimeOn(day, 10),
     to: utcTimeOn(day, 12),
     absence: 'holiday',
-  }); // 2h, counted by its stored times
+  }); // stored as 2h, but nobody worked it
   await seedWorklog({
     from: utcTimeOn(day, 13),
     to: utcTimeOn(day, 14, 30),
@@ -232,10 +232,30 @@ test('the day total sums raw worklog times, absences included', async ({
 
   await page.goto(`/worklog-entry?day=${isoDay}`);
 
-  // The day total is not the saldo: no absence special-casing, so 2 + 2 + 1.
+  // The day total is not the saldo either: it applies no begin-date window and
+  // no absence credit, it simply adds up the hours the user logged. 2 + 1, with
+  // the holiday's own stored times left out.
   await expect(
     page.locator('h2:has-text("Existing worklogs for day") + div.badge'),
-  ).toHaveText('5h 0min');
+  ).toHaveText('3h 0min');
+});
+
+// @scenario saldo/A day with only an absence
+test('a day holding nothing but an absence totals zero', async ({ page }) => {
+  const [day] = pastWorkingDayOffsets(1);
+  const isoDay = utcDay(day).toISOString().slice(0, 10);
+
+  await seedWorklog({
+    from: utcTimeOn(day, 8),
+    to: utcTimeOn(day, 16),
+    absence: 'holiday',
+  });
+
+  await page.goto(`/worklog-entry?day=${isoDay}`);
+
+  await expect(
+    page.locator('h2:has-text("Existing worklogs for day") + div.badge'),
+  ).toHaveText('0h 0min');
 });
 
 // @scenario saldo/Work during a holiday raises the balance by the hours worked

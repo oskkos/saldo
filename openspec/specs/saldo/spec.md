@@ -223,18 +223,42 @@ negative saldo SHALL use ceiled hours/minutes and an error badge.
 - **THEN** hours and minutes are floored
 - **AND** `toBadge()` renders a success-styled badge
 
-### Requirement: Worklog sum aggregation ignores absence semantics
+### Requirement: Worklog sum aggregation takes a list as given
 
 The system SHALL provide a separate aggregation that sums the raw worked minutes
 (net of lunch break) of a given list of worklogs, without applying the begin-date
-window, the future-entry exclusion, or any absence special-casing. This is a
-display total, distinct from the saldo balance.
+window, the future-entry exclusion, or any absence special-casing. Every entry in
+the list counts by its own stored times. This is a display total, distinct from
+the saldo balance; which entries belong in the list is the caller's decision.
 
 #### Scenario: Sum over a mixed list
 
 - **GIVEN** worklogs of 2h, an absence stored as 2h, and a 1.5h entry with a lunch break
-- **WHEN** the worklog sum is calculated
+- **WHEN** the worklog sum is calculated over all three
 - **THEN** the result is `5h 0min` (2 + 2 + 1, treating every entry by its raw times)
+
+### Requirement: The day total reports hours logged, not the absence
+
+The day view's total SHALL count the day's regular worklogs only. An absence is
+stored as a full-day worklog, so counting it would report work nobody did — a
+day with one absence and a five-and-a-half-hour entry SHALL read as five and a
+half hours, not thirteen. This is the same figure the month calendar shows for
+such a day (see the `absence` capability); the calendar's border colour asks a
+different question — whether the day met its expectation — and still counts the
+absence.
+
+#### Scenario: A day with an absence and real hours
+
+- **GIVEN** a day holding a `holiday` absence stored 08:00-16:00 with the lunch break subtracted
+- **AND** a regular worklog from 08:00 to 14:00 with the lunch break subtracted
+- **WHEN** the day's total is shown
+- **THEN** it reads `5h 30min`, counting the regular worklog alone
+
+#### Scenario: A day with only an absence
+
+- **GIVEN** a day holding an absence and no regular worklogs
+- **WHEN** the day's total is shown
+- **THEN** it reads `0h 0min`
 
 ### Requirement: Saldo calculation is timezone-independent
 
