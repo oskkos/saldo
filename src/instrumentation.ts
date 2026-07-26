@@ -25,17 +25,25 @@ export function register() {
  * Inert unless E2E_COVERAGE is set, so production installs no handlers.
  */
 function registerCoverageFlush() {
-  if (!process.env.E2E_COVERAGE || process.env.NEXT_RUNTIME !== 'nodejs') {
-    return;
-  }
+  // The runtime check has to read as a positive condition wrapping the Node calls,
+  // not an early return: this module is compiled for the Edge runtime too, where
+  // process.on/exit are unsupported. Turbopack inlines NEXT_RUNTIME, so written
+  // this way the whole block is dead code in the Edge build and is dropped —
+  // written as a guard clause it survives, and the build warns about each call.
+  if (process.env.NEXT_RUNTIME === 'nodejs') {
+    if (!process.env.E2E_COVERAGE) {
+      return;
+    }
 
-  // Imported dynamically so the Edge runtime never has to resolve node:v8.
-  void import('node:v8').then((v8) => {
+    // getBuiltinModule is synchronous, so a failure to load surfaces as a thrown
+    // error rather than an unobserved promise quietly installing no handler.
+    const v8 = process.getBuiltinModule('node:v8');
+
     for (const signal of ['SIGTERM', 'SIGINT'] as const) {
       process.on(signal, () => {
         v8.takeCoverage();
         process.exit(0);
       });
     }
-  });
+  }
 }

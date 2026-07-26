@@ -33,15 +33,15 @@ group 2.
 
 ## 3. Browser-side collection
 
-- [ ] 3.1 Write a failing Jest test for the fixture guard: a file under `e2e/` that
+- [x] 3.1 Write a failing Jest test for the fixture guard: a file under `e2e/` that
       declares tests while taking its test function directly from the runner is
       reported as an error naming that file, and a file using the fixture is not
-- [ ] 3.2 Add `e2e/fixtures.ts` extending `test` with a `page` fixture that starts and
+- [x] 3.2 Add `e2e/fixtures.ts` extending `test` with a `page` fixture that starts and
       stops `page.coverage`, writing one profile per test, and yields the page
       untouched when the switch is unset
-- [ ] 3.3 Re-point the seven `e2e/*.spec.ts` files and `auth.setup.ts` at the fixture,
+- [x] 3.3 Re-point the seven `e2e/*.spec.ts` files and `auth.setup.ts` at the fixture,
       so the sign-in the suite performs on every run is collected too
-- [ ] 3.4 Implement the guard from 3.1
+- [x] 3.4 Implement the guard from 3.1
 
 ## 4. Report generation and its guards
 

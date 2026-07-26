@@ -1,4 +1,9 @@
+import fs from 'node:fs';
+import path from 'node:path';
+
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
+
+import { findUninstrumentedTestFiles } from '../e2e-coverage-report.mjs';
 
 // The end-to-end coverage pipeline's contract with the repository around it: what
 // the build emits, how the report is wired into CI, and which layer each upload
@@ -36,6 +41,25 @@ afterEach(() => {
   } else {
     process.env.E2E_COVERAGE = originalSwitch;
   }
+});
+
+const repoRoot = path.join(__dirname, '..', '..');
+
+describe('every end-to-end test file is instrumented', () => {
+  // @scenario coverage-reporting/A test file bypassing the instrumented fixture is rejected
+  it('takes its test function from the fixture, not the runner', () => {
+    const dir = path.join(repoRoot, 'e2e');
+    const entries = fs
+      .readdirSync(dir)
+      .filter((name) => /\.tsx?$/.test(name))
+      .map((name) => ({
+        file: `e2e/${name}`,
+        content: fs.readFileSync(path.join(dir, name), 'utf8'),
+      }));
+
+    expect(entries.length).toBeGreaterThan(0);
+    expect(findUninstrumentedTestFiles(entries)).toEqual([]);
+  });
 });
 
 describe('build configuration', () => {
