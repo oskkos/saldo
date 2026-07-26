@@ -41,6 +41,13 @@ error, since it would otherwise drop out of collection silently.
 - **THEN** each runtime's report records that file with its own executed lines, so no
   line executed by either runtime is left uncovered by the pair
 
+#### Scenario: The server is stopped so that it can write its profile
+
+- **WHEN** the end-to-end run finishes
+- **THEN** the application server is signalled and given time to exit, rather than
+  killed outright — a killed process skips the exit path that writes its profile, and
+  contributes nothing while every test still passes
+
 #### Scenario: A test file bypassing the instrumented fixture is rejected
 
 - **WHEN** a file under `e2e/` declares tests but takes its test function directly from
@@ -121,6 +128,14 @@ produces a total describing neither.
 - **GIVEN** a coverage profile that also records dependency and framework internals
 - **WHEN** the report is generated
 - **THEN** only sources under `src/` appear
+
+#### Scenario: A script carrying none of our sources is excluded
+
+- **GIVEN** a covered script whose source map names no project source, such as a
+  bundler's per-route entry stub
+- **WHEN** the report is generated
+- **THEN** it does not appear at all — not even under the built file's own path, which
+  would otherwise pass a resolves-on-disk check because build output does exist
 
 #### Scenario: Generated code is excluded
 

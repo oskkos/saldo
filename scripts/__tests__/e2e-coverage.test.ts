@@ -130,6 +130,25 @@ describe('each layer is published under its own flag', () => {
   });
 });
 
+describe('the server gets a chance to write its profile', () => {
+  // @scenario coverage-reporting/The server is stopped so that it can write its profile
+  it('signals the web server rather than killing it, when collecting', () => {
+    // Playwright's default is SIGKILL, which skips Node's exit path: the first full
+    // coverage run passed all 44 tests and collected zero server profiles. Nothing
+    // in the suite can notice, so the configuration itself is the assertion.
+    const config = fs.readFileSync(
+      path.join(repoRoot, 'playwright.config.ts'),
+      'utf8',
+    );
+    const webServer = config.slice(config.indexOf('webServer:'));
+
+    expect(webServer).toMatch(/gracefulShutdown/);
+    expect(webServer).toMatch(/signal:\s*'SIGTERM'/);
+    // Guarded by the switch, so an ordinary run keeps Playwright's faster teardown.
+    expect(webServer).toMatch(/COLLECT_COVERAGE\s*\n?\s*\?/);
+  });
+});
+
 describe('collection is opt-in', () => {
   const scripts = () =>
     JSON.parse(

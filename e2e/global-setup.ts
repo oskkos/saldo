@@ -13,6 +13,7 @@ export default async function globalSetup() {
     fs.rmSync(COVERAGE_DIRS.root, { recursive: true, force: true });
     fs.mkdirSync(COVERAGE_DIRS.server, { recursive: true });
     fs.mkdirSync(COVERAGE_DIRS.browser, { recursive: true });
+    fs.mkdirSync(COVERAGE_DIRS.browserScripts, { recursive: true });
   }
 
   // `migrate deploy` never uses a shadow database, but prisma.config.mjs derives
