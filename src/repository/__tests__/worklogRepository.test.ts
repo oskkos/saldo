@@ -30,6 +30,7 @@ jest.mock('@/repository/prisma', () => ({
       findMany: jest.fn(),
       findUniqueOrThrow: jest.fn(),
       create: jest.fn(),
+      createManyAndReturn: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
     },
@@ -43,6 +44,7 @@ type PrismaMock = {
     findMany: ResolvingMock;
     findUniqueOrThrow: ResolvingMock;
     create: ResolvingMock;
+    createManyAndReturn: ResolvingMock;
     update: ResolvingMock;
     delete: ResolvingMock;
   };
@@ -179,6 +181,163 @@ describe('insertWorklog', () => {
   });
 });
 
+describe('the one-absence-per-day rule', () => {
+  const DAY = '2026-07-28';
+  const absenceOn = (day: string, absence: AbsenceReason): WorklogFormData => ({
+    from: new Date(`${day}T08:00:00.000Z`),
+    to: new Date(`${day}T16:00:00.000Z`),
+    comment: 'Away',
+    subtractLunchBreak: true,
+    absence,
+  });
+  // The guard reads only `from`; an absence occupies its whole day.
+  const takenOn = (...days: string[]) =>
+    days.map((day) => ({ from: new Date(`${day}T08:00:00.000Z`) }));
+
+  // @scenario absence/Second absence with the same reason is rejected
+  it('rejects a repeat of the same reason and writes nothing', async () => {
+    db.worklog.findMany.mockResolvedValue(takenOn(DAY));
+
+    await expect(
+      repo.insertWorklog(absenceOn(DAY, AbsenceReason.holiday)),
+    ).rejects.toThrow('An absence is already recorded for 28.7.2026.');
+    expect(db.worklog.create).not.toHaveBeenCalled();
+  });
+
+  // @scenario absence/Second absence with a different reason is also rejected
+  it('rejects a different reason on the same day just as firmly', async () => {
+    db.worklog.findMany.mockResolvedValue(takenOn(DAY));
+
+    await expect(
+      repo.insertWorklog(absenceOn(DAY, AbsenceReason.sick_leave)),
+    ).rejects.toThrow('An absence is already recorded for 28.7.2026.');
+    expect(db.worklog.create).not.toHaveBeenCalled();
+  });
+
+  it('queries only absences of the session user, bounded to the day', async () => {
+    db.worklog.findMany.mockResolvedValue([]);
+    db.worklog.create.mockResolvedValue(row({ absence: 'holiday' }));
+
+    await repo.insertWorklog(absenceOn(DAY, AbsenceReason.holiday));
+
+    expect(db.worklog.findMany).toHaveBeenCalledWith({
+      where: {
+        user_id: USER.id,
+        absence: { not: null },
+        from: {
+          gte: new Date(`${DAY}T00:00:00.000Z`),
+          lte: new Date(`${DAY}T23:59:59.999Z`),
+        },
+      },
+      select: { from: true },
+    });
+  });
+
+  it('writes the absence when the day is free', async () => {
+    db.worklog.findMany.mockResolvedValue([]);
+    db.worklog.create.mockResolvedValue(row({ absence: 'holiday' }));
+
+    const created = await repo.insertWorklog(
+      absenceOn(DAY, AbsenceReason.holiday),
+    );
+
+    expect(db.worklog.create).toHaveBeenCalled();
+    expect(created.absence).toBe(AbsenceReason.holiday);
+  });
+
+  // The common case must not pay for the rule: a regular worklog is not an
+  // absence, so nothing needs looking up.
+  it('does not query at all for a regular worklog', async () => {
+    db.worklog.create.mockResolvedValue(row());
+
+    await repo.insertWorklog(formData);
+
+    expect(db.worklog.findMany).not.toHaveBeenCalled();
+    expect(db.worklog.create).toHaveBeenCalled();
+  });
+});
+
+describe('insertWorklogs', () => {
+  const range = (days: string[]): WorklogFormData[] =>
+    days.map((day) => ({
+      from: new Date(`${day}T08:00:00.000Z`),
+      to: new Date(`${day}T16:00:00.000Z`),
+      comment: 'Away',
+      subtractLunchBreak: true,
+      absence: AbsenceReason.holiday,
+    }));
+
+  // @scenario absence/One taken day rejects the whole range
+  it('writes nothing when one day of the range is already taken', async () => {
+    db.worklog.findMany.mockResolvedValue([
+      { from: new Date('2026-07-30T08:00:00.000Z') },
+    ]);
+
+    await expect(
+      repo.insertWorklogs(
+        range([
+          '2026-07-28',
+          '2026-07-29',
+          '2026-07-30',
+          '2026-07-31',
+          '2026-08-01',
+        ]),
+      ),
+    ).rejects.toThrow('An absence is already recorded for 30.7.2026.');
+    expect(db.worklog.createManyAndReturn).not.toHaveBeenCalled();
+  });
+
+  it('bounds the conflict lookup by the ends of the range', async () => {
+    db.worklog.findMany.mockResolvedValue([]);
+    db.worklog.createManyAndReturn.mockResolvedValue([]);
+
+    await repo.insertWorklogs(
+      range(['2026-07-28', '2026-07-29', '2026-07-30']),
+    );
+
+    expect(db.worklog.findMany).toHaveBeenCalledWith({
+      where: {
+        user_id: USER.id,
+        absence: { not: null },
+        from: {
+          gte: new Date('2026-07-28T00:00:00.000Z'),
+          lte: new Date('2026-07-30T23:59:59.999Z'),
+        },
+      },
+      select: { from: true },
+    });
+  });
+
+  it('writes every day of a clean range in one statement', async () => {
+    db.worklog.findMany.mockResolvedValue([]);
+    db.worklog.createManyAndReturn.mockResolvedValue([
+      row({ id: 1, absence: 'holiday' }),
+      row({ id: 2, absence: 'holiday' }),
+    ]);
+
+    const created = await repo.insertWorklogs(
+      range(['2026-07-28', '2026-07-29']),
+    );
+
+    expect(db.worklog.createManyAndReturn).toHaveBeenCalledTimes(1);
+    expect(db.worklog.createManyAndReturn).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          from: new Date('2026-07-28T08:00:00.000Z'),
+          user_id: USER.id,
+          absence: AbsenceReason.holiday,
+        }),
+        expect.objectContaining({
+          from: new Date('2026-07-29T08:00:00.000Z'),
+          user_id: USER.id,
+          absence: AbsenceReason.holiday,
+        }),
+      ],
+    });
+    expect(created).toHaveLength(2);
+  });
+});
+
 describe('updateWorklog', () => {
   // @scenario worklog/Owner edits
   it('updates the listed fields and returns the record', async () => {
@@ -212,6 +371,70 @@ describe('updateWorklog', () => {
       'User mismatch.',
     );
     expect(db.worklog.update).not.toHaveBeenCalled();
+  });
+
+  const absenceRow = (day: string) =>
+    row({
+      absence: 'holiday',
+      from: new Date(`${day}T08:00:00.000Z`),
+      to: new Date(`${day}T16:00:00.000Z`),
+    });
+  const movedTo = (day: string): WorklogFormData => ({
+    from: new Date(`${day}T08:00:00.000Z`),
+    to: new Date(`${day}T16:00:00.000Z`),
+    comment: 'Away',
+    subtractLunchBreak: true,
+  });
+
+  // @scenario absence/Moving an absence onto a taken day is rejected
+  it('refuses to move an absence onto a day that already has one', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(absenceRow('2026-07-28'));
+    db.worklog.findMany.mockResolvedValue([
+      { from: new Date('2026-07-29T08:00:00.000Z') },
+    ]);
+
+    await expect(repo.updateWorklog(1, movedTo('2026-07-29'))).rejects.toThrow(
+      'An absence is already recorded for 29.7.2026.',
+    );
+    expect(db.worklog.update).not.toHaveBeenCalled();
+  });
+
+  it('moves an absence onto a free day', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(absenceRow('2026-07-28'));
+    db.worklog.findMany.mockResolvedValue([]);
+    db.worklog.update.mockResolvedValue(absenceRow('2026-07-29'));
+
+    await repo.updateWorklog(1, movedTo('2026-07-29'));
+
+    expect(db.worklog.update).toHaveBeenCalled();
+  });
+
+  // Editing an absence in place is not a move, so it cannot collide with
+  // itself and needs no lookup.
+  it('edits an absence on its own day without checking for conflicts', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(absenceRow('2026-07-28'));
+    db.worklog.update.mockResolvedValue(absenceRow('2026-07-28'));
+
+    await repo.updateWorklog(1, movedTo('2026-07-28'));
+
+    expect(db.worklog.findMany).not.toHaveBeenCalled();
+    expect(db.worklog.update).toHaveBeenCalled();
+  });
+
+  // @scenario absence/Moving a regular worklog onto an absence day is allowed
+  it('lets a regular worklog move onto a day that has an absence', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(row());
+    db.worklog.update.mockResolvedValue(row({ comment: 'Worked anyway' }));
+
+    await repo.updateWorklog(1, {
+      ...movedTo('2026-07-29'),
+      comment: 'Worked anyway',
+    });
+
+    // No conflict lookup happens at all: the stored record is not an absence,
+    // so the rule does not apply to it.
+    expect(db.worklog.findMany).not.toHaveBeenCalled();
+    expect(db.worklog.update).toHaveBeenCalled();
   });
 });
 

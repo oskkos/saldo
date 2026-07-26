@@ -7,13 +7,13 @@
 
 ## 2. Repository guard and transactional insert
 
-- [ ] 2.1 Add `getAbsenceDays(from, to)` to `worklogRepository.ts`: session-gated, filtered to the current user and to rows whose `absence` is set, wrapped in a Sentry span, returning the UTC calendar days already taken
-- [ ] 2.2 Add `insertWorklogs(data[])` writing every record inside one `prisma.$transaction`
-- [ ] 2.3 Guard `insertWorklog`: when `absence` is set, reject if that day is taken; return early with no extra query when it is not an absence
-- [ ] 2.4 Guard `insertWorklogs`: check the whole batch in one lookup before opening the transaction, so a conflicting day means nothing is written
-- [ ] 2.5 Guard `updateWorklog`: fire only when the **stored** record is an absence and the target day differs from its current day — moving a regular worklog onto an absence day must stay allowed, and self-collision cannot arise because a same-day edit is not a move
-- [ ] 2.6 Unit-test the guards: same reason rejected, different reason rejected, nothing persisted on rejection, regular worklog onto an absence day allowed, absence moved onto a taken day rejected with neither record changed, batch rollback leaves no partial range
-- [ ] 2.7 Annotate with `@scenario absence/Second absence with the same reason is rejected`, `@scenario absence/Second absence with a different reason is also rejected`, `@scenario absence/Moving an absence onto a taken day is rejected`, `@scenario absence/Moving a regular worklog onto an absence day is allowed`
+- [x] 2.1 Add `getAbsenceDays(from, to)` to `worklogRepository.ts`: session-gated, filtered to the current user and to rows whose `absence` is set, wrapped in a Sentry span, returning the UTC calendar days already taken
+- [x] 2.2 Add `insertWorklogs(data[])` writing every record in one statement via `createManyAndReturn`, so a range has no window in which it is half-written
+- [x] 2.3 Guard `insertWorklog`: when `absence` is set, reject if that day is taken; return early with no extra query when it is not an absence
+- [x] 2.4 Guard `insertWorklogs`: check the whole batch in one lookup before opening the transaction, so a conflicting day means nothing is written
+- [x] 2.5 Guard `updateWorklog`: fire only when the **stored** record is an absence and the target day differs from its current day — moving a regular worklog onto an absence day must stay allowed, and self-collision cannot arise because a same-day edit is not a move
+- [x] 2.6 Unit-test the guards: same reason rejected, different reason rejected, nothing persisted on rejection, regular worklog onto an absence day allowed, absence moved onto a taken day rejected with neither record changed, batch rollback leaves no partial range
+- [x] 2.7 Annotate with `@scenario absence/Second absence with the same reason is rejected`, `@scenario absence/Second absence with a different reason is also rejected`, `@scenario absence/Moving an absence onto a taken day is rejected`, `@scenario absence/Moving a regular worklog onto an absence day is allowed`
 
 ## 3. Absence range action and `/absence` wiring
 
@@ -51,7 +51,8 @@
 - [ ] 7.2 `e2e/worklog.spec.ts`: on a seeded absence day, log hours, assert the success notification, that the absence row is still listed, and that the day notice is visible
 - [ ] 7.3 `e2e/saldo.spec.ts`: assert the balance rises by the hours logged on an absence day
 - [ ] 7.4 Assert on the month calendar that an absence day with logged hours shows both the icon and the hours
-- [ ] 7.5 Confirm every touched spec imports `test` from `e2e/fixtures.ts`, not `@playwright/test`
+- [ ] 7.5 Move a regular worklog onto a day that has an absence and assert both records end up listed on that day — the repository test asserts only that the edit is not blocked, so the two jointly cover the scenario
+- [ ] 7.6 Confirm every touched spec imports `test` from `e2e/fixtures.ts`, not `@playwright/test`
 
 ## 8. Traceability and verification
 
