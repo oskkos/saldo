@@ -76,53 +76,18 @@ Running without Docker, the full environment variable list, and the non-local au
 | **Testing**   | Jest + Testing Library · Playwright · Codecov                          |
 | **Ops**       | Sentry · Vercel                                                        |
 
-## Development
-
-| Command                 | What it does                                 |
-| ----------------------- | -------------------------------------------- |
-| `npm run dev`           | Dev server on port 3000                      |
-| `npm run build`         | Production build                             |
-| `npm run test:ci`       | Jest, single run with coverage               |
-| `npm test`              | Jest in **watch mode** — does not exit       |
-| `npm run test:e2e`      | Playwright end-to-end suite                  |
-| `npm run lint`          | ESLint (`--max-warnings=0`) + Prettier check |
-| `npm run lint:fix`      | ESLint `--fix` + Prettier `--write`          |
-| `npm run spec:coverage` | Regenerate `openspec/COVERAGE.md`            |
-
-Run a single Jest test with `npx jest src/services/__tests__/someFile.test.ts` (add `-t "name"` to filter). The e2e suite needs a one-time database and `.env.e2e` setup — see **[`e2e/README.md`](e2e/README.md)**.
-
-Commits go through Husky: `lint-staged` on pre-commit, and commitlint enforcing [Conventional Commits](https://www.conventionalcommits.org/) on the message.
-
-### Architecture
-
-Data flows `page/component → action → repository → Prisma`, with pure business logic kept to the side:
-
-- **`src/app/`** — App Router pages, async server components by default.
-- **`src/actions/`** — the single `'use server'` module; every mutation validates with Zod, then delegates.
-- **`src/repository/`** — `server-only` data access that enforces per-user ownership on every call.
-- **`src/services/`** — pure, side-effect-free domain logic: the saldo calculation itself.
-
-The conventions that are easy to trip over — branded date types, UTC-only date math, the generated Prisma client location — are documented in **[`CLAUDE.md`](CLAUDE.md)**.
-
-## Testing & quality
-
-Two test layers cover near-complementary halves of the codebase and report to Codecov under separate flags: Jest (`unit`) holds the services, repository, and util layers; Playwright (`e2e`) drives every page and component. Only the pair describes the whole, which is why both carry forward.
-
-Beyond coverage, CI enforces **spec-to-test traceability**: every scenario in `openspec/specs/` must be claimed by a test or explicitly exempt, and every requirement needs at least one Playwright test or a categorised exemption. Tests declare what they cover inline:
-
-```ts
-// @scenario time-clock/Clock in when idle
-it('records the session start', () => { ... })
-```
-
-The generated map lives in **[`openspec/COVERAGE.md`](openspec/COVERAGE.md)**.
-
 ## Documentation
 
-- **[User guide](https://oskkos.github.io/saldo/)** — task-oriented guide for people using Saldo, generated from the specs.
-- **[Getting started](docs/getting-started.md)** — full local setup and environment variables.
-- **[`openspec/`](openspec/)** — capability specs and the change workflow.
-- **[`CLAUDE.md`](CLAUDE.md)** — architecture, conventions, and the contribution workflow in detail.
+Everything below lives in **[`docs/`](docs/)**.
+
+|                                                   |                                                                                                           |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **[Getting started](docs/getting-started.md)**    | Local setup in full — prerequisites, Docker and non-Docker paths, environment variables, troubleshooting. |
+| **[Architecture](docs/architecture.md)**          | Layer boundaries, the `src/` map, the data model, and the conventions that bite.                          |
+| **[Testing](docs/testing.md)**                    | The two test layers, coverage, and spec-to-test traceability.                                             |
+| **[Contributing](docs/CONTRIBUTING.md)**          | Commit conventions, git hooks, and the OpenSpec workflow.                                                 |
+| **[User guide](https://oskkos.github.io/saldo/)** | For people _using_ Saldo. Generated from the specs — see [`docs/user-guide/`](docs/user-guide/README.md). |
+| **[`openspec/`](openspec/)**                      | Capability specs: the behaviour the code is meant to have.                                                |
 
 ## License
 
