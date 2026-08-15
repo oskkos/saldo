@@ -11,7 +11,12 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 
 import type { Date_ISODay, Date_Time } from '@/util/dateFormatter';
-import { AbsenceReason, type Worklog, type WorklogFormData } from '@/types';
+import {
+  AbsenceReason,
+  type Worklog,
+  type WorklogFormData,
+  type WorklogSubmitResult,
+} from '@/types';
 
 // The day view's own work is turning the form's day-and-time strings into real dates
 // before submitting, keeping the day's list current afterwards, and offering the
@@ -56,8 +61,16 @@ beforeAll(async () => {
 const day = '2026-07-26' as Date_ISODay;
 const time = (s: string) => s as Date_Time;
 const setMsg = jest.fn<(msg: unknown) => void>();
-const onSubmit = jest.fn<(value: WorklogFormData) => Promise<Worklog>>();
+const onSubmit =
+  jest.fn<
+    (
+      value: WorklogFormData,
+      options?: { allowOverlap?: boolean },
+    ) => Promise<WorklogSubmitResult>
+  >();
 
+const succeeded = (id: number) =>
+  ({ status: 'success', worklog: created(id) }) as const;
 const created = (id: number): Worklog => ({
   id,
   from: new Date('2026-07-26T08:00:00Z'),
@@ -124,7 +137,7 @@ describe('WorklogEntry', () => {
   });
 
   it('submits the form times as dates on that day', async () => {
-    onSubmit.mockResolvedValue(created(9));
+    onSubmit.mockResolvedValue(succeeded(9));
     renderEntry();
 
     await submit();
@@ -141,7 +154,7 @@ describe('WorklogEntry', () => {
   });
 
   it('adds what was created to the day without a reload', async () => {
-    onSubmit.mockResolvedValue(created(9));
+    onSubmit.mockResolvedValue(succeeded(9));
     renderEntry();
     expect(screen.getByText('existing:0')).toBeInTheDocument();
 
@@ -150,8 +163,12 @@ describe('WorklogEntry', () => {
     expect(await screen.findByText('existing:1')).toBeInTheDocument();
   });
 
+  // @scenario worklog/A rejection is returned with a readable message
   it('reports the reason when the server refuses', async () => {
-    onSubmit.mockRejectedValue(new Error('overlaps an existing worklog'));
+    onSubmit.mockResolvedValue({
+      status: 'error',
+      message: 'End time must be after start time',
+    });
     renderEntry();
 
     await submit();
@@ -160,7 +177,23 @@ describe('WorklogEntry', () => {
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(toast.getByText('Failed to create worklog')).toBeInTheDocument();
-    expect(toast.getByText('overlaps an existing worklog')).toBeInTheDocument();
+    expect(
+      toast.getByText('End time must be after start time'),
+    ).toBeInTheDocument();
+    // A refused write must not appear in the day's list.
+    expect(screen.getByText('existing:0')).toBeInTheDocument();
+  });
+
+  it('still reports a genuine failure that was thrown', async () => {
+    onSubmit.mockRejectedValue(new Error('connection lost'));
+    renderEntry();
+
+    await submit();
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const toast = shownToast();
+    expect(toast.type).toBe('error');
+    expect(toast.getByText('connection lost')).toBeInTheDocument();
   });
 
   it('omits a detail line when the failure carries no message', async () => {

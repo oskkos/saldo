@@ -82,7 +82,7 @@ describe('WorklogEditModal', () => {
   });
 
   it('sends the change against the row it belongs to', async () => {
-    edit.mockResolvedValue(undefined);
+    edit.mockResolvedValue({ status: 'success', worklog: { id: 42 } });
 
     await confirm();
 
@@ -95,8 +95,12 @@ describe('WorklogEditModal', () => {
     expect(toast.getByText('Worklog updated')).toBeInTheDocument();
   });
 
+  // @scenario worklog/A rejection is returned with a readable message
   it('reports the reason when the change is refused', async () => {
-    edit.mockRejectedValue(new Error('worklog belongs to someone else'));
+    edit.mockResolvedValue({
+      status: 'error',
+      message: 'End time must be after start time',
+    });
 
     await confirm();
 
@@ -104,6 +108,19 @@ describe('WorklogEditModal', () => {
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(toast.getByText('Failed to update worklog')).toBeInTheDocument();
+    expect(
+      toast.getByText('End time must be after start time'),
+    ).toBeInTheDocument();
+  });
+
+  it('still reports a genuine failure that was thrown', async () => {
+    edit.mockRejectedValue(new Error('worklog belongs to someone else'));
+
+    await confirm();
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const toast = shownToast();
+    expect(toast.type).toBe('error');
     expect(
       toast.getByText('worklog belongs to someone else'),
     ).toBeInTheDocument();

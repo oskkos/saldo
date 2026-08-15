@@ -89,7 +89,7 @@ describe('ClockOutModal', () => {
   });
 
   it('saves the session as a worklog', async () => {
-    clockOut.mockResolvedValue(undefined);
+    clockOut.mockResolvedValue({ status: 'success', finalized: true });
     renderModal();
 
     await userEvent.setup().click(button('Save'));
@@ -100,8 +100,23 @@ describe('ClockOutModal', () => {
     expect(toast.getByText('Worklog created')).toBeInTheDocument();
   });
 
+  // @scenario time-clock/Repeated finalize creates no second worklog
+  it('does not claim a worklog was created when the session had already closed', async () => {
+    clockOut.mockResolvedValue({ status: 'success', finalized: false });
+    renderModal();
+
+    await userEvent.setup().click(button('Save'));
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const toast = shownToast();
+    expect(toast.getByText('Session was already finished')).toBeInTheDocument();
+  });
+
   it('reports the reason when saving is refused', async () => {
-    clockOut.mockRejectedValue(new Error('overlaps an existing worklog'));
+    clockOut.mockResolvedValue({
+      status: 'error',
+      message: 'A worklog must start and end on the same day',
+    });
     renderModal();
 
     await userEvent.setup().click(button('Save'));
@@ -110,7 +125,21 @@ describe('ClockOutModal', () => {
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(toast.getByText('Failed to save session')).toBeInTheDocument();
-    expect(toast.getByText('overlaps an existing worklog')).toBeInTheDocument();
+    expect(
+      toast.getByText('A worklog must start and end on the same day'),
+    ).toBeInTheDocument();
+  });
+
+  it('still reports a genuine failure that was thrown', async () => {
+    clockOut.mockRejectedValue(new Error('connection lost'));
+    renderModal();
+
+    await userEvent.setup().click(button('Save'));
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const toast = shownToast();
+    expect(toast.type).toBe('error');
+    expect(toast.getByText('connection lost')).toBeInTheDocument();
   });
 });
 

@@ -4,9 +4,11 @@ import {
   AbsenceData,
   AbsenceSubmitResult,
   AuthUser,
+  ClockOutResult,
   ExpectedHoursOverrideData,
   SettingsData,
   WorklogFormData,
+  WorklogSubmitResult,
 } from '@/types';
 import {
   getUser,
@@ -47,7 +49,11 @@ import { WorklogSchema } from '@/schemas/worklogSchema';
 import { AbsenceSchema } from '@/schemas/absenceSchema';
 import { SettingsSchema } from '@/schemas/settingsSchema';
 import { getSettings } from '@/repository/settingsRepository';
-import { AbsenceConflictError, daysInRange } from '@/services';
+import {
+  AbsenceConflictError,
+  daysInRange,
+  WorklogOverlapError,
+} from '@/services';
 import { ExpectedHoursOverrideSchema } from '@/schemas/expectedHoursOverrideSchema';
 import {
   deleteExpectedHoursOverride,
@@ -103,10 +109,52 @@ export async function onAfterSignup(data: SignupData) {
   };
 }
 
-export async function onWorklogSubmit(data: WorklogFormData) {
-  validateOrThrow(WorklogSchema, data, 'Invalid worklog');
-  const worklog = await insertWorklog(data);
-  return worklog;
+// Every outcome of a worklog write comes back as a value, for the reason spelled
+// out above `onAbsenceSubmit`: a production build replaces the message of
+// anything thrown out of a server action with an opaque digest, and each of
+// these outcomes is text the user has to read to act on.
+//
+// A conflict is not an error. It is the overlap question, and `allowOverlap`
+// carries the answer back down on the second call.
+function toWorklogFailure(
+  e: unknown,
+): Extract<WorklogSubmitResult, { status: 'conflict' | 'error' }> | null {
+  if (e instanceof WorklogOverlapError) {
+    return { status: 'conflict', message: e.message, conflicts: e.spans };
+  }
+  if (e instanceof AbsenceConflictError) {
+    return { status: 'error', message: e.message };
+  }
+  return null;
+}
+
+function worklogValidationMessage(data: unknown) {
+  const result = WorklogSchema.safeParse(data);
+  return result.success
+    ? null
+    : (result.error.issues[0]?.message ?? 'Invalid worklog');
+}
+
+export async function onWorklogSubmit(
+  data: WorklogFormData,
+  { allowOverlap = false }: { allowOverlap?: boolean } = {},
+): Promise<WorklogSubmitResult> {
+  const invalid = worklogValidationMessage(data);
+  if (invalid) {
+    return { status: 'error', message: invalid };
+  }
+  try {
+    return {
+      status: 'success',
+      worklog: await insertWorklog(data, { allowOverlap }),
+    };
+  } catch (e) {
+    const failure = toWorklogFailure(e);
+    if (failure) {
+      return failure;
+    }
+    throw e;
+  }
 }
 
 // One call for the whole range, so the days are checked together and written
@@ -169,19 +217,53 @@ export async function onWorklogDelete(worklogId: number) {
   await deleteWorklog(worklogId);
 }
 
-export async function onWorklogEdit(worklogId: number, data: WorklogFormData) {
-  validateOrThrow(WorklogSchema, data, 'Invalid worklog');
-  const worklog = await updateWorklog(worklogId, data);
-  return worklog;
+export async function onWorklogEdit(
+  worklogId: number,
+  data: WorklogFormData,
+  { allowOverlap = false }: { allowOverlap?: boolean } = {},
+): Promise<WorklogSubmitResult> {
+  const invalid = worklogValidationMessage(data);
+  if (invalid) {
+    return { status: 'error', message: invalid };
+  }
+  try {
+    return {
+      status: 'success',
+      worklog: await updateWorklog(worklogId, data, { allowOverlap }),
+    };
+  } catch (e) {
+    const failure = toWorklogFailure(e);
+    if (failure) {
+      return failure;
+    }
+    throw e;
+  }
 }
 
 export async function onClockIn(startedAt: Date) {
   return await clockIn(startedAt);
 }
 
-export async function onClockOut(data: WorklogFormData) {
-  validateOrThrow(WorklogSchema, data, 'Invalid worklog');
-  await clockOutWithWorklog(data);
+export async function onClockOut(
+  data: WorklogFormData,
+  { allowOverlap = false }: { allowOverlap?: boolean } = {},
+): Promise<ClockOutResult> {
+  const invalid = worklogValidationMessage(data);
+  if (invalid) {
+    return { status: 'error', message: invalid };
+  }
+  try {
+    return {
+      status: 'success',
+      finalized: await clockOutWithWorklog(data, { allowOverlap }),
+    };
+  } catch (e) {
+    const failure = toWorklogFailure(e);
+    if (failure) {
+      return failure;
+    }
+    throw e;
+  }
 }
 
 export async function onClockDiscard() {

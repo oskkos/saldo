@@ -4,7 +4,12 @@ import {
   Worklog,
   WorklogFormData,
   WorklogFormDataEntry,
+  WorklogSubmitResult,
 } from '@/types';
+import {
+  errorToastMessage,
+  failureToastMessage,
+} from '@/components/errorToast';
 import DayExpectedOverride from './dayExpectedOverride';
 import { add, subtract, toDate } from '@/util/date';
 import {
@@ -37,7 +42,10 @@ export default function WorklogEntry({
   day: Date_ISODay;
   defaults: { fromDefault: Date_Time; toDefault: Date_Time };
   worklogs: Worklog[];
-  onSubmit: (value: WorklogFormData) => Promise<Worklog>;
+  onSubmit: (
+    value: WorklogFormData,
+    options?: { allowOverlap?: boolean },
+  ) => Promise<WorklogSubmitResult>;
   expectedMinutes: number;
   override: ExpectedHoursOverride | null;
 }) {
@@ -138,28 +146,29 @@ export default function WorklogEntry({
                 };
                 return onSubmit(ret);
               };
-              const callback = (x: Worklog) => {
-                setWl(sortWorklogs([...wl, x]));
-              };
-              startTransitionWrapper(action, callback)
-                .then(() => {
+              // Outcomes are values now, so the toast is chosen where the
+              // result is known rather than split across then/catch. A `catch`
+              // remains for the genuine failures the action still throws.
+              const callback = (result: WorklogSubmitResult) => {
+                if (result.status === 'success') {
+                  setWl(sortWorklogs([...wl, result.worklog]));
                   setMsg({ type: 'success', message: 'Worklog created' });
-                })
-                .catch((e) => {
-                  const errorMsg =
-                    e instanceof Error ? (
-                      <div className="text-sm">{e.message}</div>
-                    ) : null;
-                  setMsg({
-                    type: 'error',
-                    message: (
-                      <div>
-                        <div>Failed to create worklog</div>
-                        {errorMsg}
-                      </div>
-                    ),
-                  });
+                  return;
+                }
+                setMsg({
+                  type: 'error',
+                  message: failureToastMessage(
+                    'Failed to create worklog',
+                    result.message,
+                  ),
                 });
+              };
+              startTransitionWrapper(action, callback).catch((e) => {
+                setMsg({
+                  type: 'error',
+                  message: errorToastMessage('Failed to create worklog', e),
+                });
+              });
             }}
           >
             Submit

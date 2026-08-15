@@ -4,14 +4,14 @@ import { useContext, useState } from 'react';
 import WorklogInputs from '../worklogInputs';
 import Modal from '../modal';
 import { onClockDiscard, onClockOut } from '@/actions';
-import { WorklogFormDataEntry } from '@/types';
+import { ClockOutResult, WorklogFormDataEntry } from '@/types';
 import { toDayMonthYear, toISODay, toTime } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from '../toastContext';
 import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import { crossesMidnight } from './util';
 import { toWorklogFormData } from '@/util/worklogFormData';
-import { errorToastMessage } from '../errorToast';
+import { errorToastMessage, failureToastMessage } from '../errorToast';
 
 export default function ClockOutModal({
   modalId,
@@ -42,14 +42,35 @@ export default function ClockOutModal({
   });
 
   const save = () => {
-    startTransitionWrapper(() => onClockOut(toWorklogFormData(value)), onDone)
-      .then(() => setMsg({ type: 'success', message: 'Worklog created' }))
-      .catch((e) =>
+    startTransitionWrapper(
+      () => onClockOut(toWorklogFormData(value)),
+      (result: ClockOutResult) => {
+        if (result.status === 'success') {
+          onDone();
+          // A repeat finds the session already closed and writes nothing; say
+          // so rather than claiming a second worklog was created.
+          setMsg({
+            type: 'success',
+            message: result.finalized
+              ? 'Worklog created'
+              : 'Session was already finished',
+          });
+          return;
+        }
         setMsg({
           type: 'error',
-          message: errorToastMessage('Failed to save session', e),
-        }),
-      );
+          message: failureToastMessage(
+            'Failed to save session',
+            result.message,
+          ),
+        });
+      },
+    ).catch((e) =>
+      setMsg({
+        type: 'error',
+        message: errorToastMessage('Failed to save session', e),
+      }),
+    );
   };
 
   const discard = () => {
