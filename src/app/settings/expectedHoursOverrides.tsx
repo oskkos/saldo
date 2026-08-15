@@ -25,7 +25,7 @@ export default function ExpectedHoursOverrides({
 }: {
   overrides: ExpectedHoursOverride[];
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [overrides, setOverrides] = useState(sortByDate(initial));
   const [day, setDay] = useState<Date_ISODay | ''>('');
@@ -138,7 +138,7 @@ export default function ExpectedHoursOverrides({
           />
           <button
             className="btn btn-secondary w-full"
-            disabled={!canSave}
+            disabled={!canSave || busy}
             onClick={save}
           >
             Add special day

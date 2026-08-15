@@ -12,7 +12,7 @@ import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useContext, useState } from 'react';
 
 export default function Absence() {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   // Only the chosen days matter here: the times each record is stored with come
   // from the user's settings, on the server. Both ends are held at the start of
@@ -98,6 +98,7 @@ export default function Absence() {
         ></textarea>
         <button
           className="btn btn-secondary mt-3 w-full"
+          disabled={busy}
           onClick={() => {
             startTransitionWrapper(async () => {
               const result = await onAbsenceSubmit(data);

@@ -49,7 +49,7 @@ export default function WorklogEntry({
   expectedMinutes: number;
   override: ExpectedHoursOverride | null;
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const router = useRouter();
   const [value, setValue] = useState<WorklogFormDataEntry>({
@@ -133,7 +133,7 @@ export default function WorklogEntry({
           />
           <button
             className="btn btn-secondary mt-3 w-full"
-            disabled={!inputsValid}
+            disabled={!inputsValid || busy}
             onClick={() => {
               const action = () => {
                 assertIsISODay(value.day, 'Invalid day');

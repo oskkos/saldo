@@ -14,7 +14,7 @@ import { useContext, useState } from 'react';
 import { Settings as SettingsType } from '@/types';
 
 export default function Settings({ settings }: { settings: SettingsType }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const [data, setData] = useState<{
     beginDate: Date | null;
     initialBalanceHours: number | '';
@@ -126,6 +126,7 @@ export default function Settings({ settings }: { settings: SettingsType }) {
         <div className="col-span-2">
           <button
             className="btn btn-secondary mt-3 w-full"
+            disabled={busy}
             onClick={() => {
               const action = () => {
                 assertExists(data.beginDate, 'Begin date is required');
@@ -146,8 +147,10 @@ export default function Settings({ settings }: { settings: SettingsType }) {
                 });
               };
               startTransitionWrapper(action)
-                .then(() => {
-                  setMsg({ type: 'success', message: 'Settings saved' });
+                .then((ran) => {
+                  if (ran) {
+                    setMsg({ type: 'success', message: 'Settings saved' });
+                  }
                 })
                 .catch((e) => {
                   const errorMsg =

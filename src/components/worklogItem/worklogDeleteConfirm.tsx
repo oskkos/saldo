@@ -15,7 +15,7 @@ export default function WorklogDeleteConfirm({
   confirmId: string;
   onDelete: (id: number) => void;
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
 
   const deleteWorklog = () => {
@@ -26,8 +26,10 @@ export default function WorklogDeleteConfirm({
         closeModal(confirmId);
       },
     )
-      .then(() => {
-        setMsg({ type: 'success', message: 'Worklog deleted' });
+      .then((ran) => {
+        if (ran) {
+          setMsg({ type: 'success', message: 'Worklog deleted' });
+        }
       })
       .catch((e) => {
         const errorMsg =
@@ -46,7 +48,12 @@ export default function WorklogDeleteConfirm({
       });
   };
   return (
-    <Modal id={confirmId} confirmLabel="Delete" confirmAction={deleteWorklog}>
+    <Modal
+      id={confirmId}
+      confirmLabel="Delete"
+      confirmAction={deleteWorklog}
+      confirmDisabled={busy}
+    >
       <h3 className="font-bold text-lg">Confirmation</h3>
       <p className="py-4">Are you sure you want to delete this worklog?</p>
     </Modal>

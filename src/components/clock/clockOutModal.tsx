@@ -24,7 +24,7 @@ export default function ClockOutModal({
   endedAt: Date;
   onDone: () => void;
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
 
   // The worklog day is fixed to the clock-in day (WorklogInputs edits only the
@@ -85,7 +85,11 @@ export default function ClockOutModal({
         onDone();
       },
     )
-      .then(() => setMsg({ type: 'success', message: 'Session discarded' }))
+      .then((ran) => {
+        if (ran) {
+          setMsg({ type: 'success', message: 'Session discarded' });
+        }
+      })
       .catch(() =>
         setMsg({ type: 'error', message: 'Failed to discard session' }),
       );
@@ -96,7 +100,7 @@ export default function ClockOutModal({
       id={modalId}
       confirmLabel="Save"
       confirmAction={save}
-      confirmDisabled={!value.from || !value.to}
+      confirmDisabled={!value.from || !value.to || busy}
       secondaryLabel="Discard"
       secondaryAction={discard}
       secondaryClassName="btn-error btn-outline"
