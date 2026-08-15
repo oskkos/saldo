@@ -29,6 +29,7 @@ import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import { sortWorklogs } from '@/services';
 import { assertIsISODay, assertIsTime } from '@/util/assertionFunctions';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
+import { confirmOverlap } from '@/util/confirmOverlap';
 import { ToastContext } from '@/components/toastContext';
 
 export default function WorklogEntry({
@@ -61,6 +62,65 @@ export default function WorklogEntry({
   });
   const [wl, setWl] = useState(worklogs);
   const [inputsValid, setInputsValid] = useState(true);
+
+  // An overlap comes back as a question. It is answered *after* the wrapper has
+  // settled rather than inside its callback, because the guard is still held
+  // while the callback runs — a retry issued from there would be dropped as a
+  // re-entrant call. Retrying from `then` puts the second write through the
+  // guard cleanly, so the confirmed save is protected too.
+  const submit = (allowOverlap = false) => {
+    let outcome: WorklogSubmitResult | null = null;
+    const action = () => {
+      assertIsISODay(value.day, 'Invalid day');
+      assertIsTime(value.from, 'Invalid from time');
+      assertIsTime(value.to, 'Invalid to time');
+      return onSubmit(
+        {
+          ...value,
+          from: toDate(value.day, value.from),
+          to: toDate(value.day, value.to),
+        },
+        { allowOverlap },
+      );
+    };
+    startTransitionWrapper(action, (result: WorklogSubmitResult) => {
+      outcome = result;
+      if (result.status === 'success') {
+        setWl(sortWorklogs([...wl, result.worklog]));
+      }
+    })
+      .then((ran) => {
+        // A dropped submission reports nothing at all.
+        if (!ran || !outcome) {
+          return;
+        }
+        const result: WorklogSubmitResult = outcome;
+        if (result.status === 'success') {
+          setMsg({ type: 'success', message: 'Worklog created' });
+          return;
+        }
+        if (result.status === 'conflict') {
+          if (confirmOverlap(result)) {
+            submit(true);
+          }
+          // Declining writes nothing and leaves the form as the user left it.
+          return;
+        }
+        setMsg({
+          type: 'error',
+          message: failureToastMessage(
+            'Failed to create worklog',
+            result.message,
+          ),
+        });
+      })
+      .catch((e) => {
+        setMsg({
+          type: 'error',
+          message: errorToastMessage('Failed to create worklog', e),
+        });
+      });
+  };
 
   const ref = useRef<HTMLDivElement>(null);
   const { onSwipeLeft, onSwipeRight } = useSwipeEvents(
@@ -134,42 +194,7 @@ export default function WorklogEntry({
           <button
             className="btn btn-secondary mt-3 w-full"
             disabled={!inputsValid || busy}
-            onClick={() => {
-              const action = () => {
-                assertIsISODay(value.day, 'Invalid day');
-                assertIsTime(value.from, 'Invalid from time');
-                assertIsTime(value.to, 'Invalid to time');
-                const ret = {
-                  ...value,
-                  from: toDate(value.day, value.from),
-                  to: toDate(value.day, value.to),
-                };
-                return onSubmit(ret);
-              };
-              // Outcomes are values now, so the toast is chosen where the
-              // result is known rather than split across then/catch. A `catch`
-              // remains for the genuine failures the action still throws.
-              const callback = (result: WorklogSubmitResult) => {
-                if (result.status === 'success') {
-                  setWl(sortWorklogs([...wl, result.worklog]));
-                  setMsg({ type: 'success', message: 'Worklog created' });
-                  return;
-                }
-                setMsg({
-                  type: 'error',
-                  message: failureToastMessage(
-                    'Failed to create worklog',
-                    result.message,
-                  ),
-                });
-              };
-              startTransitionWrapper(action, callback).catch((e) => {
-                setMsg({
-                  type: 'error',
-                  message: errorToastMessage('Failed to create worklog', e),
-                });
-              });
-            }}
+            onClick={() => submit()}
           >
             Submit
           </button>

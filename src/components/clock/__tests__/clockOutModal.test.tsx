@@ -130,6 +130,54 @@ describe('ClockOutModal', () => {
     ).toBeInTheDocument();
   });
 
+  describe('when the session overlaps a stored entry', () => {
+    const conflict = {
+      status: 'conflict',
+      message: 'This overlaps 25.7.2026 09:00–17:00.',
+      conflicts: [
+        {
+          from: new Date('2026-07-25T09:00:00Z'),
+          to: new Date('2026-07-25T17:00:00Z'),
+        },
+      ],
+    } as const;
+
+    // @scenario time-clock/Declining the overlap keeps the session
+    it('leaves the session open when the user declines', async () => {
+      const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+      clockOut.mockResolvedValue(conflict);
+      renderModal();
+
+      await userEvent.setup().click(button('Save'));
+
+      await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+      // onDone is what clears the session and dismisses the card; declining
+      // must not reach it, or the tracked time would be lost.
+      expect(onDone).not.toHaveBeenCalled();
+      expect(clockOut).toHaveBeenCalledTimes(1);
+      expect(setMsg).not.toHaveBeenCalled();
+      // Reset, not restore: the discard suite spies on the same window.confirm
+      // from collection time and restoring here would pull it out from under it.
+      confirmSpy.mockReset();
+    });
+
+    // @scenario time-clock/Confirming the overlap finalizes normally
+    it('finalizes when the user confirms', async () => {
+      const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+      clockOut
+        .mockResolvedValueOnce(conflict)
+        .mockResolvedValueOnce({ status: 'success', finalized: true });
+      renderModal();
+
+      await userEvent.setup().click(button('Save'));
+
+      await waitFor(() => expect(clockOut).toHaveBeenCalledTimes(2));
+      expect(clockOut.mock.calls[1][1]).toEqual({ allowOverlap: true });
+      await waitFor(() => expect(onDone).toHaveBeenCalled());
+      confirmSpy.mockReset();
+    });
+  });
+
   it('still reports a genuine failure that was thrown', async () => {
     clockOut.mockRejectedValue(new Error('connection lost'));
     renderModal();

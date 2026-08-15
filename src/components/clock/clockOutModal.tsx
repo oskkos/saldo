@@ -7,6 +7,7 @@ import { onClockDiscard, onClockOut } from '@/actions';
 import { ClockOutResult, WorklogFormDataEntry } from '@/types';
 import { toDayMonthYear, toISODay, toTime } from '@/util/dateFormatter';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
+import { confirmOverlap } from '@/util/confirmOverlap';
 import { ToastContext } from '../toastContext';
 import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import { crossesMidnight } from './util';
@@ -41,10 +42,19 @@ export default function ClockOutModal({
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
 
-  const save = () => {
+  const save = (allowOverlap = false) => {
+    let outcome: ClockOutResult | null = null;
     startTransitionWrapper(
-      () => onClockOut(toWorklogFormData(value)),
+      () => onClockOut(toWorklogFormData(value), { allowOverlap }),
       (result: ClockOutResult) => {
+        outcome = result;
+      },
+    )
+      .then((ran) => {
+        if (!ran || !outcome) {
+          return;
+        }
+        const result: ClockOutResult = outcome;
         if (result.status === 'success') {
           closeModal(modalId);
           onDone();
@@ -58,6 +68,15 @@ export default function ClockOutModal({
           });
           return;
         }
+        if (result.status === 'conflict') {
+          if (confirmOverlap(result)) {
+            save(true);
+          }
+          // Declining writes nothing and, crucially, does not clear the
+          // session: the modal stays open so the user can correct the times,
+          // confirm after all, or discard. Their tracked time is not lost.
+          return;
+        }
         setMsg({
           type: 'error',
           message: failureToastMessage(
@@ -65,13 +84,13 @@ export default function ClockOutModal({
             result.message,
           ),
         });
-      },
-    ).catch((e) =>
-      setMsg({
-        type: 'error',
-        message: errorToastMessage('Failed to save session', e),
-      }),
-    );
+      })
+      .catch((e) =>
+        setMsg({
+          type: 'error',
+          message: errorToastMessage('Failed to save session', e),
+        }),
+      );
   };
 
   const discard = () => {
@@ -99,7 +118,7 @@ export default function ClockOutModal({
     <Modal
       id={modalId}
       confirmLabel="Save"
-      confirmAction={save}
+      confirmAction={() => save()}
       confirmDisabled={!value.from || !value.to || busy}
       secondaryLabel="Discard"
       secondaryAction={discard}

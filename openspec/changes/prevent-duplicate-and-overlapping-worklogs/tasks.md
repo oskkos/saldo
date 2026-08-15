@@ -57,13 +57,13 @@
 
 ## 7. Confirm an overlap before saving it
 
-- [ ] 7.1 Add a shared helper that turns a conflict result into a `window.confirm` prompt naming the overlapping span, matching the phrasing already used for the discard confirmation
-- [ ] 7.2 Wire the confirm-and-resubmit flow into `worklogEntry`, re-calling the action with `allowOverlap` on confirmation and doing nothing on decline
-- [ ] 7.3 Wire it into `quickAddModal` and `worklogEditModal`, keeping the modal open when the user declines so their input is not lost
-- [ ] 7.4 Wire it into `clockOutModal`, leaving the session open and the modal usable when the user declines
-- [ ] 7.5 Ensure the resubmission is itself covered by the re-entrancy guard
-- [ ] 7.6 Extend the component tests: conflict prompts, confirming persists, declining writes nothing and preserves input, declining at clock-out leaves the session open
-- [ ] 7.7 Annotate the new tests with their `// @scenario worklog/...` and `// @scenario time-clock/...` coverage declarations
+- [x] 7.1 Add a shared helper that turns a conflict result into a `window.confirm` prompt naming the overlapping span, matching the phrasing already used for the discard confirmation
+- [x] 7.2 Wire the confirm-and-resubmit flow into `worklogEntry`, re-calling the action with `allowOverlap` on confirmation and doing nothing on decline
+- [x] 7.3 Wire it into `quickAddModal` and `worklogEditModal`, keeping the modal open when the user declines so their input is not lost
+- [x] 7.4 Wire it into `clockOutModal`, leaving the session open and the modal usable when the user declines
+- [x] 7.5 Ensure the resubmission is itself covered by the re-entrancy guard
+- [x] 7.6 Extend the component tests: conflict prompts, confirming persists, declining writes nothing and preserves input, declining at clock-out leaves the session open
+- [x] 7.7 Annotate the new tests with their `// @scenario worklog/...` and `// @scenario time-clock/...` coverage declarations
 
 ## 8. Cover the flows end to end
 

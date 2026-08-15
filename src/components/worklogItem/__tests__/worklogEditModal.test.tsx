@@ -17,7 +17,13 @@ import type { Worklog } from '@/types';
 // reported rather than swallowed — the browser suite only ever edits successfully.
 jest.mock('@/actions', () => ({ onWorklogEdit: jest.fn() }));
 
-type EditMock = jest.Mock<(id: number, data: unknown) => Promise<unknown>>;
+type EditMock = jest.Mock<
+  (
+    id: number,
+    data: unknown,
+    options?: { allowOverlap?: boolean },
+  ) => Promise<unknown>
+>;
 
 let WorklogEditModal: typeof import('../worklogEditModal').default;
 let ToastContext: typeof import('../../toastContext').ToastContext;
@@ -94,7 +100,9 @@ describe('WorklogEditModal', () => {
 
     // The id is what stops an edit landing on somebody else's worklog.
     await waitFor(() =>
-      expect(edit).toHaveBeenCalledWith(42, expect.anything()),
+      expect(edit).toHaveBeenCalledWith(42, expect.anything(), {
+        allowOverlap: false,
+      }),
     );
     const toast = shownToast();
     expect(toast.type).toBe('success');
@@ -121,6 +129,50 @@ describe('WorklogEditModal', () => {
     // A refused edit leaves the form open with the user's values in it.
     expect(dialog().open).toBe(true);
     expect(screen.getByDisplayValue('08:00')).toBeInTheDocument();
+  });
+
+  // @scenario worklog/Editing an entry does not conflict with itself
+  describe('when the edit overlaps another stored entry', () => {
+    const conflict = {
+      status: 'conflict',
+      message: 'This overlaps 26.7.2026 13:00–16:00.',
+      conflicts: [
+        {
+          from: new Date('2026-07-26T13:00:00Z'),
+          to: new Date('2026-07-26T16:00:00Z'),
+        },
+      ],
+    };
+
+    // @scenario worklog/Declined overlap persists nothing
+    it('keeps the modal open on the edited values when declined', async () => {
+      const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+      edit.mockResolvedValue(conflict);
+
+      await confirm();
+
+      await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+      expect(edit).toHaveBeenCalledTimes(1);
+      expect(onEdit).not.toHaveBeenCalled();
+      expect(setMsg).not.toHaveBeenCalled();
+      expect(dialog().open).toBe(true);
+      confirmSpy.mockRestore();
+    });
+
+    // @scenario worklog/Confirmed overlap is persisted
+    it('saves anyway when confirmed', async () => {
+      const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+      edit
+        .mockResolvedValueOnce(conflict)
+        .mockResolvedValueOnce({ status: 'success', worklog: { id: 42 } });
+
+      await confirm();
+
+      await waitFor(() => expect(edit).toHaveBeenCalledTimes(2));
+      expect(edit.mock.calls[1][2]).toEqual({ allowOverlap: true });
+      await waitFor(() => expect(dialog().open).toBe(false));
+      confirmSpy.mockRestore();
+    });
   });
 
   it('still reports a genuine failure that was thrown', async () => {
