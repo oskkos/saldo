@@ -34,7 +34,15 @@ off to the side. Do not skip a layer.
 
 **Return user-facing errors from actions; do not throw them.** A production build
 replaces a thrown error's message with an opaque digest, so a toast that reads fine in
-`next dev` is empty in CI and in production. `onAbsenceSubmit` is the worked example.
+`next dev` is empty in CI and in production. `onAbsenceSubmit` is the worked example;
+the worklog write actions return a `success | conflict | error` union for the same
+reason.
+
+**Every client-triggered mutation goes through `useTransitionWrapper`.** It returns
+`[busy, run]`: pass `busy` to the control's `disabled`, and gate any success message on
+what `run` resolves to — a re-entrant call is dropped and resolves `false`, so an
+ungated toast announces a write that never happened. A retry issued from inside `run`'s
+callback is dropped too (the guard is still held); retry from `.then`.
 
 **All date maths is UTC.** Use the helpers in `src/util/date.ts` (which sets
 `dayjs.tz.setDefault('UTC')`), never `dayjs` directly.

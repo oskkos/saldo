@@ -45,6 +45,7 @@ The balance counts forward from a begin date you choose, starting from an option
 - **Record absences** over a single day or a date range — holiday, flex hours, sick leave, or other — each affecting the balance according to its reason.
 - **Statistics** covering the same window as your saldo: totals, daily average, most and least hours, absences by reason, and a per-day chart.
 - **Expected hours your way** — set a default per day, and override individual dates with special days for half-days and the like.
+- **No accidental double-counting** — an entry that overlaps hours you already logged is put to you before it is saved, and tapping a button twice never logs the same time twice.
 - **Sign in** with Google, GitHub, or email and password.
 
 ## Screenshots

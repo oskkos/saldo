@@ -52,6 +52,13 @@ thrown error that reads perfectly in `next dev` says nothing at all in productio
 preference — it is the difference between a useful toast and an empty one, and it is
 invisible until you test against a real build.
 
+The worklog write actions — `onWorklogSubmit`, `onWorklogEdit`, `onClockOut` — follow
+the same rule and return a discriminated union: `success`, `conflict`, or `error`.
+Validation failures travel on that channel too, so a caller has one place to look
+rather than two. A `conflict` is distinct from an `error`: it is a question the user
+answers, and answering yes re-runs the write with `allowOverlap: true`. Only genuine
+failures are still thrown, and callers keep a `catch` for those.
+
 ### `src/repository/` — data access and the authorization gate
 
 `server-only` modules, one per aggregate: worklog, settings, clock, user,
@@ -64,6 +71,14 @@ evidence of ownership. Because the gate lives here rather than in the pages, a n
 page cannot forget it.
 
 Database calls are wrapped in `Sentry.startSpan`.
+
+**Invariants that need a read before the write live here, not in the actions.** Two do:
+a day holds at most one absence (`assertAbsenceDaysAreFree`), and a work entry may not
+silently overlap another (`assertSpanIsFree`). Both sit beside the ownership check for
+the same reason — they need stored state, and not every write reaches the table through
+`insertWorklog`, since `clockRepository` creates its own row. Both throw a typed error
+that the action turns into a returned value. The overlap rule is *advisory*: the user
+may confirm through it, which is why it cannot be a database constraint.
 
 This layer is also the translation boundary. Prisma's rows are `snake_case` and shaped
 by the schema; the rest of the app speaks the `camelCase` domain types in
@@ -141,6 +156,34 @@ Import from `@/generated/prisma/client`, never from `@prisma/client`. Run
 Configured in both `tsconfig.json` and the Jest config, so it resolves the same in
 tests.
 
+### Every client-triggered mutation goes through `useTransitionWrapper`
+
+`src/util/useTransitionWrapper.ts` returns `[busy, run]`. Call sites pass `busy` to
+their control's `disabled` (combined with any validity gate) and gate any success
+message on what `run` resolves to:
+
+```ts
+const [busy, run] = useTransitionWrapper();
+run(action, callback).then((ran) => {
+  if (ran) setMsg({ type: 'success', message: '…' });
+});
+```
+
+`run` refuses to start a second mutation while one is in flight and resolves `false`
+without invoking the action — so a dropped activation must announce nothing, or the
+user is told about a write that never happened.
+
+The guard inside the hook is a **ref**, not the `busy` state. Two taps can land in the
+same frame: both would read the pre-render value of a state variable, and `disabled`
+only takes effect once React has committed. `busy` exists for the affordance; the ref
+is what makes it correct. Note also that `isPending` from `useTransition` cannot do
+this job — the awaited action sits outside `startTransition`, so the flag reads idle
+for the whole server round-trip.
+
+A retry issued from inside `run`'s callback is dropped, because the guard is still
+held while the callback runs. Retry from `.then` instead — that is how the overlap
+confirmation re-submits.
+
 ## Data model
 
 Six Prisma models in `prisma/schema.prisma`:
@@ -150,7 +193,9 @@ Six Prisma models in `prisma/schema.prisma`:
   `expected_minutes_per_day` (default 450 = 7.5 h).
 - **`Worklog`** — a `from`/`to` pair on a user, with an optional comment, a
   `subtract_lunch_break` flag, and an optional `absence`. An absence is a worklog with
-  its `absence` column set, not a separate table.
+  its `absence` column set, not a separate table. Indexed on `(user_id, from)`, which
+  serves both the bounded range reads that render the app and the overlap lookup every
+  write performs.
 - **`Absence`** (enum) — `holiday`, `flex_hours`, `sick_leave`, `other`.
 - **`ExpectedHoursOverride`** — per-date expected minutes with an optional label.
 - **`PasswordResetData`** — reset token and expiry, one per user.
