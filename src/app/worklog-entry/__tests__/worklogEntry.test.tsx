@@ -184,6 +184,54 @@ describe('WorklogEntry', () => {
     expect(screen.getByText('existing:0')).toBeInTheDocument();
   });
 
+  // @scenario mutation-safety/Second activation during an in-flight mutation is dropped
+  // @scenario mutation-safety/No success notification for a dropped submission
+  // @scenario mutation-safety/Dropped submission leaves the view unchanged
+  it('creates one entry when Submit is tapped twice quickly', async () => {
+    // Held open so the second tap lands mid-flight, which is how the duplicates
+    // users reported were produced.
+    let release!: () => void;
+    onSubmit.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve(succeeded(9));
+      }),
+    );
+    renderEntry();
+    const user = userEvent.setup();
+    const button = screen.getByRole('button', { name: 'Submit' });
+
+    await user.click(button);
+    await user.click(button);
+    release();
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    expect(setMsg).toHaveBeenCalledTimes(1);
+    // One entry added to the day, not two.
+    expect(await screen.findByText('existing:1')).toBeInTheDocument();
+  });
+
+  // @scenario mutation-safety/Control is disabled during the mutation
+  // @scenario mutation-safety/Existing validity gating still applies
+  it('disables Submit while the write is in flight', async () => {
+    let release!: () => void;
+    onSubmit.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve(succeeded(9));
+      }),
+    );
+    renderEntry();
+    const button = screen.getByRole('button', { name: 'Submit' });
+
+    await userEvent.setup().click(button);
+
+    expect(button).toBeDisabled();
+
+    release();
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    expect(button).toBeEnabled();
+  });
+
   it('still reports a genuine failure that was thrown', async () => {
     onSubmit.mockRejectedValue(new Error('connection lost'));
     renderEntry();

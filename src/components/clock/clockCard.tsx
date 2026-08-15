@@ -20,7 +20,7 @@ export default function ClockCard({
 }: {
   activeSession: ActiveSession | null;
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const router = useRouter();
 
@@ -42,7 +42,11 @@ export default function ClockCard({
       () => onClockIn(start),
       (session) => setStartedAt(session.startedAt),
     )
-      .then(() => setMsg({ type: 'success', message: 'Clocked in' }))
+      .then((ran) => {
+        if (ran) {
+          setMsg({ type: 'success', message: 'Clocked in' });
+        }
+      })
       .catch(() => setMsg({ type: 'error', message: 'Failed to clock in' }));
   };
 
@@ -58,6 +62,7 @@ export default function ClockCard({
     return (
       <button
         className="btn btn-secondary w-full max-w-sm gap-2 min-h-18"
+        disabled={busy}
         onClick={clockIn}
       >
         <MdPlayArrow className="w-5 h-5" />

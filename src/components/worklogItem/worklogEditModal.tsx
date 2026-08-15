@@ -19,7 +19,7 @@ export default function WorklogEditModal({
   editModalId: string;
   onEdit: (editedWorklog: Worklog) => void;
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [inputsValid, setInputsValid] = useState(true);
   const [value, setValue] = useState<WorklogFormDataEntry>({
@@ -60,7 +60,7 @@ export default function WorklogEditModal({
       id={editModalId}
       confirmLabel="Edit"
       confirmAction={editWorklog}
-      confirmDisabled={!inputsValid}
+      confirmDisabled={!inputsValid || busy}
     >
       <h3 className="font-bold text-lg">Edit worklog</h3>
       <div className="flex flex-wrap justify-between items-center m-3 sm:w-11/12">

@@ -47,13 +47,13 @@
 
 ## 6. Guard against re-entrant submissions
 
-- [ ] 6.1 Rework `src/util/useTransitionWrapper.ts` to hold a synchronous `busyRef`, return `[busy, run]`, and have `run` resolve to `false` without invoking the action when a call is already in flight
-- [ ] 6.2 Release the guard in a `finally` so a failed action does not leave the control permanently inert, and keep `router.refresh()` inside `startTransition`
-- [ ] 6.3 Add `src/util/__tests__/useTransitionWrapper.test.ts`: a second call during flight is dropped and resolves `false`, two calls in the same tick run the action once, the guard releases after success and after failure
-- [ ] 6.4 Update all ten consumers to destructure `busy` and pass it to their control's disabled state, combining it with any existing validity gate
-- [ ] 6.5 Update every notifying call site to gate its success toast on `run`'s result, so a dropped call reports nothing
-- [ ] 6.6 Extend the component tests for the notifying paths: a dropped submission shows no toast and does not alter the rendered list
-- [ ] 6.7 Annotate the new tests with their `// @scenario mutation-safety/...` coverage declarations
+- [x] 6.1 Rework `src/util/useTransitionWrapper.ts` to hold a synchronous `busyRef`, return `[busy, run]`, and have `run` resolve to `false` without invoking the action when a call is already in flight
+- [x] 6.2 Release the guard in a `finally` so a failed action does not leave the control permanently inert, and keep `router.refresh()` inside `startTransition`
+- [x] 6.3 Add `src/util/__tests__/useTransitionWrapper.test.ts`: a second call during flight is dropped and resolves `false`, two calls in the same tick run the action once, the guard releases after success and after failure
+- [x] 6.4 Update all ten consumers to destructure `busy` and pass it to their control's disabled state, combining it with any existing validity gate
+- [x] 6.5 Update every notifying call site to gate its success toast on `run`'s result, so a dropped call reports nothing
+- [x] 6.6 Extend the component tests for the notifying paths: a dropped submission shows no toast and does not alter the rendered list
+- [x] 6.7 Annotate the new tests with their `// @scenario mutation-safety/...` coverage declarations
 
 ## 7. Confirm an overlap before saving it
 

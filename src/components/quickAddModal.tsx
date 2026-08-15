@@ -21,7 +21,7 @@ export default function QuickAddWorklogModal({
   defaults: { fromDefault: Date_Time; toDefault: Date_Time };
   onSubmit: (worklog: Worklog) => void;
 }) {
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [inputsValid, setInputsValid] = useState(true);
   const [value, setValue] = useState<WorklogFormDataEntry>({
@@ -64,7 +64,7 @@ export default function QuickAddWorklogModal({
       id={modalId}
       confirmLabel="Save"
       confirmAction={saveWorklog}
-      confirmDisabled={!inputsValid}
+      confirmDisabled={!inputsValid || busy}
     >
       <h3 className="font-bold text-lg">Add new worklog</h3>
 

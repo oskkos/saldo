@@ -120,6 +120,50 @@ describe('QuickAddWorklogModal', () => {
     expect(screen.getByDisplayValue('08:00')).toBeInTheDocument();
   });
 
+  // @scenario mutation-safety/Second activation during an in-flight mutation is dropped
+  // @scenario mutation-safety/No success notification for a dropped submission
+  // @scenario mutation-safety/No error notification for a dropped submission
+  it('saves once and reports once when Save is tapped twice quickly', async () => {
+    // The action is held open so the second tap lands while the first is still
+    // in flight — the window the reported bug occurs in.
+    let release!: () => void;
+    submit.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve({ status: 'success', worklog: { id: 1 } });
+      }),
+    );
+    const user = userEvent.setup();
+    const button = screen.getByRole('button', { name: 'Save', hidden: true });
+
+    await user.click(button);
+    await user.click(button);
+    release();
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    expect(submit).toHaveBeenCalledTimes(1);
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    // One write, one toast: the dropped tap says nothing at all.
+    expect(setMsg).toHaveBeenCalledTimes(1);
+  });
+
+  // @scenario mutation-safety/Control is disabled during the mutation
+  it('disables Save while the write is in flight', async () => {
+    let release!: () => void;
+    submit.mockReturnValue(
+      new Promise((resolve) => {
+        release = () => resolve({ status: 'success', worklog: { id: 1 } });
+      }),
+    );
+    const button = screen.getByRole('button', { name: 'Save', hidden: true });
+
+    await userEvent.setup().click(button);
+
+    expect(button).toBeDisabled();
+
+    release();
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+  });
+
   it('still reports a genuine failure that was thrown', async () => {
     submit.mockRejectedValue(new Error('connection lost'));
 

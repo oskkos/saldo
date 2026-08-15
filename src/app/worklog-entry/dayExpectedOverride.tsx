@@ -29,7 +29,7 @@ export default function DayExpectedOverride({
   override: ExpectedHoursOverride | null;
 }) {
   const router = useRouter();
-  const [, startTransitionWrapper] = useTransitionWrapper();
+  const [busy, startTransitionWrapper] = useTransitionWrapper();
   const { setMsg } = useContext(ToastContext);
   const [hours, setHours] = useState<number | ''>(
     Math.floor(expectedMinutes / 60),
@@ -56,9 +56,11 @@ export default function DayExpectedOverride({
         }),
       () => router.refresh(),
     )
-      .then(() =>
-        setMsg({ type: 'success', message: 'Expected hours updated' }),
-      )
+      .then((ran) => {
+        if (ran) {
+          setMsg({ type: 'success', message: 'Expected hours updated' });
+        }
+      })
       .catch((e) =>
         setMsg({
           type: 'error',
@@ -78,7 +80,11 @@ export default function DayExpectedOverride({
         router.refresh();
       },
     )
-      .then(() => setMsg({ type: 'success', message: 'Override cleared' }))
+      .then((ran) => {
+        if (ran) {
+          setMsg({ type: 'success', message: 'Override cleared' });
+        }
+      })
       .catch((e) =>
         setMsg({
           type: 'error',
