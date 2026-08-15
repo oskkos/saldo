@@ -572,6 +572,26 @@ describe('the no-silent-overlap rule', () => {
     expect(lt.getTime()).toBeGreaterThan(longestReachingEntry.getTime());
   });
 
+  // Backfilling a day from months ago must still be overlap-checked against that
+  // day, not against today. The bound is derived from the submitted span, so this
+  // fails the moment anyone re-anchors it to the current date.
+  it('anchors the range to the submitted span, not to today', async () => {
+    db.worklog.create.mockResolvedValue(row());
+    const longAgo = (time: string) => new Date(`2026-01-15T${time}:00.000Z`);
+
+    await repo.insertWorklog({
+      from: longAgo('09:00'),
+      to: longAgo('17:00'),
+      comment: 'Backfilled',
+      subtractLunchBreak: true,
+    });
+
+    expect(queriedSpan().from).toEqual({
+      gte: new Date('2026-01-14T09:00:00.000Z'),
+      lt: longAgo('17:00'),
+    });
+  });
+
   // @scenario worklog/Work on an absence day is not a conflict
   it('excludes stored absences from the lookup', async () => {
     db.worklog.create.mockResolvedValue(row());

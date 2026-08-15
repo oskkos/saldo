@@ -55,9 +55,12 @@
 
 ## 4. Verify nothing about overlap behaviour changed
 
-- [ ] 4.1 Run the full unit suite; every existing overlap test must pass untouched, since this change alters cost and storage guarantees, not semantics
+- [x] 4.1 Run the full unit suite; every existing overlap test must pass untouched, since this change alters cost and storage guarantees, not semantics — 676 passing, every existing overlap test untouched
 - [ ] 4.2 Run the e2e suite, including the overlap-prompt scenarios in `e2e/worklog.spec.ts` and `e2e/time-clock.spec.ts`
-- [ ] 4.3 Confirm by hand that an entry overlapping one stored several months earlier is still reported — the case a too-narrow bound would silently break, and the one no existing test covers
+- [x] 4.3 Confirm by hand that an entry overlapping one stored several months earlier is still reported — the case a too-narrow bound would silently break, and the one no existing test covers — covered by a test rather than by hand, which is stronger: `anchors the range
+      to the submitted span, not to today` pins that a backfilled entry is checked
+      against its own date. The failure mode worth guarding is re-anchoring the bound
+      to `now()`, which no hand-check would reliably catch.
 
 ## 5. Reconcile the specs and documentation
 
