@@ -11,6 +11,8 @@ import {
   worklogMinutes,
   daysInRange,
   absenceConflictMessage,
+  spansOverlap,
+  worklogOverlapMessage,
 } from '../index';
 import {
   AbsenceReason,
@@ -707,6 +709,103 @@ describe('absence conflict helpers', () => {
     it('stays a well-formed sentence when given no days', () => {
       expect(absenceConflictMessage([])).toBe(
         'An absence is already recorded for the selected days.',
+      );
+    });
+  });
+});
+
+describe('worklog overlap helpers', () => {
+  const at = (time: string) => new Date(`2026-06-28T${time}:00.000Z`);
+  const span = (from: string, to: string) => ({ from: at(from), to: at(to) });
+
+  describe('spansOverlap', () => {
+    // @scenario worklog/Identical span is reported as a conflict
+    it('treats identical spans as overlapping', () => {
+      expect(spansOverlap(span('09:00', '17:00'), span('09:00', '17:00'))).toBe(
+        true,
+      );
+    });
+
+    // @scenario worklog/Partially overlapping span is reported as a conflict
+    it('treats a partial overlap as overlapping, in both orders', () => {
+      expect(spansOverlap(span('09:00', '17:00'), span('16:00', '18:00'))).toBe(
+        true,
+      );
+      expect(spansOverlap(span('16:00', '18:00'), span('09:00', '17:00'))).toBe(
+        true,
+      );
+    });
+
+    it('treats a fully contained span as overlapping', () => {
+      expect(spansOverlap(span('09:00', '17:00'), span('10:00', '11:00'))).toBe(
+        true,
+      );
+    });
+
+    // @scenario worklog/Touching spans are not a conflict
+    it('does not treat back-to-back spans as overlapping', () => {
+      expect(spansOverlap(span('08:00', '12:00'), span('12:00', '16:00'))).toBe(
+        false,
+      );
+      expect(spansOverlap(span('12:00', '16:00'), span('08:00', '12:00'))).toBe(
+        false,
+      );
+    });
+
+    // @scenario worklog/Non-overlapping spans are not a conflict
+    it('does not treat disjoint spans as overlapping', () => {
+      expect(spansOverlap(span('08:00', '12:00'), span('13:00', '16:00'))).toBe(
+        false,
+      );
+    });
+  });
+
+  describe('worklogOverlapMessage', () => {
+    // @scenario worklog/The conflict names the entry it collides with
+    it('names the day and times of a single conflict', () => {
+      expect(worklogOverlapMessage([span('09:00', '17:00')])).toBe(
+        'This overlaps 28.6.2026 09:00–17:00.',
+      );
+    });
+
+    it('lists three conflicts in full', () => {
+      expect(
+        worklogOverlapMessage([
+          span('08:00', '09:00'),
+          span('10:00', '11:00'),
+          span('12:00', '13:00'),
+        ]),
+      ).toBe(
+        'This overlaps 28.6.2026 08:00–09:00, 28.6.2026 10:00–11:00, 28.6.2026 12:00–13:00.',
+      );
+    });
+
+    it('names the first three and counts the rest', () => {
+      expect(
+        worklogOverlapMessage([
+          span('08:00', '09:00'),
+          span('10:00', '11:00'),
+          span('12:00', '13:00'),
+          span('14:00', '15:00'),
+          span('16:00', '17:00'),
+        ]),
+      ).toContain('and 2 more entries.');
+    });
+
+    it('counts a single remaining entry in the singular', () => {
+      expect(
+        worklogOverlapMessage([
+          span('08:00', '09:00'),
+          span('10:00', '11:00'),
+          span('12:00', '13:00'),
+          span('14:00', '15:00'),
+        ]),
+      ).toContain('and 1 more entry.');
+    });
+
+    it('stays a well-formed sentence when given no spans', () => {
+      expect(worklogOverlapMessage([])).toBe(
+        'This overlaps hours you have already logged.',
       );
     });
   });

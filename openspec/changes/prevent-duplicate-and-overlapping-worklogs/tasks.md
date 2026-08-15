@@ -11,13 +11,13 @@
 
 ## 2. Detect overlapping work entries in the repository
 
-- [ ] 2.1 Add a `WorklogOverlapError` to `src/services/index.tsx` beside `AbsenceConflictError`, carrying the conflicting spans so the message can name them
-- [ ] 2.2 Add a pure overlap predicate to `src/services/index.tsx` using half-open comparison (`a.from < b.to && b.from < a.to`), with unit tests covering identical, partial, touching, and disjoint spans
-- [ ] 2.3 Add `overlappingWorkEntries(userId, from, to, excludeId?)` to `src/repository/worklogRepository.ts`, querying `from < to` / `to > from` with `absence: null` and the current user, excluding `excludeId` when given
-- [ ] 2.4 Call the guard from `insertWorklog`, skipping it entirely when the incoming entry carries an `absence`, and bypassing it when the new `allowOverlap` option is set
-- [ ] 2.5 Call the guard from `updateWorklog`, excluding the edited row from its own comparison, with the same `allowOverlap` bypass
-- [ ] 2.6 Extend `src/repository/__tests__/worklogRepository.test.ts`: conflict on identical span, conflict on partial overlap, no conflict on touching spans, stored absence not reported, incoming absence not checked, edit excludes itself, edit onto an occupied span conflicts, `allowOverlap` persists
-- [ ] 2.7 Annotate the new tests with their `// @scenario worklog/...` coverage declarations
+- [x] 2.1 Add a `WorklogOverlapError` to `src/services/index.tsx` beside `AbsenceConflictError`, carrying the conflicting spans so the message can name them
+- [x] 2.2 Add a pure overlap predicate to `src/services/index.tsx` using half-open comparison (`a.from < b.to && b.from < a.to`), with unit tests covering identical, partial, touching, and disjoint spans
+- [x] 2.3 Add `overlappingWorkEntries(userId, from, to, excludeId?)` to `src/repository/worklogRepository.ts`, querying `from < to` / `to > from` with `absence: null` and the current user, excluding `excludeId` when given
+- [x] 2.4 Call the guard from `insertWorklog`, skipping it entirely when the incoming entry carries an `absence`, and bypassing it when the new `allowOverlap` option is set
+- [x] 2.5 Call the guard from `updateWorklog`, excluding the edited row from its own comparison, with the same `allowOverlap` bypass
+- [x] 2.6 Extend `src/repository/__tests__/worklogRepository.test.ts`: conflict on identical span, conflict on partial overlap, no conflict on touching spans, stored absence not reported, incoming absence not checked, edit excludes itself, edit onto an occupied span conflicts, `allowOverlap` persists
+- [x] 2.7 Annotate the new tests with their `// @scenario worklog/...` coverage declarations
 
 ## 3. Make clock-out idempotent
 

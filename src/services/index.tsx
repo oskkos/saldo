@@ -13,7 +13,12 @@ import {
   isNonWorkingDay,
   startOfDay,
 } from '@/util/date';
-import { Date_ISODay, toDayMonthYear, toISODay } from '@/util/dateFormatter';
+import {
+  Date_ISODay,
+  toDayMonthYear,
+  toISODay,
+  toTime,
+} from '@/util/dateFormatter';
 
 // Index the per-date overrides by UTC calendar day for O(1) lookup.
 export function expectedMinutesByDay(
@@ -193,4 +198,51 @@ export function absenceConflictMessage(days: Date_ISODay[]) {
       ? ` and ${remaining} more ${remaining === 1 ? 'day' : 'days'}`
       : '';
   return `An absence is already recorded for ${listed.join(', ')}${rest}.`;
+}
+
+// Spans are half-open: [from, to). Two entries collide only when each begins
+// strictly before the other ends, so back-to-back entries (08:00-12:00 followed
+// by 12:00-16:00) do not — an inclusive comparison would flag every one of them.
+export function spansOverlap(
+  a: { from: Date; to: Date },
+  b: { from: Date; to: Date },
+) {
+  return a.from.getTime() < b.to.getTime() && b.from.getTime() < a.to.getTime();
+}
+
+// Naming every collision would produce a toast nobody reads; the prompt only
+// needs enough for the user to recognise what they are about to double-log.
+const MAX_LISTED_CONFLICT_SPANS = 3;
+
+// Thrown by the write paths so the action boundary can tell a rejected overlap
+// apart from a genuine failure. Unlike an absence conflict, this one is a
+// question rather than a verdict: the user may confirm through it, and the
+// action re-runs the write with the overlap allowed.
+export class WorklogOverlapError extends Error {
+  readonly spans: { from: Date; to: Date }[];
+
+  constructor(spans: { from: Date; to: Date }[]) {
+    super(worklogOverlapMessage(spans));
+    this.name = 'WorklogOverlapError';
+    this.spans = spans;
+  }
+}
+
+export function worklogOverlapMessage(spans: { from: Date; to: Date }[]) {
+  if (spans.length === 0) {
+    return 'This overlaps hours you have already logged.';
+  }
+  const listed = spans
+    .slice(0, MAX_LISTED_CONFLICT_SPANS)
+    .map((span) => `${toDayMonthYear(span.from)} ${formatSpan(span)}`);
+  const remaining = spans.length - listed.length;
+  const rest =
+    remaining > 0
+      ? ` and ${remaining} more ${remaining === 1 ? 'entry' : 'entries'}`
+      : '';
+  return `This overlaps ${listed.join(', ')}${rest}.`;
+}
+
+function formatSpan(span: { from: Date; to: Date }) {
+  return `${toTime(span.from)}–${toTime(span.to)}`;
 }

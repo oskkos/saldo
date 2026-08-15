@@ -7,7 +7,7 @@ import { Worklog, WorklogFormData } from '@/types';
 import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
 import { getUserFromSession } from '@/auth/authSession';
-import { AbsenceConflictError } from '@/services';
+import { AbsenceConflictError, WorklogOverlapError } from '@/services';
 import { endOfDay, startOfDay } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 
@@ -116,19 +116,86 @@ async function assertAbsenceDaysAreFree(userId: number, days: Date_ISODay[]) {
   }
 }
 
-export async function insertWorklog({
-  from,
-  to,
-  comment,
-  subtractLunchBreak,
-  absence,
-}: WorklogFormData): Promise<Worklog> {
+// The current user's stored *work* entries whose span collides with the given
+// one. Absences are excluded: an absence claims the whole day by design, and
+// working during one is a supported combination rather than a conflict.
+//
+// The candidate query is bounded by the incoming span itself. `from < to` is
+// index-backed on (user_id, from); `to > from` then discards the earlier rows
+// the index range still includes.
+export async function overlappingWorkEntries(
+  userId: number,
+  from: Date,
+  to: Date,
+  excludeWorklogId?: number,
+): Promise<Worklog[]> {
+  return await Sentry.startSpan(
+    { name: 'overlappingWorkEntries', op: 'db.sql.prisma' },
+    async (span) => {
+      const rows = await prisma.worklog.findMany({
+        where: {
+          user_id: userId,
+          absence: null,
+          from: { lt: to },
+          to: { gt: from },
+          ...(excludeWorklogId === undefined
+            ? {}
+            : { id: { not: excludeWorklogId } }),
+        },
+        orderBy: { from: 'asc' },
+      });
+
+      span.setAttributes({ userId, records: rows.length });
+
+      return rows.map(toWorklog);
+    },
+  );
+}
+
+// A work entry may not silently land on top of another. This is advisory rather
+// than absolute — the user is asked and may confirm through it, which is why it
+// cannot be a database constraint — but the question has to be asked against
+// stored state, because the case it exists for is a client whose view predates
+// the entry it would collide with.
+async function assertSpanIsFree(
+  userId: number,
+  from: Date,
+  to: Date,
+  excludeWorklogId?: number,
+) {
+  const conflicts = await overlappingWorkEntries(
+    userId,
+    from,
+    to,
+    excludeWorklogId,
+  );
+  if (conflicts.length > 0) {
+    throw new WorklogOverlapError(
+      conflicts.map((conflict) => ({ from: conflict.from, to: conflict.to })),
+    );
+  }
+}
+
+// `allowOverlap` carries the user's answer to that question back down. It
+// bypasses the overlap check only; ownership, validation and the absence
+// invariant are unaffected by it.
+export type WriteOptions = { allowOverlap?: boolean };
+
+export async function insertWorklog(
+  { from, to, comment, subtractLunchBreak, absence }: WorklogFormData,
+  { allowOverlap = false }: WriteOptions = {},
+): Promise<Worklog> {
   const user = await getUserFromSession();
   if (!user) {
     throw new Error('User not found in session.');
   }
   if (absence) {
     await assertAbsenceDaysAreFree(user.id, [toISODay(from)]);
+  } else if (!allowOverlap) {
+    // Only a work entry is overlap-checked. An absence has its own one-per-day
+    // guard above, and checking it here would flag every legitimate day that
+    // holds both an absence and the hours worked during it.
+    await assertSpanIsFree(user.id, from, to);
   }
 
   return await Sentry.startSpan(
@@ -199,6 +266,7 @@ async function getWorklog(worklogId: number) {
 export async function updateWorklog(
   worklogId: number,
   { from, to, comment, subtractLunchBreak }: WorklogFormData,
+  { allowOverlap = false }: WriteOptions = {},
 ): Promise<Worklog> {
   const user = await getUserFromSession();
   if (!user) {
@@ -215,6 +283,12 @@ export async function updateWorklog(
   const targetDay = toISODay(from);
   if (worklog.absence && targetDay !== toISODay(worklog.from)) {
     await assertAbsenceDaysAreFree(user.id, [targetDay]);
+  }
+  // A stored absence keeps its exemption through the edit. A work entry is
+  // checked against the others, excluding itself — otherwise nudging an end
+  // time would always collide with the row being moved.
+  if (!worklog.absence && !allowOverlap) {
+    await assertSpanIsFree(user.id, from, to, worklogId);
   }
 
   return await Sentry.startSpan(

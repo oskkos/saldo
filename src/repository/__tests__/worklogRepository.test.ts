@@ -7,7 +7,7 @@ import {
   beforeEach,
 } from '@jest/globals';
 import { AbsenceReason, type WorklogFormData } from '@/types';
-import { AbsenceConflictError } from '@/services';
+import { AbsenceConflictError, WorklogOverlapError } from '@/services';
 
 // Same server-layer harness as clockRepository.test.ts: the Prisma client, the
 // auth gate and the Sentry span wrapper are mocked, React's per-request `cache`
@@ -86,6 +86,9 @@ beforeAll(async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   getUserFromSession.mockResolvedValue(USER);
+  // Every write now reads before it writes (the overlap lookup), so the default
+  // is "nothing stored". Tests that care set their own rows.
+  db.worklog.findMany.mockResolvedValue([]);
 });
 
 describe('getWorklogs', () => {
@@ -246,14 +249,20 @@ describe('the one-absence-per-day rule', () => {
     expect(created.absence).toBe(AbsenceReason.holiday);
   });
 
-  // The common case must not pay for the rule: a regular worklog is not an
-  // absence, so nothing needs looking up.
-  it('does not query at all for a regular worklog', async () => {
+  // A regular worklog is not an absence, so the absence-day guard never runs
+  // for it. It does perform the overlap lookup, which is a different query:
+  // that one filters on `absence: null` rather than `absence: { not: null }`.
+  it('does not run the absence-day lookup for a regular worklog', async () => {
     db.worklog.create.mockResolvedValue(row());
 
     await repo.insertWorklog(formData);
 
-    expect(db.worklog.findMany).not.toHaveBeenCalled();
+    expect(db.worklog.findMany).toHaveBeenCalledTimes(1);
+    expect(db.worklog.findMany).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ absence: { not: null } }),
+      }),
+    );
     expect(db.worklog.create).toHaveBeenCalled();
   });
 });
@@ -455,10 +464,184 @@ describe('updateWorklog', () => {
       comment: 'Worked anyway',
     });
 
-    // No conflict lookup happens at all: the stored record is not an absence,
-    // so the rule does not apply to it.
+    // The absence rule does not apply to a stored work entry, so no absence-day
+    // lookup happens. The only read is the overlap check, which excludes
+    // absences — the day's absence is invisible to it and blocks nothing.
+    expect(db.worklog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ absence: null }),
+      }),
+    );
+    expect(db.worklog.update).toHaveBeenCalled();
+  });
+});
+
+describe('the no-silent-overlap rule', () => {
+  const DAY = '2026-06-28';
+  const at = (time: string) => new Date(`${DAY}T${time}:00.000Z`);
+  const workFrom = (fromTime: string, toTime: string): WorklogFormData => ({
+    from: at(fromTime),
+    to: at(toTime),
+    comment: 'Shift',
+    subtractLunchBreak: true,
+  });
+  const storedWork = (fromTime: string, toTime: string, id = 7) =>
+    row({ id, from: at(fromTime), to: at(toTime) });
+
+  // The repository asks the database for colliding rows; the half-open
+  // comparison is expressed in the query, so these tests assert the query and
+  // let the service-level tests cover the predicate itself.
+  const queriedSpan = () => {
+    const call = db.worklog.findMany.mock.calls[0][0] as {
+      where: { from: { lt: Date }; to: { gt: Date }; absence: null };
+    };
+    return call.where;
+  };
+
+  // @scenario worklog/Identical span is reported as a conflict
+  it('rejects an entry identical to one already stored', async () => {
+    db.worklog.findMany.mockResolvedValue([storedWork('09:00', '17:00')]);
+
+    await expect(
+      repo.insertWorklog(workFrom('09:00', '17:00')),
+    ).rejects.toThrow(WorklogOverlapError);
+    expect(db.worklog.create).not.toHaveBeenCalled();
+  });
+
+  // @scenario worklog/Partially overlapping span is reported as a conflict
+  it('rejects an entry that partially overlaps a stored one', async () => {
+    db.worklog.findMany.mockResolvedValue([storedWork('09:00', '17:00')]);
+
+    await expect(
+      repo.insertWorklog(workFrom('16:00', '18:00')),
+    ).rejects.toThrow(WorklogOverlapError);
+    expect(db.worklog.create).not.toHaveBeenCalled();
+  });
+
+  // @scenario worklog/The conflict names the entry it collides with
+  it('carries the colliding span on the error', async () => {
+    db.worklog.findMany.mockResolvedValue([storedWork('09:00', '17:00')]);
+
+    await expect(
+      repo.insertWorklog(workFrom('16:00', '18:00')),
+    ).rejects.toMatchObject({
+      spans: [{ from: at('09:00'), to: at('17:00') }],
+    });
+  });
+
+  // @scenario worklog/Touching spans are not a conflict
+  // @scenario worklog/Non-overlapping spans are not a conflict
+  it('bounds the lookup half-open, so touching entries never match', async () => {
+    db.worklog.create.mockResolvedValue(row());
+
+    await repo.insertWorklog(workFrom('12:00', '16:00'));
+
+    // An entry ending exactly at 12:00 is excluded by `to > from`, and one
+    // starting exactly at 16:00 by `from < to`.
+    expect(queriedSpan()).toEqual(
+      expect.objectContaining({
+        user_id: USER.id,
+        absence: null,
+        from: { lt: at('16:00') },
+        to: { gt: at('12:00') },
+      }),
+    );
+    expect(db.worklog.create).toHaveBeenCalled();
+  });
+
+  // @scenario worklog/Work on an absence day is not a conflict
+  it('excludes stored absences from the lookup', async () => {
+    db.worklog.create.mockResolvedValue(row());
+
+    await repo.insertWorklog(workFrom('09:00', '17:00'));
+
+    expect(queriedSpan().absence).toBeNull();
+    expect(db.worklog.create).toHaveBeenCalled();
+  });
+
+  // @scenario worklog/An incoming absence is not overlap-checked
+  it('does not overlap-check an incoming absence', async () => {
+    db.worklog.create.mockResolvedValue(row({ absence: 'holiday' }));
+
+    await repo.insertWorklog({
+      ...workFrom('08:00', '16:00'),
+      absence: AbsenceReason.holiday,
+    });
+
+    // The one lookup that happened is the absence-day guard, which selects only
+    // `from` and filters on `absence: { not: null }` — not the overlap query.
+    expect(db.worklog.findMany).toHaveBeenCalledTimes(1);
+    expect(queriedSpan()).toEqual(
+      expect.objectContaining({ absence: { not: null } }),
+    );
+  });
+
+  // @scenario worklog/Confirmed overlap is persisted
+  it('persists without checking when the overlap is allowed', async () => {
+    db.worklog.create.mockResolvedValue(row());
+
+    await repo.insertWorklog(workFrom('09:00', '17:00'), {
+      allowOverlap: true,
+    });
+
+    expect(db.worklog.findMany).not.toHaveBeenCalled();
+    expect(db.worklog.create).toHaveBeenCalled();
+  });
+
+  // @scenario worklog/Editing an entry does not conflict with itself
+  it('excludes the edited row from its own comparison', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(
+      storedWork('09:00', '17:00', 3),
+    );
+    db.worklog.update.mockResolvedValue(storedWork('09:00', '18:00', 3));
+
+    await repo.updateWorklog(3, workFrom('09:00', '18:00'));
+
+    expect(queriedSpan()).toEqual(expect.objectContaining({ id: { not: 3 } }));
+    expect(db.worklog.update).toHaveBeenCalled();
+  });
+
+  // @scenario worklog/Editing onto an occupied span is reported as a conflict
+  it('rejects an edit that moves an entry onto an occupied span', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(
+      storedWork('08:00', '10:00', 3),
+    );
+    db.worklog.findMany.mockResolvedValue([storedWork('13:00', '16:00', 4)]);
+
+    await expect(
+      repo.updateWorklog(3, workFrom('08:00', '14:00')),
+    ).rejects.toThrow(WorklogOverlapError);
+    expect(db.worklog.update).not.toHaveBeenCalled();
+  });
+
+  it('lets a confirmed edit through', async () => {
+    db.worklog.findUniqueOrThrow.mockResolvedValue(
+      storedWork('08:00', '10:00', 3),
+    );
+    db.worklog.update.mockResolvedValue(storedWork('08:00', '14:00', 3));
+
+    await repo.updateWorklog(3, workFrom('08:00', '14:00'), {
+      allowOverlap: true,
+    });
+
     expect(db.worklog.findMany).not.toHaveBeenCalled();
     expect(db.worklog.update).toHaveBeenCalled();
+  });
+
+  // @scenario worklog/Detection uses stored state, not the client's view
+  it('reads stored rows rather than trusting anything supplied by the caller', async () => {
+    db.worklog.findMany.mockResolvedValue([storedWork('09:00', '17:00')]);
+
+    // The caller passes only its own entry; the conflicting one is known solely
+    // from the database.
+    await expect(
+      repo.insertWorklog(workFrom('10:00', '12:00')),
+    ).rejects.toThrow(WorklogOverlapError);
+    expect(db.worklog.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ user_id: USER.id }),
+      }),
+    );
   });
 });
 
