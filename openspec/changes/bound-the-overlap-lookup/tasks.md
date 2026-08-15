@@ -36,11 +36,22 @@
 
 ## 3. Bound the overlap read
 
-- [ ] 3.1 Add the lower bound to `overlappingWorkEntries` in `src/repository/worklogRepository.ts`: `from: { gte: subtract(from, 1, 'day'), lt: to }`
-- [ ] 3.2 Rewrite the comment above the function to state the proof — a colliding entry ends after `from`, spans at most a day by constraint, therefore begins after `from - 1 day` — and name the constraint the proof depends on
-- [ ] 3.3 Update the query-shape assertion in `src/repository/__tests__/worklogRepository.test.ts` to expect the lower bound
-- [ ] 3.4 Add a repository test proving the bound cannot hide a conflict: an entry beginning before the bound but reaching into the submitted span is still returned
-- [ ] 3.5 Verify the index is actually used with the new bound rather than assumed to be — `EXPLAIN` the query against a database with the index present, and record the plan in the PR
+- [x] 3.1 Add the lower bound to `overlappingWorkEntries` in `src/repository/worklogRepository.ts`: `from: { gte: subtract(from, 1, 'day'), lt: to }`
+- [x] 3.2 Rewrite the comment above the function to state the proof — a colliding entry ends after `from`, spans at most a day by constraint, therefore begins after `from - 1 day` — and name the constraint the proof depends on — the comment now states the proof and names `Worklog_work_entry_span_positive_and_bounded` as what it rests on
+- [x] 3.3 Update the query-shape assertion in `src/repository/__tests__/worklogRepository.test.ts` to expect the lower bound
+- [x] 3.4 Add a repository test proving the bound cannot hide a conflict: an entry beginning before the bound but reaching into the submitted span is still returned — pins the relationship between bound and constraint: the longest permitted entry that still reaches the submitted span must fall inside the queried range
+- [x] 3.5 Verify the index is actually used with the new bound rather than assumed to be — `EXPLAIN` the query against a database with the index present, and record the plan in the PR — verified against a 3135-row history with the index present. The result is
+      stronger than expected: **the old query did not use the index at all.**
+
+      | | plan | buffers | rows discarded |
+      | --- | --- | --- | --- |
+      | before (`from < to` only) | Seq Scan | 33 | 3134 |
+      | after (`gte` added) | Index Scan using `Worklog_user_id_from_idx` | 3 | — |
+
+      An unbounded range covered nearly the whole table, so the planner declined the
+      index. This means the *previous* change's "Overlap detection on write" scenario
+      was not actually satisfied either — the index existed but went unused on this
+      query shape.
 
 ## 4. Verify nothing about overlap behaviour changed
 
