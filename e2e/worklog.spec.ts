@@ -201,3 +201,86 @@ test('a day with an absence still takes hours, and keeps the absence', async ({
   expect(absence?.from.getUTCHours()).toBe(8);
   expect(absence?.to.getUTCHours()).toBe(16);
 });
+
+// @scenario worklog/Identical span is reported as a conflict
+// @scenario worklog/The conflict names the entry it collides with
+// @scenario worklog/Declined overlap persists nothing
+// @scenario worklog/Detection uses stored state, not the client's view
+test('an overlapping entry is put to the user, and declining saves nothing', async ({
+  page,
+}) => {
+  // Seeded straight into the database and never rendered on this page, so the
+  // conflict can only have been found server-side — which is the point: the
+  // reported bug is a client whose list predates the entry it collides with.
+  await seedWorklog({ from: utcTimeOn(0, 9), to: utcTimeOn(0, 17) });
+
+  await entryPage(page);
+  await fillTimes(page, '10:00', '12:00');
+
+  let prompt = '';
+  page.once('dialog', (dialog) => {
+    prompt = dialog.message();
+    return dialog.dismiss();
+  });
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  await expect.poll(() => prompt).toContain('This overlaps');
+  expect(prompt).toContain('09:00–17:00');
+
+  // Declined: still just the seeded entry, and nothing announced.
+  await expect(page.getByText('Worklog created')).toBeHidden();
+  expect(await getWorklogs()).toHaveLength(1);
+});
+
+// @scenario worklog/Confirmed overlap is persisted
+test('confirming an overlap saves the entry anyway', async ({ page }) => {
+  await seedWorklog({ from: utcTimeOn(0, 9), to: utcTimeOn(0, 17) });
+
+  await entryPage(page);
+  await fillTimes(page, '10:00', '12:00');
+
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  await expect(page.getByText('10:00 - 12:00')).toBeVisible();
+  expect(await getWorklogs()).toHaveLength(2);
+});
+
+// @scenario worklog/Touching spans are not a conflict
+test('an entry that starts where another ends is saved without a prompt', async ({
+  page,
+}) => {
+  await seedWorklog({ from: utcTimeOn(0, 8), to: utcTimeOn(0, 12) });
+
+  let asked = false;
+  page.on('dialog', (dialog) => {
+    asked = true;
+    return dialog.dismiss();
+  });
+
+  await entryPage(page);
+  await fillTimes(page, '12:00', '16:00');
+  await page.getByRole('button', { name: 'Submit' }).click();
+
+  await expect(page.getByText('12:00 - 16:00')).toBeVisible();
+  expect(asked).toBe(false);
+  expect(await getWorklogs()).toHaveLength(2);
+});
+
+// @scenario mutation-safety/Second activation during an in-flight mutation is dropped
+// @scenario mutation-safety/Two activations before the interface re-renders
+// @scenario mutation-safety/No success notification for a dropped submission
+test('tapping Submit twice quickly creates exactly one entry', async ({
+  page,
+}) => {
+  await entryPage(page);
+  await fillTimes(page, '09:00', '12:00');
+
+  // Two clicks in one gesture: the second lands before any re-render caused by
+  // the first, which is how the duplicates users reported were produced.
+  await page.getByRole('button', { name: 'Submit' }).dblclick();
+
+  await expect(page.getByText('09:00 - 12:00')).toBeVisible();
+  // The assertion that matters: one row, not two.
+  expect(await getWorklogs()).toHaveLength(1);
+});
