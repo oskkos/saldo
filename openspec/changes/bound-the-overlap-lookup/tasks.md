@@ -81,5 +81,5 @@
 
 ## 6. Deploy deliberately
 
-- [ ] 6.1 Note in the PR description that the migration deletes production row `id = 1288` (`user_id = 3265`) and raises that user's saldo by 30 minutes, so the data change is reviewed rather than discovered
-- [ ] 6.2 Confirm a rollback plan is written down: dropping the constraint and reverting the query restores prior behaviour, but the deleted row returns only from a backup
+- [x] 6.1 Note in the PR description that the migration deletes production row `id = 1288` (`user_id = 3265`) and raises that user's saldo by 30 minutes, so the data change is reviewed rather than discovered — added to the PR description, with the survey table and the EXPLAIN before/after
+- [x] 6.2 Confirm a rollback plan is written down: dropping the constraint and reverting the query restores prior behaviour, but the deleted row returns only from a backup — recorded in `design.md` under Migration Plan: drop the constraint and revert the query; the deleted row returns only from a backup, which is why the survey precedes the deploy
