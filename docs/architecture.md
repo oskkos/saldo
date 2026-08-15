@@ -80,6 +80,12 @@ the same reason — they need stored state, and not every write reaches the tabl
 that the action turns into a returned value. The overlap rule is *advisory*: the user
 may confirm through it, which is why it cannot be a database constraint.
 
+The overlap lookup reads a bounded range — a day either side of the submitted span,
+not the user's whole history — and that bound is only sound because a database `CHECK`
+holds every work entry to at most a day. Widen what the constraint permits and the
+bound must widen with it, or overlaps start going unreported. The proof is written out
+above `overlappingWorkEntries`.
+
 This layer is also the translation boundary. Prisma's rows are `snake_case` and shaped
 by the schema; the rest of the app speaks the `camelCase` domain types in
 `src/types/`. Mapper functions (`toWorklog` and friends) convert on the way out.
@@ -195,7 +201,10 @@ Six Prisma models in `prisma/schema.prisma`:
   `subtract_lunch_break` flag, and an optional `absence`. An absence is a worklog with
   its `absence` column set, not a separate table. Indexed on `(user_id, from)`, which
   serves both the bounded range reads that render the app and the overlap lookup every
-  write performs.
+  write performs. A `CHECK` constraint the Prisma schema cannot express —
+  `Worklog_work_entry_span_positive_and_bounded`, in
+  `migrations/20260815130500_constrain_worklog_span` — requires a work entry to span a
+  positive length of time no longer than a day. Absences are exempt from it.
 - **`Absence`** (enum) — `holiday`, `flex_hours`, `sick_leave`, `other`.
 - **`ExpectedHoursOverride`** — per-date expected minutes with an optional label.
 - **`PasswordResetData`** — reset token and expiry, one per user.
