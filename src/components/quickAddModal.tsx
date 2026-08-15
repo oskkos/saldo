@@ -8,6 +8,7 @@ import Modal, { closeModal } from './modal';
 import DateInput from './form/dateInput';
 import { Worklog, WorklogFormDataEntry, WorklogSubmitResult } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
+import { confirmOverlap } from '@/util/confirmOverlap';
 import { ToastContext } from './toastContext';
 import { toWorklogFormData } from '@/util/worklogFormData';
 import { errorToastMessage, failureToastMessage } from './errorToast';
@@ -32,16 +33,36 @@ export default function QuickAddWorklogModal({
     subtractLunchBreak: NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH,
   });
 
-  const saveWorklog = () => {
+  // The overlap answer is handled once the wrapper has settled, not inside its
+  // callback: the guard is still held there, so a retry issued from the callback
+  // would be dropped as re-entrant. See worklogEntry for the same shape.
+  const saveWorklog = (allowOverlap = false) => {
+    let outcome: WorklogSubmitResult | null = null;
     startTransitionWrapper(
-      () => onWorklogSubmit(toWorklogFormData(value)),
+      () => onWorklogSubmit(toWorklogFormData(value), { allowOverlap }),
       (result: WorklogSubmitResult) => {
+        outcome = result;
         if (result.status === 'success') {
           onSubmit(result.worklog);
-          // The dialog no longer dismisses itself on tap, so a refused save
-          // leaves the form open with the user's input intact.
+        }
+      },
+    )
+      .then((ran) => {
+        if (!ran || !outcome) {
+          return;
+        }
+        const result: WorklogSubmitResult = outcome;
+        if (result.status === 'success') {
+          // The dialog no longer dismisses itself on tap, so anything short of
+          // success leaves the form open with the user's input intact.
           closeModal(modalId);
           setMsg({ type: 'success', message: 'Worklog created' });
+          return;
+        }
+        if (result.status === 'conflict') {
+          if (confirmOverlap(result)) {
+            saveWorklog(true);
+          }
           return;
         }
         setMsg({
@@ -51,19 +72,19 @@ export default function QuickAddWorklogModal({
             result.message,
           ),
         });
-      },
-    ).catch((e) => {
-      setMsg({
-        type: 'error',
-        message: errorToastMessage('Failed to create worklog', e),
+      })
+      .catch((e) => {
+        setMsg({
+          type: 'error',
+          message: errorToastMessage('Failed to create worklog', e),
+        });
       });
-    });
   };
   return (
     <Modal
       id={modalId}
       confirmLabel="Save"
-      confirmAction={saveWorklog}
+      confirmAction={() => saveWorklog()}
       confirmDisabled={!inputsValid || busy}
     >
       <h3 className="font-bold text-lg">Add new worklog</h3>

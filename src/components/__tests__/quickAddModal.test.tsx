@@ -18,7 +18,9 @@ import type { Date_Time } from '@/util/dateFormatter';
 // reaches it.
 jest.mock('@/actions', () => ({ onWorklogSubmit: jest.fn() }));
 
-type SubmitMock = jest.Mock<(data: unknown) => Promise<unknown>>;
+type SubmitMock = jest.Mock<
+  (data: unknown, options?: { allowOverlap?: boolean }) => Promise<unknown>
+>;
 
 let QuickAddWorklogModal: typeof import('../quickAddModal').default;
 let ToastContext: typeof import('../toastContext').ToastContext;
@@ -162,6 +164,51 @@ describe('QuickAddWorklogModal', () => {
 
     release();
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
+  });
+
+  describe('when the entry overlaps one already stored', () => {
+    const conflict = {
+      status: 'conflict',
+      message: 'This overlaps 26.7.2026 09:00–17:00.',
+      conflicts: [
+        {
+          from: new Date('2026-07-26T09:00:00Z'),
+          to: new Date('2026-07-26T17:00:00Z'),
+        },
+      ],
+    } as const;
+
+    // @scenario worklog/Declined overlap persists nothing
+    it('keeps the modal open and its input when the user declines', async () => {
+      const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+      submit.mockResolvedValue(conflict);
+
+      await save();
+
+      await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+      expect(submit).toHaveBeenCalledTimes(1);
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(setMsg).not.toHaveBeenCalled();
+      // The whole reason the confirm button no longer dismisses the dialog.
+      expect(dialog().open).toBe(true);
+      expect(screen.getByDisplayValue('08:00')).toBeInTheDocument();
+      confirmSpy.mockRestore();
+    });
+
+    // @scenario worklog/Confirmed overlap is persisted
+    it('saves anyway when the user confirms', async () => {
+      const confirmSpy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+      submit
+        .mockResolvedValueOnce(conflict)
+        .mockResolvedValueOnce({ status: 'success', worklog: { id: 1 } });
+
+      await save();
+
+      await waitFor(() => expect(submit).toHaveBeenCalledTimes(2));
+      expect(submit.mock.calls[1][1]).toEqual({ allowOverlap: true });
+      await waitFor(() => expect(dialog().open).toBe(false));
+      confirmSpy.mockRestore();
+    });
   });
 
   it('still reports a genuine failure that was thrown', async () => {

@@ -1,4 +1,5 @@
 import {
+  afterEach,
   beforeAll,
   beforeEach,
   describe,
@@ -253,6 +254,76 @@ describe('WorklogEntry', () => {
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
     const toast = shownToast();
     expect(toast.getByText('Failed to create worklog')).toBeInTheDocument();
+  });
+
+  describe('when the entry overlaps one already stored', () => {
+    const conflict: WorklogSubmitResult = {
+      status: 'conflict',
+      message: 'This overlaps 26.7.2026 09:00–17:00.',
+      conflicts: [
+        {
+          from: new Date('2026-07-26T09:00:00Z'),
+          to: new Date('2026-07-26T17:00:00Z'),
+        },
+      ],
+    };
+
+    let confirmSpy: jest.SpiedFunction<typeof window.confirm>;
+
+    beforeEach(() => {
+      confirmSpy = jest.spyOn(window, 'confirm');
+    });
+
+    afterEach(() => {
+      confirmSpy.mockRestore();
+    });
+
+    // @scenario worklog/The conflict names the entry it collides with
+    it('asks, naming the entry it collides with', async () => {
+      confirmSpy.mockReturnValue(false);
+      onSubmit.mockResolvedValue(conflict);
+      renderEntry();
+
+      await submit();
+
+      await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+      expect(confirmSpy.mock.calls[0][0]).toContain(
+        'This overlaps 26.7.2026 09:00–17:00.',
+      );
+    });
+
+    // @scenario worklog/Declined overlap persists nothing
+    it('writes nothing and keeps the input when the user declines', async () => {
+      confirmSpy.mockReturnValue(false);
+      onSubmit.mockResolvedValue(conflict);
+      renderEntry();
+
+      await submit();
+
+      await waitFor(() => expect(confirmSpy).toHaveBeenCalled());
+      // One call only: no retry, and no toast claiming anything happened.
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      expect(setMsg).not.toHaveBeenCalled();
+      expect(screen.getByText('existing:0')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('08:00')).toBeInTheDocument();
+    });
+
+    // @scenario worklog/Confirmed overlap is persisted
+    it('saves anyway when the user confirms', async () => {
+      confirmSpy.mockReturnValue(true);
+      onSubmit
+        .mockResolvedValueOnce(conflict)
+        .mockResolvedValueOnce(succeeded(9));
+      renderEntry();
+
+      await submit();
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
+      // The retry carries the answer down; the first call did not.
+      expect(onSubmit.mock.calls[0][1]).toEqual({ allowOverlap: false });
+      expect(onSubmit.mock.calls[1][1]).toEqual({ allowOverlap: true });
+      expect(await screen.findByText('existing:1')).toBeInTheDocument();
+    });
   });
 
   it('takes a removed entry out of the day', async () => {
