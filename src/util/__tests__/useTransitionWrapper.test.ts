@@ -72,7 +72,6 @@ describe('useTransitionWrapper', () => {
     expect(action).toHaveBeenCalledTimes(1);
   });
 
-  // @scenario mutation-safety/A dropped submission reports nothing
   // @scenario mutation-safety/Dropped submission leaves the view unchanged
   it('does not invoke the callback for a dropped call', async () => {
     const { result } = renderHook(() => useTransitionWrapper());
