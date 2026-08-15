@@ -2,11 +2,15 @@
 
 ### Requirement: A stored work entry spans a positive, bounded length of time
 
-The database SHALL reject a worklog whose `to` is not strictly later than its
+The database SHALL reject a work entry whose `to` is not strictly later than its
 `from`, and one whose span exceeds one day. This is a constraint on stored
 records, enforced by the database itself, not only a validation applied to
 submissions — the guarantee other behaviour relies on is about what is *in* the
 table, and application-level validation has been bypassed in the past.
+
+Absences SHALL be exempt. The overlap read excludes them, so they take no part in
+the guarantee this constraint exists to support, and constraining them would place
+records nothing depends on at risk of rejection.
 
 The bound exists because the overlap read derives its lower bound from it: if a
 stored entry could span an unlimited length of time, no lower bound on that read
@@ -40,6 +44,11 @@ any adjustment would invent data that was never entered.
 
 - **WHEN** a worklog spanning a normal working day is written
 - **THEN** it is stored, and no existing worklog behaviour changes
+
+#### Scenario: An absence is not subject to the span rule
+
+- **WHEN** a record carrying an absence reason is written with a span the rule would otherwise reject
+- **THEN** it is stored, because absences take no part in overlap detection
 
 #### Scenario: Existing violating rows are removed before the rule takes effect
 
