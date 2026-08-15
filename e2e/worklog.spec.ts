@@ -204,6 +204,7 @@ test('a day with an absence still takes hours, and keeps the absence', async ({
 
 // @scenario worklog/Identical span is reported as a conflict
 // @scenario worklog/The conflict names the entry it collides with
+// @scenario worklog/A conflict is returned, not thrown
 // @scenario worklog/Declined overlap persists nothing
 // @scenario worklog/Detection uses stored state, not the client's view
 test('an overlapping entry is put to the user, and declining saves nothing', async ({

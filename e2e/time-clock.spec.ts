@@ -4,6 +4,8 @@ import {
   setOpenSession,
   getStartedAt,
   getWorklogs,
+  seedWorklog,
+  utcTimeOn,
   disconnect,
 } from './db';
 
@@ -186,4 +188,40 @@ test('overnight session must be corrected or discarded before saving', async ({
   await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
   expect(await getStartedAt()).toBeNull();
   expect(await getWorklogs()).toHaveLength(0);
+});
+
+// @scenario time-clock/Declining the overlap keeps the session
+// @scenario time-clock/Confirming the overlap finalizes normally
+test('an overlapping session is put to the user, and declining keeps it open', async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date('2026-07-25T08:00:00Z') });
+  // Hours already logged across the session the user is about to finish.
+  await seedWorklog({
+    from: new Date('2026-07-25T09:00:00Z'),
+    to: new Date('2026-07-25T17:00:00Z'),
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Clock in' }).click();
+
+  await page.clock.setFixedTime(new Date('2026-07-25T16:00:00Z'));
+  await page.getByRole('button', { name: 'Clock out' }).click();
+  await expect(finalizeHeading(page)).toBeVisible();
+
+  // Declined: nothing logged, and — the part that matters — still clocked in,
+  // so the tracked session is not lost to a prompt the user said no to.
+  page.once('dialog', (dialog) => dialog.dismiss());
+  await finalizeModal(page).getByRole('button', { name: 'Save' }).click();
+
+  await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
+  expect(await getStartedAt()).not.toBeNull();
+  expect(await getWorklogs()).toHaveLength(1);
+
+  // Confirming finishes the session as normal.
+  page.once('dialog', (dialog) => dialog.accept());
+  await finalizeModal(page).getByRole('button', { name: 'Save' }).click();
+
+  await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
+  expect(await getStartedAt()).toBeNull();
+  expect(await getWorklogs()).toHaveLength(2);
 });
