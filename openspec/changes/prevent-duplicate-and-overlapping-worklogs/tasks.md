@@ -84,7 +84,21 @@
 
 ## 9. Update the documentation
 
-- [ ] 9.1 Update `docs/architecture.md` for the new repository-level invariant, the action result contract, and the Prisma index
-- [ ] 9.2 Note the re-entrancy guard convention where `docs/architecture.md` describes the client-to-action boundary, so future call sites follow it
+- [x] 9.1 Update `docs/architecture.md` for the new repository-level invariant, the action result contract, and the Prisma index
+- [x] 9.2 Note the re-entrancy guard convention where `docs/architecture.md` describes the client-to-action boundary, so future call sites follow it
 - [ ] 9.3 Regenerate the user guide with `/generate-user-guides` for the new overlap confirmation
-- [ ] 9.4 Review `CLAUDE.md`, `docs/testing.md`, `docs/getting-started.md` and `README.md` and record explicitly which were checked and why any needed no change
+      — **not doable in this environment.** Generation drives the real app through the
+      Playwright MCP to capture screenshots, which needs a running app and a database;
+      neither is available here. It is also blocked by ordering: the guide's
+      traceability footers cite requirement hashes from `openspec/specs/`, so it cannot
+      pick up the new requirements until the sync step. Run after the sync commit.
+- [x] 9.4 Review `CLAUDE.md`, `docs/testing.md`, `docs/getting-started.md` and `README.md` and record explicitly which were checked and why any needed no change
+      — `CLAUDE.md`: updated (action result union; the `useTransitionWrapper` rule,
+      which produces wrong code if unknown). `docs/testing.md`: updated — the
+      production-build note now distinguishes a *returned* message from a thrown one.
+      `README.md`: updated — one feature bullet, the behaviour is user-visible.
+      `docs/getting-started.md`: **checked, no change needed** — no command, script or
+      environment variable moved; the new migration is picked up by the existing
+      `prisma migrate` step it already documents. `e2e/README.md`: **checked, no change
+      needed** — the harness, its setup and its conventions are untouched; the new
+      specs follow them.

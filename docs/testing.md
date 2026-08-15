@@ -53,7 +53,8 @@ One asymmetry worth knowing: **a test asserting a message the server produced mu
 run against a production build.** Locally the harness starts `next dev`; CI starts
 `npm run start`. A production build replaces the message of anything *thrown* out of a
 server action with an opaque digest, so a toast that reads fine in dev can be empty in
-CI. Check it the way CI will:
+CI. A message the action *returned* survives either way — which is why the worklog and
+absence actions return theirs. Check it the way CI will:
 
 ```bash
 npm run build && CI=1 npm run test:e2e
