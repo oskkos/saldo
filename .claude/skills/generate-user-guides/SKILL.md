@@ -58,6 +58,12 @@ Relay the report. Interpret `uncovered` with judgment: a user-facing requirement
 by no page is a **gap**; an internal/plumbing requirement being uncovered is **expected**
 (see plumbing list below). Write nothing.
 
+**Do not report a clean bill on the `pagesToRegenerate` count alone.** That count
+covers drift in already-cited requirements only; it is `0` for a guide missing an
+entire new feature. A `--check` run is only "clean" when the count is 0 **and** you
+have triaged `uncovered` and found nothing user-facing in it. Say which of the two
+you actually did.
+
 If the report shows pages that would be **added or renamed**, note that generation will
 also reconcile the home-page card grid in `content/index.md` (see Step 4). A brand-new
 nav section additionally needs a hand-written card heading and description.
@@ -70,6 +76,31 @@ nav section additionally needs a hand-written card heading and description.
 - With scope: `node scripts/resolve-scope.mjs "<scope>"`. If it prints nothing for a
   scope that should exist, the page may not exist yet → this is a NEW page (see IA).
 - Cold/first run (empty guide): build the full page set from the IA below.
+
+**The delta is necessary but not sufficient — always check `uncovered` too.** The
+delta can only flag a requirement some page *already cites*. A requirement that is
+**new** is cited by nowhere, so it is structurally invisible to the delta: it lands
+in `check.mjs`'s `uncovered` list instead, while the summary still reads
+`=> 0 page(s) need regeneration`. Read that as "no page has drifted", NEVER as
+"nothing to do" — a whole user-facing feature can be undocumented behind it. Adding
+requirements is the single most likely reason to be running this skill, so:
+
+```
+node scripts/check.mjs --json    # run this even when resolve-scope.mjs prints nothing
+```
+
+Triage `uncovered` with the plumbing test in the IA, and add the pages that should
+cover each user-facing one to the work set. Most of the list is long-standing
+intentional plumbing — to find the entries that are actually new, diff it against the
+requirements the accompanying change added:
+
+```
+ls openspec/changes/<change-name>/specs/          # ADDED requirements = candidates
+git diff origin/develop...HEAD -- openspec/specs/ # or, on a feature branch
+```
+
+Every ADDED requirement is a candidate; each one you leave out is a judgment call to
+state explicitly in the PR, not a silent omission.
 
 **Step 2 — Apply the information architecture (IA).** See "Information architecture".
 
@@ -108,8 +139,23 @@ cd docs/user-guide && mkdocs build   # (in the venv from README.md)
 If mkdocs isn't installed, note it and skip — don't block the guide on it.
 
 **Step 6 — Output as a PR.** Stage `docs/user-guide/`, commit with a Conventional Commit
-(`docs(user-guide): ...`), push a branch, and open a PR against `develop`. **Never merge.**
-For a cold run, one PR covers the whole guide.
+(`docs(user-guide): ...`). **Never merge.** For a cold run, one PR covers the whole guide.
+
+Where that commit goes depends on why the guide is being updated:
+
+- **Alongside a change still in flight** — the run documents behavior introduced by the
+  branch you are already on, which has an open PR. Commit onto **that branch** and let
+  it land on **that PR**. Do not open a second one. A guide PR cut from `develop` would
+  describe a screen that does not exist there yet, and would be unreviewable and
+  unmergeable until the feature landed. This is the common case when a
+  `/generate-user-guides` run follows an `/opsx:apply`.
+- **Standalone** — the run refreshes prose or screenshots for behavior already on
+  `develop` (a drift fix, a re-capture, a cold run). Branch from `origin/develop`
+  (`docs/user-guide-<topic>`), push, and open a PR against `develop`.
+
+Decide by asking where the documented behavior lives, not by which command was typed.
+If unsure, check whether the current branch has an open PR whose commits introduced the
+requirements you just cited.
 
 ## Information architecture
 
@@ -198,5 +244,8 @@ see it. Keep writing it into every page regardless — the hook handles hiding i
 - Specs are the source of truth; never invent behavior not in a requirement.
 - Never document a plumbing requirement as a user step.
 - Stateful by default: leave unchanged pages (and their screenshots) untouched.
-- Never merge; stop at an open PR for human review.
+- An empty delta is not proof the guide is current — new requirements never appear in
+  it. Triage `uncovered` before declaring a run clean.
+- Never merge; stop at an open PR for human review. When the behavior being documented
+  only exists on the branch you are on, that branch's PR is the one to use.
 - Keep prose date-agnostic so screenshot drift stays harmless.
