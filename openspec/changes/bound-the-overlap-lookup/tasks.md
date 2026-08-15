@@ -1,6 +1,6 @@
 ## 1. Survey every environment before changing anything
 
-- [ ] 1.1 Run the survey against each environment (production, staging, any other database that receives this migration), recording the result per environment:
+- [x] 1.1 Run the survey against each environment (production, staging, any other database that receives this migration), recording the result per environment:
       ```sql
       SELECT count(*) FILTER (WHERE "to" <= "from")                  AS non_positive,
              count(*) FILTER (WHERE "to" - "from" > interval '1 day') AS over_long,
@@ -8,8 +8,22 @@
       FROM "Worklog"
       WHERE absence IS NULL;
       ```
-- [ ] 1.2 If any environment reports `over_long > 0`, stop and bring the rows to the user — the migration is designed to fail on them rather than alter them, and someone must decide what each entry should have been
-- [ ] 1.3 Record the surveyed numbers in the PR description, so the margin's justification is auditable later rather than resting on a measurement nobody can find
+      Results, 2026-08-15:
+
+      | environment | work entries | non_positive | over_long | longest span |
+      | --- | --- | --- | --- | --- |
+      | production (Neon) | 1386 | 1 (`id = 1288`) | 0 | 12:45:00 |
+      | local dev (`saldo`) | 7 | 0 | 0 | 09:15:00 |
+      | local e2e (`saldo_test`) | 1 | 0 | 0 | 03:00:00 |
+
+      **Not directly surveyed:** the Vercel *Preview* environment. Its database was
+      not reachable from here. If previews run against a Neon branch of production
+      they inherit production's numbers and the migration handles the one row as it
+      does there; if they run against production directly, it is already covered.
+      Worth a glance before deploy, though the migration fails safely either way.
+- [x] 1.2 If any environment reports `over_long > 0`, stop and bring the rows to the user — the migration is designed to fail on them rather than alter them, and someone must decide what each entry should have been
+      — no environment reports one; nothing to escalate.
+- [x] 1.3 Record the surveyed numbers in the PR description, so the margin's justification is auditable later rather than resting on a measurement nobody can find
 
 ## 2. Constrain the stored span
 
