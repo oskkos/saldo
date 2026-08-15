@@ -1,8 +1,13 @@
 ## 1. Index the worklog table
 
-- [ ] 1.1 Add `@@index([user_id, from])` to the `Worklog` model in `prisma/schema.prisma`
-- [ ] 1.2 Generate the migration and run `prisma generate` so `src/generated/prisma` is current
+- [x] 1.1 Add `@@index([user_id, from])` to the `Worklog` model in `prisma/schema.prisma`
+- [x] 1.2 Generate the migration and run `prisma generate` so `src/generated/prisma` is current
 - [ ] 1.3 Verify the migration applies cleanly against a fresh database and is additive only (no data change)
+      — **not verifiable in this environment** (no local database; the configured
+      `DATABASE_URL` is the hosted instance, which `prisma migrate dev` can reset on
+      drift). The migration SQL was instead confirmed byte-identical to Prisma's own
+      output via `prisma migrate diff --from-empty --to-schema`, and is a single
+      additive `CREATE INDEX`. Needs one run against a fresh database before merge.
 
 ## 2. Detect overlapping work entries in the repository
 
