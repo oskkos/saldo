@@ -7,6 +7,7 @@ import {
   beforeEach,
 } from '@jest/globals';
 import { AbsenceReason, type WorklogFormData } from '@/types';
+import { WorklogOverlapError } from '@/services';
 
 // --- Server-layer unit-test harness -----------------------------------------
 // Repositories touch three seams we must keep out of jsdom: the Prisma client
@@ -21,7 +22,8 @@ import { AbsenceReason, type WorklogFormData } from '@/types';
 // via dynamic `import()` in `beforeAll`, after the mocks exist. Reuse this
 // pattern for other repository/action unit tests.
 jest.mock('@sentry/nextjs', () => ({
-  startSpan: (_opts: unknown, cb: () => unknown) => cb(),
+  startSpan: (_opts: unknown, cb: (span: unknown) => unknown) =>
+    cb({ setAttributes: () => {} }),
 }));
 jest.mock('react', () => ({
   ...(jest.requireActual('react') as object),
@@ -39,6 +41,11 @@ jest.mock('@/repository/prisma', () => ({
       update: jest.fn(),
       updateMany: jest.fn(),
     },
+    // Clock-out borrows the overlap guard from the worklog repository, which
+    // reads this table before the transaction opens.
+    worklog: {
+      findMany: jest.fn(),
+    },
     $transaction: jest.fn(),
   },
 }));
@@ -54,6 +61,9 @@ type PrismaMock = {
     findUniqueOrThrow: ResolvingMock;
     update: ResolvingMock;
     updateMany: ResolvingMock;
+  };
+  worklog: {
+    findMany: ResolvingMock;
   };
   $transaction: ResolvingMock;
 };
@@ -74,6 +84,8 @@ beforeAll(async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   getUserFromSession.mockResolvedValue(USER);
+  // Nothing stored by default, so the overlap guard clears out of the way.
+  db.worklog.findMany.mockResolvedValue([]);
 });
 
 describe('getActiveSession', () => {
@@ -156,17 +168,34 @@ describe('clockOutWithWorklog', () => {
     subtractLunchBreak: true,
   };
 
-  it('creates the worklog and clears the session in one transaction', async () => {
+  // `claimed` is how many user rows the conditional close matched: 1 when this
+  // call is the one that closed an open session, 0 when it was already closed.
+  const transaction = (claimed: number) => {
     const tx = {
       worklog: { create: jest.fn() },
-      user: { update: jest.fn() },
+      user: {
+        updateMany: jest.fn((_args: unknown) =>
+          Promise.resolve({ count: claimed }),
+        ),
+      },
     };
     db.$transaction.mockImplementation((cb: unknown) =>
       Promise.resolve((cb as (t: typeof tx) => unknown)(tx)),
     );
+    return tx;
+  };
 
-    await repo.clockOutWithWorklog(data);
+  // @scenario time-clock/Finalizing an open session still works
+  // @scenario time-clock/Save creates a worklog
+  it('creates the worklog and clears the session in one transaction', async () => {
+    const tx = transaction(1);
 
+    await expect(repo.clockOutWithWorklog(data)).resolves.toBe(true);
+
+    expect(tx.user.updateMany).toHaveBeenCalledWith({
+      where: { id: USER.id, started_at: { not: null } },
+      data: { started_at: null },
+    });
     expect(tx.worklog.create).toHaveBeenCalledWith({
       data: {
         from: data.from,
@@ -177,20 +206,48 @@ describe('clockOutWithWorklog', () => {
         absence: null,
       },
     });
-    expect(tx.user.update).toHaveBeenCalledWith({
-      where: { id: USER.id },
-      data: { started_at: null },
-    });
   });
 
-  it('persists the absence reason when the session carries one', async () => {
+  // @scenario time-clock/Repeated finalize creates no second worklog
+  // @scenario time-clock/Concurrent finalize creates one worklog
+  it('writes nothing when the session was already closed', async () => {
+    const tx = transaction(0);
+
+    await expect(repo.clockOutWithWorklog(data)).resolves.toBe(false);
+
+    // The conditional close is what makes this safe: whichever call matches the
+    // row wins, and the loser finds nothing to claim and writes no worklog.
+    expect(tx.user.updateMany).toHaveBeenCalled();
+    expect(tx.worklog.create).not.toHaveBeenCalled();
+  });
+
+  it('claims the session before writing, so a failed write reopens it', async () => {
+    const order: string[] = [];
     const tx = {
-      worklog: { create: jest.fn() },
-      user: { update: jest.fn() },
+      worklog: {
+        create: jest.fn(() => {
+          order.push('create');
+          return Promise.resolve({});
+        }),
+      },
+      user: {
+        updateMany: jest.fn(() => {
+          order.push('claim');
+          return Promise.resolve({ count: 1 });
+        }),
+      },
     };
     db.$transaction.mockImplementation((cb: unknown) =>
       Promise.resolve((cb as (t: typeof tx) => unknown)(tx)),
     );
+
+    await repo.clockOutWithWorklog(data);
+
+    expect(order).toEqual(['claim', 'create']);
+  });
+
+  it('persists the absence reason when the session carries one', async () => {
+    const tx = transaction(1);
 
     await repo.clockOutWithWorklog({
       ...data,
@@ -200,6 +257,43 @@ describe('clockOutWithWorklog', () => {
     expect(tx.worklog.create).toHaveBeenCalledWith({
       data: expect.objectContaining({ absence: AbsenceReason.flex_hours }),
     });
+  });
+
+  // @scenario time-clock/Declining the overlap keeps the session
+  it('leaves the session open when the span overlaps a stored entry', async () => {
+    const tx = transaction(1);
+    db.worklog.findMany.mockResolvedValue([
+      {
+        id: 7,
+        user_id: USER.id,
+        from: new Date('2026-07-25T09:00:00.000Z'),
+        to: new Date('2026-07-25T17:00:00.000Z'),
+        comment: null,
+        subtract_lunch_break: false,
+        absence: null,
+      },
+    ]);
+
+    await expect(repo.clockOutWithWorklog(data)).rejects.toThrow(
+      WorklogOverlapError,
+    );
+
+    // The check runs before the transaction opens, so nothing was claimed and
+    // the user is still clocked in.
+    expect(db.$transaction).not.toHaveBeenCalled();
+    expect(tx.user.updateMany).not.toHaveBeenCalled();
+  });
+
+  // @scenario time-clock/Confirming the overlap finalizes normally
+  it('finalizes anyway once the overlap is confirmed', async () => {
+    const tx = transaction(1);
+
+    await expect(
+      repo.clockOutWithWorklog(data, { allowOverlap: true }),
+    ).resolves.toBe(true);
+
+    expect(db.worklog.findMany).not.toHaveBeenCalled();
+    expect(tx.worklog.create).toHaveBeenCalled();
   });
 
   it('throws when there is no user in the session', async () => {

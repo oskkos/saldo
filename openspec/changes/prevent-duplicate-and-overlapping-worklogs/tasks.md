@@ -21,11 +21,11 @@
 
 ## 3. Make clock-out idempotent
 
-- [ ] 3.1 In `src/repository/clockRepository.ts`, make `clockOutWithWorklog` close the session conditionally on `started_at` being non-null and create the worklog only when that update affected a row, mirroring `clockIn`
-- [ ] 3.2 Have it report to the caller whether a session was actually finalized, so a repeat is distinguishable from a first finalize
-- [ ] 3.3 Apply the same overlap guard and `allowOverlap` bypass to the worklog it creates
-- [ ] 3.4 Extend `src/repository/__tests__/clockRepository.test.ts`: repeated finalize creates no second worklog, concurrent finalize creates one, finalizing an open session still works
-- [ ] 3.5 Annotate the new tests with their `// @scenario time-clock/...` coverage declarations
+- [x] 3.1 In `src/repository/clockRepository.ts`, make `clockOutWithWorklog` close the session conditionally on `started_at` being non-null and create the worklog only when that update affected a row, mirroring `clockIn`
+- [x] 3.2 Have it report to the caller whether a session was actually finalized, so a repeat is distinguishable from a first finalize
+- [x] 3.3 Apply the same overlap guard and `allowOverlap` bypass to the worklog it creates
+- [x] 3.4 Extend `src/repository/__tests__/clockRepository.test.ts`: repeated finalize creates no second worklog, concurrent finalize creates one, finalizing an open session still works
+- [x] 3.5 Annotate the new tests with their `// @scenario time-clock/...` coverage declarations
 
 ## 4. Return worklog outcomes as values
 
