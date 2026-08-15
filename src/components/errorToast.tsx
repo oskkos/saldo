@@ -13,3 +13,13 @@ export function errorToastMessage(title: string, error: unknown): ReactNode {
     </div>
   );
 }
+
+// Same body, for a message an action returned as a value rather than threw.
+export function failureToastMessage(title: string, message: string): ReactNode {
+  return (
+    <div>
+      <div>{title}</div>
+      <div className="text-sm">{message}</div>
+    </div>
+  );
+}

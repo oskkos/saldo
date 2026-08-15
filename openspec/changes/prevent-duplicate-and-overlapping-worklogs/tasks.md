@@ -29,14 +29,14 @@
 
 ## 4. Return worklog outcomes as values
 
-- [ ] 4.1 Add the result and conflict types to `src/types/index.ts`, mirroring the shape of `AbsenceSubmitResult` with a `conflict` variant carrying the overlapping spans
-- [ ] 4.2 Change `onWorklogSubmit` in `src/actions/index.ts` to validate with `safeParse`, catch `WorklogOverlapError`, and return success / conflict / error instead of throwing; accept an `allowOverlap` argument
-- [ ] 4.3 Do the same for `onWorklogEdit`
-- [ ] 4.4 Do the same for `onClockOut`, returning a distinct outcome when no session was open to finalize
-- [ ] 4.5 Leave `validateOrThrow` and the non-worklog actions (settings, expected-hours overrides) unchanged
-- [ ] 4.6 Update the four consumers (`worklogEntry`, `quickAddModal`, `worklogEditModal`, `clockOutModal`) to unwrap the result and surface the error message, without the confirmation flow yet
-- [ ] 4.7 Extend `src/actions/__tests__/worklogActions.test.ts`: success carries the record, conflict is returned rather than thrown, validation rejections are returned with a readable message
-- [ ] 4.8 Annotate the new tests with their `// @scenario worklog/...` coverage declarations
+- [x] 4.1 Add the result and conflict types to `src/types/index.ts`, mirroring the shape of `AbsenceSubmitResult` with a `conflict` variant carrying the overlapping spans
+- [x] 4.2 Change `onWorklogSubmit` in `src/actions/index.ts` to validate with `safeParse`, catch `WorklogOverlapError`, and return success / conflict / error instead of throwing; accept an `allowOverlap` argument
+- [x] 4.3 Do the same for `onWorklogEdit`
+- [x] 4.4 Do the same for `onClockOut`, returning a distinct outcome when no session was open to finalize
+- [x] 4.5 Leave `validateOrThrow` and the non-worklog actions (settings, expected-hours overrides) unchanged
+- [x] 4.6 Update the four consumers (`worklogEntry`, `quickAddModal`, `worklogEditModal`, `clockOutModal`) to unwrap the result and surface the error message, without the confirmation flow yet
+- [x] 4.7 Extend `src/actions/__tests__/worklogActions.test.ts`: success carries the record, conflict is returned rather than thrown, validation rejections are returned with a readable message
+- [x] 4.8 Annotate the new tests with their `// @scenario worklog/...` coverage declarations
 
 ## 5. Let a modal survive its confirm action
 

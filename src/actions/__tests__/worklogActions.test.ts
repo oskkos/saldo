@@ -7,6 +7,8 @@ import {
   beforeEach,
 } from '@jest/globals';
 import { AbsenceReason, type WorklogFormData } from '@/types';
+import { AbsenceConflictError, WorklogOverlapError } from '@/services';
+import { assertIsISODay } from '@/util/assertionFunctions';
 
 // The actions module is the only 'use server' entry point, so this suite is
 // where the "validation runs before anything is written" half of the worklog
@@ -59,6 +61,11 @@ const valid: WorklogFormData = {
   subtractLunchBreak: true,
 };
 
+const conflictingSpan = {
+  from: new Date('2026-06-28T09:00:00.000Z'),
+  to: new Date('2026-06-28T17:00:00.000Z'),
+};
+
 beforeAll(async () => {
   actions = await import('@/actions');
   const worklogRepo = await import('@/repository/worklogRepository');
@@ -78,9 +85,10 @@ describe('onWorklogSubmit validation', () => {
   it('rejects an end time equal to the start and writes nothing', async () => {
     const sameInstant = { ...valid, to: valid.from };
 
-    await expect(actions.onWorklogSubmit(sameInstant)).rejects.toThrow(
-      'End time must be after start time',
-    );
+    await expect(actions.onWorklogSubmit(sameInstant)).resolves.toEqual({
+      status: 'error',
+      message: 'End time must be after start time',
+    });
     expect(insertWorklog).not.toHaveBeenCalled();
   });
 
@@ -91,9 +99,10 @@ describe('onWorklogSubmit validation', () => {
       to: new Date('2026-06-28T07:00:00.000Z'),
     };
 
-    await expect(actions.onWorklogSubmit(reversed)).rejects.toThrow(
-      'End time must be after start time',
-    );
+    await expect(actions.onWorklogSubmit(reversed)).resolves.toEqual({
+      status: 'error',
+      message: 'End time must be after start time',
+    });
     expect(insertWorklog).not.toHaveBeenCalled();
   });
 
@@ -106,9 +115,10 @@ describe('onWorklogSubmit validation', () => {
       to: new Date('2026-06-29T03:30:00.000Z'),
     };
 
-    await expect(actions.onWorklogSubmit(overnight)).rejects.toThrow(
-      'A worklog must start and end on the same day',
-    );
+    await expect(actions.onWorklogSubmit(overnight)).resolves.toEqual({
+      status: 'error',
+      message: 'A worklog must start and end on the same day',
+    });
     expect(insertWorklog).not.toHaveBeenCalled();
   });
 
@@ -119,21 +129,38 @@ describe('onWorklogSubmit validation', () => {
       absence: 'sabbatical',
     } as unknown as WorklogFormData;
 
-    await expect(actions.onWorklogSubmit(bogus)).rejects.toThrow(
-      /Invalid option: expected one of/,
-    );
+    const result = await actions.onWorklogSubmit(bogus);
+
+    expect(result.status).toBe('error');
+    expect(result).toMatchObject({
+      message: expect.stringMatching(/Invalid option: expected one of/),
+    });
     expect(insertWorklog).not.toHaveBeenCalled();
+  });
+
+  // @scenario worklog/A rejection is returned with a readable message
+  it('returns the rejection rather than throwing it', async () => {
+    // A thrown message would reach production as an opaque digest, so the
+    // assertion that matters is that nothing is thrown at all.
+    const result = actions.onWorklogSubmit({ ...valid, to: valid.from });
+
+    await expect(result).resolves.toMatchObject({ status: 'error' });
+    await expect(result).resolves.not.toBeInstanceOf(Error);
   });
 
   // @scenario worklog/Valid worklog passes
   // @scenario worklog/Client triggers a write
+  // @scenario worklog/Success carries the written record
   it('passes a valid worklog through to the repository', async () => {
     insertWorklog.mockResolvedValue({ id: 7 });
 
     // The action is the only write path a client component can call; it
     // delegates to the repository rather than touching the database.
-    await expect(actions.onWorklogSubmit(valid)).resolves.toEqual({ id: 7 });
-    expect(insertWorklog).toHaveBeenCalledWith(valid);
+    await expect(actions.onWorklogSubmit(valid)).resolves.toEqual({
+      status: 'success',
+      worklog: { id: 7 },
+    });
+    expect(insertWorklog).toHaveBeenCalledWith(valid, { allowOverlap: false });
   });
 
   // @scenario worklog/Valid worklog passes
@@ -142,9 +169,67 @@ describe('onWorklogSubmit validation', () => {
     const withAbsence = { ...valid, absence: AbsenceReason.holiday };
 
     await expect(actions.onWorklogSubmit(withAbsence)).resolves.toEqual({
-      id: 8,
+      status: 'success',
+      worklog: { id: 8 },
     });
-    expect(insertWorklog).toHaveBeenCalledWith(withAbsence);
+    expect(insertWorklog).toHaveBeenCalledWith(withAbsence, {
+      allowOverlap: false,
+    });
+  });
+});
+
+describe('overlap outcomes', () => {
+  // @scenario worklog/A conflict is returned, not thrown
+  it('returns an overlap as a conflict carrying the colliding spans', async () => {
+    insertWorklog.mockRejectedValue(new WorklogOverlapError([conflictingSpan]));
+
+    const result = await actions.onWorklogSubmit(valid);
+
+    expect(result).toEqual({
+      status: 'conflict',
+      message: 'This overlaps 28.6.2026 09:00–17:00.',
+      conflicts: [conflictingSpan],
+    });
+  });
+
+  // @scenario worklog/Confirmed overlap is persisted
+  it('carries the confirmation down to the repository', async () => {
+    insertWorklog.mockResolvedValue({ id: 9 });
+
+    await actions.onWorklogSubmit(valid, { allowOverlap: true });
+
+    expect(insertWorklog).toHaveBeenCalledWith(valid, { allowOverlap: true });
+  });
+
+  // @scenario worklog/Editing onto an occupied span is reported as a conflict
+  it('returns a conflict from the edit path too', async () => {
+    updateWorklog.mockRejectedValue(new WorklogOverlapError([conflictingSpan]));
+
+    await expect(actions.onWorklogEdit(1, valid)).resolves.toMatchObject({
+      status: 'conflict',
+      conflicts: [conflictingSpan],
+    });
+  });
+
+  // An absence conflict is a verdict, not a question: there is no confirming
+  // through it, so it comes back as a plain rejection.
+  it('returns an absence conflict as an error rather than a conflict', async () => {
+    assertIsISODay('2026-06-28', 'test fixture');
+    insertWorklog.mockRejectedValue(
+      new AbsenceConflictError(['2026-06-28' as never]),
+    );
+
+    await expect(actions.onWorklogSubmit(valid)).resolves.toMatchObject({
+      status: 'error',
+    });
+  });
+
+  it('rethrows a genuine failure instead of dressing it as an outcome', async () => {
+    insertWorklog.mockRejectedValue(new Error('connection lost'));
+
+    await expect(actions.onWorklogSubmit(valid)).rejects.toThrow(
+      'connection lost',
+    );
   });
 });
 
@@ -153,8 +238,21 @@ describe('onWorklogEdit validation', () => {
   it('rejects a non-positive duration on edit and writes nothing', async () => {
     await expect(
       actions.onWorklogEdit(1, { ...valid, to: valid.from }),
-    ).rejects.toThrow('End time must be after start time');
+    ).resolves.toEqual({
+      status: 'error',
+      message: 'End time must be after start time',
+    });
     expect(updateWorklog).not.toHaveBeenCalled();
+  });
+
+  // @scenario worklog/Success carries the written record
+  it('returns the updated record on success', async () => {
+    updateWorklog.mockResolvedValue({ id: 3, comment: 'Edited' });
+
+    await expect(actions.onWorklogEdit(3, valid)).resolves.toEqual({
+      status: 'success',
+      worklog: { id: 3, comment: 'Edited' },
+    });
   });
 });
 
@@ -168,15 +266,44 @@ describe('validation does not depend on the calling UI', () => {
     };
 
     // Same input, a different caller: the time-clock finalize step.
-    await expect(actions.onClockOut(overnight)).rejects.toThrow(
-      'A worklog must start and end on the same day',
-    );
+    await expect(actions.onClockOut(overnight)).resolves.toEqual({
+      status: 'error',
+      message: 'A worklog must start and end on the same day',
+    });
     expect(clockOutWithWorklog).not.toHaveBeenCalled();
   });
 
   it('accepts through the clock-out path what the worklog form accepts', async () => {
-    await actions.onClockOut(valid);
+    clockOutWithWorklog.mockResolvedValue(true);
 
-    expect(clockOutWithWorklog).toHaveBeenCalledWith(valid);
+    await expect(actions.onClockOut(valid)).resolves.toEqual({
+      status: 'success',
+      finalized: true,
+    });
+    expect(clockOutWithWorklog).toHaveBeenCalledWith(valid, {
+      allowOverlap: false,
+    });
+  });
+
+  // @scenario time-clock/Repeated finalize creates no second worklog
+  it('reports a repeat finalize as having written nothing', async () => {
+    clockOutWithWorklog.mockResolvedValue(false);
+
+    await expect(actions.onClockOut(valid)).resolves.toEqual({
+      status: 'success',
+      finalized: false,
+    });
+  });
+
+  // @scenario time-clock/Declining the overlap keeps the session
+  it('returns an overlapping clock-out as a conflict', async () => {
+    clockOutWithWorklog.mockRejectedValue(
+      new WorklogOverlapError([conflictingSpan]),
+    );
+
+    await expect(actions.onClockOut(valid)).resolves.toMatchObject({
+      status: 'conflict',
+      conflicts: [conflictingSpan],
+    });
   });
 });

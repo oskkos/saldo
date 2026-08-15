@@ -3,12 +3,12 @@ import { useContext, useState } from 'react';
 import WorklogInputs from '../worklogInputs';
 import { toISODay, toTime } from '@/util/dateFormatter';
 import { onWorklogEdit } from '@/actions';
-import { Worklog, WorklogFormDataEntry } from '@/types';
+import { Worklog, WorklogFormDataEntry, WorklogSubmitResult } from '@/types';
 import Modal from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from '../toastContext';
 import { toWorklogFormData } from '@/util/worklogFormData';
-import { errorToastMessage } from '../errorToast';
+import { errorToastMessage, failureToastMessage } from '../errorToast';
 
 export default function WorklogEditModal({
   worklog,
@@ -33,17 +33,26 @@ export default function WorklogEditModal({
   const editWorklog = () => {
     startTransitionWrapper(
       () => onWorklogEdit(worklog.id, toWorklogFormData(value)),
-      onEdit,
-    )
-      .then(() => {
-        setMsg({ type: 'success', message: 'Worklog updated' });
-      })
-      .catch((e) => {
+      (result: WorklogSubmitResult) => {
+        if (result.status === 'success') {
+          onEdit(result.worklog);
+          setMsg({ type: 'success', message: 'Worklog updated' });
+          return;
+        }
         setMsg({
           type: 'error',
-          message: errorToastMessage('Failed to update worklog', e),
+          message: failureToastMessage(
+            'Failed to update worklog',
+            result.message,
+          ),
         });
+      },
+    ).catch((e) => {
+      setMsg({
+        type: 'error',
+        message: errorToastMessage('Failed to update worklog', e),
       });
+    });
   };
   return (
     <Modal

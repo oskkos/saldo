@@ -76,7 +76,7 @@ describe('QuickAddWorklogModal', () => {
   });
 
   it('saves the worklog and says so', async () => {
-    submit.mockResolvedValue(undefined);
+    submit.mockResolvedValue({ status: 'success', worklog: { id: 1 } });
 
     await save();
 
@@ -85,10 +85,17 @@ describe('QuickAddWorklogModal', () => {
     const toast = shownToast();
     expect(toast.type).toBe('success');
     expect(toast.getByText('Worklog created')).toBeInTheDocument();
+    expect(onSubmit).toHaveBeenCalledWith({ id: 1 });
   });
 
+  // @scenario worklog/A rejection is returned with a readable message
   it('reports the reason when the save is refused', async () => {
-    submit.mockRejectedValue(new Error('overlaps an existing worklog'));
+    // The refusal arrives as a value, which is the only form whose message
+    // survives a production build.
+    submit.mockResolvedValue({
+      status: 'error',
+      message: 'End time must be after start time',
+    });
 
     await save();
 
@@ -96,6 +103,20 @@ describe('QuickAddWorklogModal', () => {
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(toast.getByText('Failed to create worklog')).toBeInTheDocument();
-    expect(toast.getByText('overlaps an existing worklog')).toBeInTheDocument();
+    expect(
+      toast.getByText('End time must be after start time'),
+    ).toBeInTheDocument();
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('still reports a genuine failure that was thrown', async () => {
+    submit.mockRejectedValue(new Error('connection lost'));
+
+    await save();
+
+    await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    const toast = shownToast();
+    expect(toast.type).toBe('error');
+    expect(toast.getByText('connection lost')).toBeInTheDocument();
   });
 });

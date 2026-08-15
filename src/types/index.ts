@@ -60,6 +60,25 @@ export interface AbsenceData {
 export type AbsenceSubmitResult =
   | { status: 'success'; worklogs: Worklog[] }
   | { status: 'error'; message: string };
+
+// The span of a stored entry an incoming one would land on top of.
+export type WorklogConflict = { from: Date; to: Date };
+
+// Worklog writes report their outcome the same way, and for the same reason. A
+// conflict is distinct from an error: it is a question the user answers, and
+// answering yes re-runs the write with `allowOverlap`.
+export type WorklogSubmitResult =
+  | { status: 'success'; worklog: Worklog }
+  | { status: 'conflict'; message: string; conflicts: WorklogConflict[] }
+  | { status: 'error'; message: string };
+
+// Clock-out creates a worklog but hands back nothing to render, so success
+// carries only whether this call was the one that finalized the session —
+// `false` means it had already been closed and nothing further was written.
+export type ClockOutResult =
+  | { status: 'success'; finalized: boolean }
+  | { status: 'conflict'; message: string; conflicts: WorklogConflict[] }
+  | { status: 'error'; message: string };
 import type { ReactElement } from 'react';
 
 export interface SaldoForDay {

@@ -6,11 +6,11 @@ import { onWorklogSubmit } from '@/actions';
 import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
 import Modal from './modal';
 import DateInput from './form/dateInput';
-import { Worklog, WorklogFormDataEntry } from '@/types';
+import { Worklog, WorklogFormDataEntry, WorklogSubmitResult } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from './toastContext';
 import { toWorklogFormData } from '@/util/worklogFormData';
-import { errorToastMessage } from './errorToast';
+import { errorToastMessage, failureToastMessage } from './errorToast';
 
 export default function QuickAddWorklogModal({
   modalId,
@@ -35,17 +35,26 @@ export default function QuickAddWorklogModal({
   const saveWorklog = () => {
     startTransitionWrapper(
       () => onWorklogSubmit(toWorklogFormData(value)),
-      onSubmit,
-    )
-      .then(() => {
-        setMsg({ type: 'success', message: 'Worklog created' });
-      })
-      .catch((e) => {
+      (result: WorklogSubmitResult) => {
+        if (result.status === 'success') {
+          onSubmit(result.worklog);
+          setMsg({ type: 'success', message: 'Worklog created' });
+          return;
+        }
         setMsg({
           type: 'error',
-          message: errorToastMessage('Failed to create worklog', e),
+          message: failureToastMessage(
+            'Failed to create worklog',
+            result.message,
+          ),
         });
+      },
+    ).catch((e) => {
+      setMsg({
+        type: 'error',
+        message: errorToastMessage('Failed to create worklog', e),
       });
+    });
   };
   return (
     <Modal
