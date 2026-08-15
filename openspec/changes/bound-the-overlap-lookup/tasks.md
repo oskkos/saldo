@@ -27,12 +27,12 @@
 
 ## 2. Constrain the stored span
 
-- [ ] 2.1 Write the migration: delete work entries where `"to" <= "from"`, then `ALTER TABLE "Worklog" ADD CONSTRAINT "Worklog_span_positive_and_bounded" CHECK ("to" > "from" AND "to" - "from" <= interval '1 day')` — in that order, in one migration
-- [ ] 2.2 Confirm the delete is scoped so it cannot touch absences or any row with a positive span, and that it reports how many rows it removed
-- [ ] 2.3 Add a comment to the `Worklog` model in `prisma/schema.prisma` naming the constraint and the migration that introduces it, since Prisma's schema cannot express a `CHECK` and a future reader has no other signal it exists
-- [ ] 2.4 Apply the migration to a fresh database and confirm it succeeds and is correctly ordered (`e2e/global-setup.ts` runs `prisma migrate deploy` from empty)
-- [ ] 2.5 Apply it to a database seeded with a violating row and confirm the row is removed and the constraint then applies
-- [ ] 2.6 Confirm a database seeded with an over-long row makes the migration fail and roll back, leaving the row untouched — the loud failure is the designed behaviour, so it needs a test rather than a hope
+- [x] 2.1 Write the migration: delete work entries where `"to" <= "from"`, then `ALTER TABLE "Worklog" ADD CONSTRAINT "Worklog_span_positive_and_bounded" CHECK ("to" > "from" AND "to" - "from" <= interval '1 day')` — in that order, in one migration — `20260815130500_constrain_worklog_span`, wrapped in an explicit BEGIN/COMMIT (see 2.6)
+- [x] 2.2 Confirm the delete is scoped so it cannot touch absences or any row with a positive span, and that it reports how many rows it removed — scoped to `absence IS NULL` and `"to" <= "from"`; the constraint is scoped identically so the two cannot disagree. Verified an inverted *absence* row survives while a zero-length work entry is deleted
+- [x] 2.3 Add a comment to the `Worklog` model in `prisma/schema.prisma` naming the constraint and the migration that introduces it, since Prisma's schema cannot express a `CHECK` and a future reader has no other signal it exists
+- [x] 2.4 Apply the migration to a fresh database and confirm it succeeds and is correctly ordered (`e2e/global-setup.ts` runs `prisma migrate deploy` from empty) — verified: fresh database, `prisma migrate deploy` from empty, constraint present afterwards
+- [x] 2.5 Apply it to a database seeded with a violating row and confirm the row is removed and the constraint then applies — verified: zero-length work entry deleted, valid entry and inverted absence untouched, constraint then applied
+- [x] 2.6 Confirm a database seeded with an over-long row makes the migration fail and roll back, leaving the row untouched — the loud failure is the designed behaviour, so it needs a test rather than a hope — verified, and it caught a defect: Prisma does NOT wrap a migration in a transaction, so the DELETE committed while ADD CONSTRAINT failed. Fixed with explicit BEGIN/COMMIT; re-tested, both rows now survive and the constraint is absent
 
 ## 3. Bound the overlap read
 

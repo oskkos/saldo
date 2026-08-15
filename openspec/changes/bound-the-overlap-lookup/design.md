@@ -144,8 +144,15 @@ editing the model knows it is there.
 1. Survey every environment for rows the constraint would reject, using the query in
    the tasks. Production is known: one row with `to == from`.
 2. Deploy the migration. It deletes non-positive-span work entries, then adds the
-   constraint, in one transaction — Postgres DDL is transactional, so a failure at
-   the constraint step also rolls back the delete.
+   constraint, inside an explicit `BEGIN`/`COMMIT`.
+
+   The explicit transaction is required, not decorative. **Prisma does not wrap a
+   migration file in a transaction** — verified by seeding a database with both a
+   zero-length row and an over-long one and running `prisma migrate deploy`: the
+   `DELETE` committed and stayed committed after `ADD CONSTRAINT` failed, leaving
+   the database half-migrated on precisely the environment that needs a human to
+   look at it. With `BEGIN`/`COMMIT` the same test leaves both rows intact and the
+   constraint absent.
 3. Deploy the query change. It is safe in either order: the bound is correct as soon
    as the constraint holds, and the constraint is independent of the query.
 

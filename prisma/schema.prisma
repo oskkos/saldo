@@ -46,6 +46,14 @@ model Worklog {
   // Serves both the bounded range reads that render the app and the overlap
   // lookup every worklog write performs, so neither scans a user's history.
   @@index([user_id, from])
+
+  // A CHECK constraint this schema cannot express lives in
+  // migrations/20260815130500_constrain_worklog_span: a work entry (absence IS
+  // NULL) must satisfy `to > from AND to - from <= interval '1 day'`. The overlap
+  // lookup's lower bound is only sound while that holds, so do not drop it — see
+  // overlappingWorkEntries in src/repository/worklogRepository.ts. Prisma neither
+  // models nor detects the absence of CHECK constraints, so this comment is the
+  // only signal in the schema that it exists.
 }
 
 enum Absence {
