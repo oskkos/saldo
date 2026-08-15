@@ -157,7 +157,7 @@ export async function overlappingWorkEntries(
 // cannot be a database constraint — but the question has to be asked against
 // stored state, because the case it exists for is a client whose view predates
 // the entry it would collide with.
-async function assertSpanIsFree(
+export async function assertSpanIsFree(
   userId: number,
   from: Date,
   to: Date,

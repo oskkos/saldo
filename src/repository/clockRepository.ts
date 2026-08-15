@@ -5,6 +5,7 @@ import { prisma } from './prisma';
 import { ActiveSession, WorklogFormData } from '@/types';
 import * as Sentry from '@sentry/nextjs';
 import { getUserFromSession } from '@/auth/authSession';
+import { assertSpanIsFree, type WriteOptions } from './worklogRepository';
 
 // Cached per request so the layout (badge) and the home page (clock card) share
 // a single read instead of querying started_at twice.
@@ -28,21 +29,43 @@ export const getActiveSession = cache(
   },
 );
 
-// Clock out atomically: create the worklog and clear the open session in one
+// Clock out atomically: claim the open session and create the worklog in one
 // transaction, so a failure can't leave a logged worklog with the session still
 // open (which would let a retry double-log).
+//
+// The session is claimed *first*, conditionally on still being open, and the
+// worklog is written only if that claim took. Without the condition two
+// concurrent clock-outs — a double tap, a retry, a second device — would each
+// write a worklog. `clockIn` guards itself the same way.
+//
+// Returns whether this call is the one that finalized the session; a repeat
+// returns false rather than writing again.
 export async function clockOutWithWorklog(
   data: WorklogFormData,
-): Promise<void> {
+  { allowOverlap = false }: WriteOptions = {},
+): Promise<boolean> {
   const user = await getUserFromSession();
   if (!user) {
     throw new Error('User not found in session.');
   }
 
-  await Sentry.startSpan(
+  // Read before the transaction, so a rejected overlap leaves the session open
+  // and the user can correct, confirm, or discard it.
+  if (!data.absence && !allowOverlap) {
+    await assertSpanIsFree(user.id, data.from, data.to);
+  }
+
+  return await Sentry.startSpan(
     { name: 'clockOutWithWorklog', op: 'db.sql.prisma' },
     async () => {
-      await prisma.$transaction(async (tx) => {
+      return await prisma.$transaction(async (tx) => {
+        const claimed = await tx.user.updateMany({
+          where: { id: user.id, started_at: { not: null } },
+          data: { started_at: null },
+        });
+        if (claimed.count === 0) {
+          return false;
+        }
         await tx.worklog.create({
           data: {
             from: data.from,
@@ -53,10 +76,7 @@ export async function clockOutWithWorklog(
             absence: data.absence ?? null,
           },
         });
-        await tx.user.update({
-          where: { id: user.id },
-          data: { started_at: null },
-        });
+        return true;
       });
     },
   );
