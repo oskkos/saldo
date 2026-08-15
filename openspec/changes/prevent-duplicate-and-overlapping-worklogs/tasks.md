@@ -2,12 +2,12 @@
 
 - [x] 1.1 Add `@@index([user_id, from])` to the `Worklog` model in `prisma/schema.prisma`
 - [x] 1.2 Generate the migration and run `prisma generate` so `src/generated/prisma` is current
-- [ ] 1.3 Verify the migration applies cleanly against a fresh database and is additive only (no data change)
-      — **not verifiable in this environment** (no local database; the configured
-      `DATABASE_URL` is the hosted instance, which `prisma migrate dev` can reset on
-      drift). The migration SQL was instead confirmed byte-identical to Prisma's own
-      output via `prisma migrate diff --from-empty --to-schema`, and is a single
-      additive `CREATE INDEX`. Needs one run against a fresh database before merge.
+- [x] 1.3 Verify the migration applies cleanly against a fresh database and is additive only (no data change)
+      — verified. A fresh `saldo_test` database was created on the docker-compose
+      Postgres and `prisma migrate deploy` applied the full migration history to it
+      from empty (`e2e/global-setup.ts`), after which the whole Playwright suite ran
+      green (58/58) against the result. The migration is a single additive
+      `CREATE INDEX` and touches no rows.
 
 ## 2. Detect overlapping work entries in the repository
 
@@ -86,12 +86,12 @@
 
 - [x] 9.1 Update `docs/architecture.md` for the new repository-level invariant, the action result contract, and the Prisma index
 - [x] 9.2 Note the re-entrancy guard convention where `docs/architecture.md` describes the client-to-action boundary, so future call sites follow it
-- [ ] 9.3 Regenerate the user guide with `/generate-user-guides` for the new overlap confirmation
-      — **not doable in this environment.** Generation drives the real app through the
-      Playwright MCP to capture screenshots, which needs a running app and a database;
-      neither is available here. It is also blocked by ordering: the guide's
-      traceability footers cite requirement hashes from `openspec/specs/`, so it cannot
-      pick up the new requirements until the sync step. Run after the sync commit.
+- [x] 9.3 Regenerate the user guide with `/generate-user-guides` for the new overlap confirmation
+      — done after the sync commit, so the footers cite the new requirement hashes.
+      `logging-a-work-day.md` and `using-the-clock.md` gained overlap sections; no
+      screenshot was captured for the prompt itself because it is a native
+      `window.confirm`, which renders outside the page and cannot be captured. The
+      prose is grounded on `worklogOverlapMessage` instead.
 - [x] 9.4 Review `CLAUDE.md`, `docs/testing.md`, `docs/getting-started.md` and `README.md` and record explicitly which were checked and why any needed no change
       — `CLAUDE.md`: updated (action result union; the `useTransitionWrapper` rule,
       which produces wrong code if unknown). `docs/testing.md`: updated — the
