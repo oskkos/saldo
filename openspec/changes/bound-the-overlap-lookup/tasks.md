@@ -64,12 +64,20 @@
 
 ## 5. Reconcile the specs and documentation
 
-- [ ] 5.1 Run `/opsx:sync` to apply the deltas to `openspec/specs/`
-- [ ] 5.2 Confirm the sync removed the sentence in `data-load-performance` disclaiming the cost guarantee, and restored `Write cost does not grow with history`
-- [ ] 5.3 Re-add the exemption for `Write cost does not grow with history` to `scripts/spec-coverage.exemptions.json`, or cover it with the `EXPLAIN` evidence from 3.5 if that turns out to be assertable
-- [ ] 5.4 Annotate the new tests with their scenarios and run `npm run spec:coverage`, committing the regenerated `openspec/COVERAGE.md`
-- [ ] 5.5 Check `docs/architecture.md` for statements about the overlap read or worklog storage invariants and update them, since the database now enforces something it did not before
-- [ ] 5.6 Confirm no user-guide page needs regenerating — no user-visible behaviour changes here — and say so explicitly rather than leaving it unconsidered
+- [x] 5.1 Run `/opsx:sync` to apply the deltas to `openspec/specs/`
+- [x] 5.2 Confirm the sync removed the sentence in `data-load-performance` disclaiming the cost guarantee, and restored `Write cost does not grow with history` — confirmed: the disclaiming paragraph is gone and both scenarios are present in `openspec/specs/data-load-performance/spec.md`
+- [x] 5.3 Re-add the exemption for `Write cost does not grow with history` to `scripts/spec-coverage.exemptions.json`, or cover it with the `EXPLAIN` evidence from 3.5 if that turns out to be assertable — exempted rather than covered. The EXPLAIN evidence from 3.5 is a manual
+      measurement, not something either layer can assert: the unit layer mocks Prisma and
+      the e2e database is reset per test, so it never holds a long history. The exemption
+      records the measured numbers. Two migration scenarios are exempted for the same
+      class of reason — the suite runs after migrations, so it can never observe them.
+- [x] 5.4 Annotate the new tests with their scenarios and run `npm run spec:coverage`, committing the regenerated `openspec/COVERAGE.md` — added `e2e/worklog-span.spec.ts` covering the 5 constraint-behaviour scenarios against a real database, annotated the new repository test, regenerated `COVERAGE.md`: 260 scenarios, 233 covered, 27 exempt, **0 uncovered**
+- [x] 5.5 Check `docs/architecture.md` for statements about the overlap read or worklog storage invariants and update them, since the database now enforces something it did not before — updated both places: the repository-invariants section now states the bound depends on the constraint, and the `Worklog` model entry names the constraint and its migration
+- [x] 5.6 Confirm no user-guide page needs regenerating — no user-visible behaviour changes here — and say so explicitly rather than leaving it unconsidered — confirmed, no page needs regenerating. Triaging the guide's `uncovered` list
+      per the skill's rule: the one new entry is `worklog :: A stored work entry spans a
+      positive, bounded length of time`, which is plumbing — a storage constraint with no
+      user-visible surface, since form validation already prevents a user from submitting
+      such a span. Nothing a reader could act on.
 
 ## 6. Deploy deliberately
 

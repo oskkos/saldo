@@ -23,6 +23,18 @@
     {
       "scenario": "spec-test-traceability/Over-claiming is a review defect",
       "reason": "The requirement itself states this is enforced by code review, not tooling: no check can tell whether a test really asserts the scenario's THEN. The rule is written into CLAUDE.md and e2e/README.md, and the generated map puts each claim in the diff a reviewer reads."
+    },
+    {
+      "scenario": "data-load-performance/Write cost does not grow with history",
+      "reason": "Asserting the read's cost tracks the submitted span rather than history size means reading a query plan, which neither layer can do: the unit layer mocks Prisma, and the e2e database is reset per test so it never holds a long history. It was verified by hand instead \u2014 EXPLAIN ANALYZE against 3135 seeded entries showed the unbounded query sequential-scanning (33 buffers, 3134 rows discarded) and the bounded one using Worklog_user_id_from_idx (3 buffers). The sibling scenario 'The bound cannot hide a conflict' pins the part that can be asserted: that the range asked for is wide enough to reach the longest entry the constraint permits."
+    },
+    {
+      "scenario": "worklog/Existing violating rows are removed before the rule takes effect",
+      "reason": "Migration behaviour, not application behaviour. Asserting it means running a migration against a database seeded with a row the current schema forbids \u2014 the e2e database has already been migrated before any test runs, so there is no point at which the suite could observe it. Verified by hand: a database seeded with a zero-length work entry, a valid entry and an inverted absence had only the zero-length entry deleted, after which the constraint applied."
+    },
+    {
+      "scenario": "worklog/An over-long stored row stops the rollout rather than being altered",
+      "reason": "Same reason: it asserts what a migration does to pre-existing data, which the suite runs too late to see. Verified by hand, and it caught a real defect \u2014 Prisma does not wrap a migration in a transaction, so the DELETE committed while ADD CONSTRAINT failed. After adding explicit BEGIN/COMMIT the same test leaves both rows intact and the constraint absent, which is the behaviour this scenario states."
     }
   ],
   "requirementsWithoutE2e": [
