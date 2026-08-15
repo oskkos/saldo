@@ -28,6 +28,21 @@ A session is meant to cover a single day, so it can't stretch across more than o
 day. If you forget to clock out, Saldo helps you finish the leftover session the next
 time you return.
 
+## If the session overlaps hours you already logged
+
+A session you are saving is checked against your stored work entries in exactly
+the same way a typed entry is. If its span runs over one of them, Saldo asks
+before saving, naming the date and time span it would land on.
+
+Choose **OK** to save the session anyway. Choose **Cancel** and nothing is
+written — and, importantly, **you stay clocked in with the session untouched**.
+Your tracked time isn't lost, so you can reopen the dialog, correct the times,
+and save or discard from there.
+
+Pressing **Save** twice cannot log the session twice: once a session has been
+turned into a worklog it is closed, and a repeat press — or a press from a second
+device — adds nothing further.
+
 <!-- traceability -->
 
 > **Generated from OpenSpec specs** — do not hand-edit; run `/generate-user-guides` to update.
@@ -40,5 +55,8 @@ time you return.
 > | time-clock | Sessions may not span more than one day | `1b505f7b70e2` |
 > | time-clock | Forgotten sessions are handled on return | `753eeb7fbf47` |
 > | time-clock | Clock state is visible across the app | `392eb5cef249` |
+> | time-clock | A declined overlap leaves the session open | `9b6e7dfad545` |
+> | time-clock | Finalizing a session twice creates one worklog | `aad85de8a296` |
+> | worklog | Work entries do not silently overlap | `c5bab5b7ae76` |
 
 <!-- /traceability -->
