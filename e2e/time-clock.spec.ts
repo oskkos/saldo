@@ -21,6 +21,21 @@ const finalizeModal = (page: Page) => page.locator('#clock-out-modal');
 const finalizeHeading = (page: Page) =>
   finalizeModal(page).getByRole('heading', { name: 'Finish work session' });
 
+// Press Save on the finalize dialog and answer the overlap prompt it raises.
+// The prompt is a native window.confirm, so it arrives as a Playwright dialog
+// event; both it and the click are awaited together because the click does not
+// settle until the dialog has been answered.
+async function answerOverlapPrompt(page: Page, answer: 'accept' | 'dismiss') {
+  const prompt = page.waitForEvent('dialog');
+  const clicked = finalizeModal(page)
+    .getByRole('button', { name: 'Save' })
+    .click();
+  const dialog = await prompt;
+  expect(dialog.message()).toContain('Save anyway?');
+  await (answer === 'accept' ? dialog.accept() : dialog.dismiss());
+  await clicked;
+}
+
 test.beforeEach(async () => {
   await resetClockState();
 });
@@ -210,16 +225,21 @@ test('an overlapping session is put to the user, and declining keeps it open', a
 
   // Declined: nothing logged, and — the part that matters — still clocked in,
   // so the tracked session is not lost to a prompt the user said no to.
-  page.once('dialog', (dialog) => dialog.dismiss());
-  await finalizeModal(page).getByRole('button', { name: 'Save' }).click();
+  //
+  // Wait for the dialog rather than registering `page.once` and hoping. A
+  // `once` handler that never fires stays registered, so the NEXT prompt is
+  // handled twice — the stale handler first, then this test's, which fails with
+  // "Cannot accept dialog which is already handled" several steps from the real
+  // cause. Awaiting the event also asserts the prompt appeared at all, which is
+  // the scenario under test.
+  await answerOverlapPrompt(page, 'dismiss');
 
   await expect(page.getByRole('button', { name: 'Clock out' })).toBeVisible();
   expect(await getStartedAt()).not.toBeNull();
   expect(await getWorklogs()).toHaveLength(1);
 
   // Confirming finishes the session as normal.
-  page.once('dialog', (dialog) => dialog.accept());
-  await finalizeModal(page).getByRole('button', { name: 'Save' }).click();
+  await answerOverlapPrompt(page, 'accept');
 
   await expect(page.getByRole('button', { name: 'Clock in' })).toBeVisible();
   expect(await getStartedAt()).toBeNull();
