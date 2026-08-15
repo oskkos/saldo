@@ -8,7 +8,7 @@ import { assertIsAbsenceReason } from '@/util/assertionFunctions';
 import * as Sentry from '@sentry/nextjs';
 import { getUserFromSession } from '@/auth/authSession';
 import { AbsenceConflictError, WorklogOverlapError } from '@/services';
-import { endOfDay, startOfDay } from '@/util/date';
+import { endOfDay, startOfDay, subtract } from '@/util/date';
 import { Date_ISODay, toISODay } from '@/util/dateFormatter';
 
 const toAbsenceReason = (absence: string | null) => {
@@ -120,9 +120,19 @@ async function assertAbsenceDaysAreFree(userId: number, days: Date_ISODay[]) {
 // one. Absences are excluded: an absence claims the whole day by design, and
 // working during one is a supported combination rather than a conflict.
 //
-// The candidate query is bounded by the incoming span itself. `from < to` is
-// index-backed on (user_id, from); `to > from` then discards the earlier rows
-// the index range still includes.
+// The candidate query is bounded on both sides, so the (user_id, from) index range
+// covers the days around the submitted span rather than the user's whole history.
+//
+// The lower bound is sound because of a database constraint, not because of a
+// convention: `Worklog_work_entry_span_positive_and_bounded` (added in
+// migrations/20260815130500_constrain_worklog_span) holds every work entry to at
+// most a day. A colliding entry must end after `from`, and can begin at most a day
+// before it ends, so it must begin after `from - 1 day`. Nothing outside that range
+// can reach into the submitted span.
+//
+// That makes the constraint load-bearing: widen the span it permits and this bound
+// must widen with it, or overlaps start going unreported. `to > from` is not part
+// of the index and discards whatever the range still over-includes.
 export async function overlappingWorkEntries(
   userId: number,
   from: Date,
@@ -136,7 +146,7 @@ export async function overlappingWorkEntries(
         where: {
           user_id: userId,
           absence: null,
-          from: { lt: to },
+          from: { gte: subtract(from, 1, 'day'), lt: to },
           to: { gt: from },
           ...(excludeWorklogId === undefined
             ? {}

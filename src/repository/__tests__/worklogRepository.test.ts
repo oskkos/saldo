@@ -493,7 +493,7 @@ describe('the no-silent-overlap rule', () => {
   // let the service-level tests cover the predicate itself.
   const queriedSpan = () => {
     const call = db.worklog.findMany.mock.calls[0][0] as {
-      where: { from: { lt: Date }; to: { gt: Date }; absence: null };
+      where: { from: { gte: Date; lt: Date }; to: { gt: Date }; absence: null };
     };
     return call.where;
   };
@@ -537,16 +537,39 @@ describe('the no-silent-overlap rule', () => {
     await repo.insertWorklog(workFrom('12:00', '16:00'));
 
     // An entry ending exactly at 12:00 is excluded by `to > from`, and one
-    // starting exactly at 16:00 by `from < to`.
+    // starting exactly at 16:00 by `from < to`. The `gte` closes the index range
+    // below so it covers the days around the span instead of all of history.
     expect(queriedSpan()).toEqual(
       expect.objectContaining({
         user_id: USER.id,
         absence: null,
-        from: { lt: at('16:00') },
+        from: {
+          gte: new Date('2026-06-27T12:00:00.000Z'),
+          lt: at('16:00'),
+        },
         to: { gt: at('12:00') },
       }),
     );
     expect(db.worklog.create).toHaveBeenCalled();
+  });
+
+  // The bound is only safe while the database keeps every work entry to at most a
+  // day. This pins the relationship: an entry starting a day before the submitted
+  // span, and running into it, must still fall inside the range asked for. If the
+  // bound is ever narrowed without the constraint narrowing too, this fails.
+  // @scenario data-load-performance/The bound cannot hide a conflict
+  it('asks for a range wide enough to reach an entry from the day before', async () => {
+    db.worklog.create.mockResolvedValue(row());
+
+    await repo.insertWorklog(workFrom('12:00', '16:00'));
+
+    // The longest entry the constraint permits that still reaches 12:00: it
+    // begins one day earlier and ends a moment after the submitted span starts.
+    const longestReachingEntry = new Date('2026-06-27T12:00:01.000Z');
+    const { gte, lt } = queriedSpan().from;
+
+    expect(gte.getTime()).toBeLessThanOrEqual(longestReachingEntry.getTime());
+    expect(lt.getTime()).toBeGreaterThan(longestReachingEntry.getTime());
   });
 
   // @scenario worklog/Work on an absence day is not a conflict
