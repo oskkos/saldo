@@ -42,6 +42,10 @@ model Worklog {
   absence              Absence?
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
+
+  // Serves both the bounded range reads that render the app and the overlap
+  // lookup every worklog write performs, so neither scans a user's history.
+  @@index([user_id, from])
 }
 
 enum Absence {
