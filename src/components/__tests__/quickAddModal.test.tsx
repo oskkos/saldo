@@ -48,6 +48,9 @@ const shownToast = () => {
   return { type: msg.type, getByText };
 };
 
+/** The modal's own <dialog>, so its open state can be asserted. */
+const dialog = () => document.querySelector('dialog') as HTMLDialogElement;
+
 beforeEach(() => {
   submit.mockReset();
   onSubmit.mockReset();
@@ -61,6 +64,9 @@ beforeEach(() => {
       />
     </ToastContext.Provider>,
   );
+  // Opened the way ClockCard/QuickAdd open it, so the close-on-success and
+  // stay-open-on-refusal behaviour can be observed at all.
+  dialog().showModal();
 });
 
 const save = async () =>
@@ -86,6 +92,7 @@ describe('QuickAddWorklogModal', () => {
     expect(toast.type).toBe('success');
     expect(toast.getByText('Worklog created')).toBeInTheDocument();
     expect(onSubmit).toHaveBeenCalledWith({ id: 1 });
+    expect(dialog().open).toBe(false);
   });
 
   // @scenario worklog/A rejection is returned with a readable message
@@ -107,6 +114,10 @@ describe('QuickAddWorklogModal', () => {
       toast.getByText('End time must be after start time'),
     ).toBeInTheDocument();
     expect(onSubmit).not.toHaveBeenCalled();
+    // The dialog no longer dismisses itself on tap, so a refusal leaves the
+    // form open with the user's input still in it.
+    expect(dialog().open).toBe(true);
+    expect(screen.getByDisplayValue('08:00')).toBeInTheDocument();
   });
 
   it('still reports a genuine failure that was thrown', async () => {

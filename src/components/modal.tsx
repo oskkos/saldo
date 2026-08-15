@@ -48,7 +48,14 @@ export default function Modal({
               {secondaryLabel}
             </button>
           ) : null}
+          {/* type=button so the dialog is not dismissed the instant this is
+              tapped. The action is asynchronous, and its outcome may be a
+              question the user has to answer (an overlap confirmation) — a
+              dialog that has already closed would take the user's input with
+              it. Callers close explicitly once the action reports success.
+              Same reasoning as the secondary button above. */}
           <button
+            type="button"
             className="btn btn-primary"
             onClick={confirmAction}
             disabled={confirmDisabled}

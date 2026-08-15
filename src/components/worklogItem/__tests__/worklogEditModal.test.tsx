@@ -54,6 +54,9 @@ const shownToast = () => {
   return { type: msg.type, getByText };
 };
 
+/** The modal's own <dialog>, so its open state can be asserted. */
+const dialog = () => document.querySelector('dialog') as HTMLDialogElement;
+
 beforeEach(() => {
   edit.mockReset();
   onEdit.mockReset();
@@ -67,6 +70,9 @@ beforeEach(() => {
       />
     </ToastContext.Provider>,
   );
+  // Opened the way the worklog row opens it, so the close-on-success and
+  // stay-open-on-refusal behaviour can be observed at all.
+  dialog().showModal();
 });
 
 const confirm = async () =>
@@ -93,6 +99,7 @@ describe('WorklogEditModal', () => {
     const toast = shownToast();
     expect(toast.type).toBe('success');
     expect(toast.getByText('Worklog updated')).toBeInTheDocument();
+    expect(dialog().open).toBe(false);
   });
 
   // @scenario worklog/A rejection is returned with a readable message
@@ -111,6 +118,9 @@ describe('WorklogEditModal', () => {
     expect(
       toast.getByText('End time must be after start time'),
     ).toBeInTheDocument();
+    // A refused edit leaves the form open with the user's values in it.
+    expect(dialog().open).toBe(true);
+    expect(screen.getByDisplayValue('08:00')).toBeInTheDocument();
   });
 
   it('still reports a genuine failure that was thrown', async () => {

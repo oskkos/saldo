@@ -2,7 +2,7 @@
 
 import { useContext, useState } from 'react';
 import WorklogInputs from '../worklogInputs';
-import Modal from '../modal';
+import Modal, { closeModal } from '../modal';
 import { onClockDiscard, onClockOut } from '@/actions';
 import { ClockOutResult, WorklogFormDataEntry } from '@/types';
 import { toDayMonthYear, toISODay, toTime } from '@/util/dateFormatter';
@@ -46,6 +46,7 @@ export default function ClockOutModal({
       () => onClockOut(toWorklogFormData(value)),
       (result: ClockOutResult) => {
         if (result.status === 'success') {
+          closeModal(modalId);
           onDone();
           // A repeat finds the session already closed and writes nothing; say
           // so rather than claiming a second worklog was created.
@@ -77,7 +78,13 @@ export default function ClockOutModal({
     if (!window.confirm('Discard this session? It will not be logged.')) {
       return;
     }
-    startTransitionWrapper(() => onClockDiscard(), onDone)
+    startTransitionWrapper(
+      () => onClockDiscard(),
+      () => {
+        closeModal(modalId);
+        onDone();
+      },
+    )
       .then(() => setMsg({ type: 'success', message: 'Session discarded' }))
       .catch(() =>
         setMsg({ type: 'error', message: 'Failed to discard session' }),

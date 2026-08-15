@@ -4,7 +4,7 @@ import WorklogInputs from './worklogInputs';
 import { Date_Time, toISODay } from '@/util/dateFormatter';
 import { onWorklogSubmit } from '@/actions';
 import { NEW_WORKLOG_DEFAULT_SUBTRACT_LUNCH } from '@/constants';
-import Modal from './modal';
+import Modal, { closeModal } from './modal';
 import DateInput from './form/dateInput';
 import { Worklog, WorklogFormDataEntry, WorklogSubmitResult } from '@/types';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
@@ -38,6 +38,9 @@ export default function QuickAddWorklogModal({
       (result: WorklogSubmitResult) => {
         if (result.status === 'success') {
           onSubmit(result.worklog);
+          // The dialog no longer dismisses itself on tap, so a refused save
+          // leaves the form open with the user's input intact.
+          closeModal(modalId);
           setMsg({ type: 'success', message: 'Worklog created' });
           return;
         }
