@@ -1,7 +1,7 @@
 'use client';
 
 import { onWorklogDelete } from '@/actions';
-import Modal from '../modal';
+import Modal, { closeModal } from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { useContext } from 'react';
 import { ToastContext } from '../toastContext';
@@ -23,6 +23,7 @@ export default function WorklogDeleteConfirm({
       () => onWorklogDelete(worklogId),
       () => {
         onDelete(worklogId);
+        closeModal(confirmId);
       },
     )
       .then(() => {

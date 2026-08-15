@@ -8,11 +8,15 @@ import Modal, { closeModal, showModal } from '../modal';
 // is hidden, so its contents are outside the accessibility tree. These tests are
 // about the markup the modal builds, not about whether it is currently on screen.
 //
-// The secondary button is the reason this has its own test. It is deliberately
-// type="button" so that pressing it does not submit the dialog's form and dismiss
-// the modal — a confirm prompt inside a modal has to be able to say no without the
-// whole thing closing. Nothing about that is visible, so a refactor could drop the
-// attribute and only a test would notice.
+// The button types are the reason this has its own test. Both the confirm and the
+// secondary button are deliberately type="button" so that pressing them does not
+// submit the dialog's form and dismiss the modal — the confirm action is
+// asynchronous and its outcome may be a question the user has to answer, which a
+// dialog that closed on the tap could not host. Callers close explicitly on
+// success. Nothing about that is visible, so a refactor could drop the attribute
+// and only a test would notice.
+//
+// Cancel keeps its default submit behaviour: dismissing is all it does.
 
 describe('Modal', () => {
   const renderModal = (props: Partial<Parameters<typeof Modal>[0]> = {}) =>
@@ -28,10 +32,6 @@ describe('Modal', () => {
     );
 
   it('confirms through the given action', async () => {
-    // jsdom logs "Not implemented: HTMLFormElement.prototype.requestSubmit" here.
-    // That is the point rather than a problem: the confirm button is a submit button
-    // inside form method="dialog", so in a browser it both runs the action and
-    // closes the modal — which is exactly what the secondary button must not do.
     const confirmAction = jest.fn();
     renderModal({ confirmAction });
 
@@ -40,6 +40,29 @@ describe('Modal', () => {
       .click(screen.getByRole('button', { name: 'Save', hidden: true }));
 
     expect(confirmAction).toHaveBeenCalled();
+  });
+
+  it('confirms without dismissing the dialog itself', async () => {
+    const confirmAction = jest.fn();
+    renderModal({ confirmAction });
+
+    const confirm = screen.getByRole('button', { name: 'Save', hidden: true });
+    // A submit button here would close the dialog through method="dialog",
+    // taking the user's input with it before the action had answered.
+    expect(confirm).toHaveAttribute('type', 'button');
+
+    await userEvent.setup().click(confirm);
+    expect(confirmAction).toHaveBeenCalled();
+  });
+
+  it('leaves Cancel as the one button that just dismisses', () => {
+    renderModal();
+
+    // No explicit type: it submits form method="dialog", which closes the modal
+    // and runs nothing.
+    expect(
+      screen.getByRole('button', { name: 'Cancel', hidden: true }),
+    ).not.toHaveAttribute('type', 'button');
   });
 
   it('refuses to confirm while the caller says the contents are invalid', () => {

@@ -13,3 +13,22 @@ if (typeof globalThis.TextEncoder === 'undefined') {
 if (typeof globalThis.TextDecoder === 'undefined') {
   globalThis.TextDecoder = TextDecoder;
 }
+
+// jsdom implements <dialog> as an element but not its modal behaviour, so
+// `showModal`/`close` are missing. Components reach for both (src/components/
+// modal.tsx), and a dialog that never opens or closes cannot be asserted on.
+// Track the open state the way the real element does, so `open` reflects it.
+if (typeof globalThis.HTMLDialogElement !== 'undefined') {
+  const proto = globalThis.HTMLDialogElement.prototype;
+  if (typeof proto.showModal !== 'function') {
+    proto.showModal = function showModal() {
+      this.open = true;
+    };
+  }
+  if (typeof proto.close !== 'function') {
+    proto.close = function close() {
+      this.open = false;
+      this.dispatchEvent(new Event('close'));
+    };
+  }
+}

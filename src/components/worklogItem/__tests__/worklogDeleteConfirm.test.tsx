@@ -47,6 +47,9 @@ const shownToast = () => {
   return { type: msg.type, getByText };
 };
 
+/** The confirm's own <dialog>, so its open state can be asserted. */
+const dialog = () => document.querySelector('dialog') as HTMLDialogElement;
+
 beforeEach(() => {
   remove.mockReset();
   onDelete.mockReset();
@@ -60,6 +63,7 @@ beforeEach(() => {
       />
     </ToastContext.Provider>,
   );
+  dialog().showModal();
 });
 
 const confirmDelete = async () =>
@@ -85,6 +89,7 @@ describe('WorklogDeleteConfirm', () => {
     const toast = shownToast();
     expect(toast.type).toBe('success');
     expect(toast.getByText('Worklog deleted')).toBeInTheDocument();
+    expect(dialog().open).toBe(false);
   });
 
   it('reports the reason when the delete is refused', async () => {
@@ -99,8 +104,10 @@ describe('WorklogDeleteConfirm', () => {
     expect(
       toast.getByText('worklog belongs to someone else'),
     ).toBeInTheDocument();
-    // The row must stay on screen when the delete did not happen.
+    // The row must stay on screen when the delete did not happen, and so must
+    // the confirmation the user is still answering.
     expect(onDelete).not.toHaveBeenCalled();
+    expect(dialog().open).toBe(true);
   });
 
   it('omits a reason when the failure carries none', async () => {

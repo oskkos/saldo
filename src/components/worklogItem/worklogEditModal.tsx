@@ -4,7 +4,7 @@ import WorklogInputs from '../worklogInputs';
 import { toISODay, toTime } from '@/util/dateFormatter';
 import { onWorklogEdit } from '@/actions';
 import { Worklog, WorklogFormDataEntry, WorklogSubmitResult } from '@/types';
-import Modal from '../modal';
+import Modal, { closeModal } from '../modal';
 import { useTransitionWrapper } from '@/util/useTransitionWrapper';
 import { ToastContext } from '../toastContext';
 import { toWorklogFormData } from '@/util/worklogFormData';
@@ -36,6 +36,7 @@ export default function WorklogEditModal({
       (result: WorklogSubmitResult) => {
         if (result.status === 'success') {
           onEdit(result.worklog);
+          closeModal(editModalId);
           setMsg({ type: 'success', message: 'Worklog updated' });
           return;
         }

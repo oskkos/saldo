@@ -40,10 +40,10 @@
 
 ## 5. Let a modal survive its confirm action
 
-- [ ] 5.1 In `src/components/modal.tsx`, give the confirm button `type="button"` so activating it no longer dismisses the dialog implicitly
-- [ ] 5.2 Expose an explicit close so callers dismiss the dialog when their action reports success
-- [ ] 5.3 Update `quickAddModal`, `worklogEditModal`, `worklogDeleteConfirm` and `clockOutModal` to close explicitly on success and stay open otherwise
-- [ ] 5.4 Update `src/components/__tests__/` coverage for the modal and each of the four callers: the dialog stays open on a failed action and closes on a successful one
+- [x] 5.1 In `src/components/modal.tsx`, give the confirm button `type="button"` so activating it no longer dismisses the dialog implicitly
+- [x] 5.2 Expose an explicit close so callers dismiss the dialog when their action reports success
+- [x] 5.3 Update `quickAddModal`, `worklogEditModal`, `worklogDeleteConfirm` and `clockOutModal` to close explicitly on success and stay open otherwise
+- [x] 5.4 Update `src/components/__tests__/` coverage for the modal and each of the four callers: the dialog stays open on a failed action and closes on a successful one
 
 ## 6. Guard against re-entrant submissions
 
