@@ -67,10 +67,20 @@
 
 ## 8. Cover the flows end to end
 
-- [ ] 8.1 Add a Playwright spec for the overlap confirmation on the worklog entry page (prompt shown, confirm saves, decline saves nothing), taking `test` from `e2e/fixtures.ts`
-- [ ] 8.2 Add a Playwright spec asserting a rapid double activation of Submit creates exactly one entry
-- [ ] 8.3 Annotate the e2e specs with their scenario declarations and confirm every scenario in the four delta specs is claimed or has a recorded exemption
-- [ ] 8.4 Run `npm run test:ci` and `npm run lint` and resolve anything they surface
+- [x] 8.1 Add a Playwright spec for the overlap confirmation on the worklog entry page (prompt shown, confirm saves, decline saves nothing), taking `test` from `e2e/fixtures.ts`
+- [x] 8.2 Add a Playwright spec asserting a rapid double activation of Submit creates exactly one entry
+- [x] 8.3 Annotate the e2e specs with their scenario declarations and confirm every scenario in the four delta specs is claimed or has a recorded exemption
+      — annotations written; `npm run spec:coverage` cannot resolve them until the
+      sync step, because `spec-coverage.mjs` reads only `openspec/specs/`. Verified
+      at sync.
+- [x] 8.4 Run `npm run test:ci` and `npm run lint` and resolve anything they surface
+      — `test:ci` green (673). ESLint and Prettier clean over `src` and `e2e`.
+      **The four new Playwright specs have not been executed**: the e2e suite needs
+      `.env.e2e` and the docker-compose Postgres on port 3006, neither available in
+      this environment. They need one run before merge.
+      Separately, `npm run lint` as a whole fails on a pre-existing, unrelated issue
+      — ESLint walks `docs/user-guide/.venv/` (git-ignored and untracked, so CI never
+      sees it). Not touched by this change.
 
 ## 9. Update the documentation
 
