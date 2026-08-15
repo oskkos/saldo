@@ -23,10 +23,6 @@
     {
       "scenario": "spec-test-traceability/Over-claiming is a review defect",
       "reason": "The requirement itself states this is enforced by code review, not tooling: no check can tell whether a test really asserts the scenario's THEN. The rule is written into CLAUDE.md and e2e/README.md, and the generated map puts each claim in the diff a reviewer reads."
-    },
-    {
-      "scenario": "data-load-performance/Write cost does not grow with history",
-      "reason": "Asserting that the overlap read's cost is bounded by nearby entries rather than by history size means measuring query plans or timings against a real database with a seeded long history. Neither test layer has that: the unit layer mocks Prisma, and the e2e database is reset per test. The sibling scenarios assert the index exists over the columns both queries filter on, which is the part that can be pinned."
     }
   ],
   "requirementsWithoutE2e": [

@@ -75,9 +75,14 @@ Computing whether days are non-working over a date range (e.g. the `beginDate �
 
 The system SHALL serve worklog queries that filter to one user and bound the
 result by the record's `from` instant with a database index covering those
-columns, so the lookup does not scan the user's full history. This covers the
-range reads that render the app and the bounded read that every worklog write now
-performs to detect overlap.
+columns, so the lookup is served by the index rather than by scanning the
+worklog table. This covers the range reads that render the app and the read that
+every worklog write performs to detect overlap.
+
+The overlap read's index range is currently open at its lower end — it is bounded
+above by the submitted span but extends back over the user's stored history — so
+this requirement does not yet claim that the read's cost is independent of how
+much history a user has.
 
 #### Scenario: Overlap detection on write
 
@@ -89,8 +94,3 @@ performs to detect overlap.
 - **WHEN** the app lists a user's worklogs for a bounded date range
 - **THEN** the same index serves the query
 
-#### Scenario: Write cost does not grow with history
-
-- **GIVEN** a user with a long history of worklogs
-- **WHEN** they create a new worklog
-- **THEN** the cost of the overlap read is bounded by the entries near the submitted span rather than by the size of their history
