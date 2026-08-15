@@ -54,7 +54,10 @@ export default function DayExpectedOverride({
           minutes: (hours || 0) * 60 + (mins || 0),
           label: label.trim() || undefined,
         }),
-      () => router.refresh(),
+      () => {
+        closeModal(MODAL_ID);
+        router.refresh();
+      },
     )
       .then((ran) => {
         if (ran) {
@@ -108,6 +111,7 @@ export default function DayExpectedOverride({
         id={MODAL_ID}
         confirmLabel="Save"
         confirmAction={save}
+        confirmDisabled={busy}
         secondaryLabel={override ? 'Clear' : undefined}
         secondaryAction={override ? clear : undefined}
         secondaryClassName="btn-error btn-outline"

@@ -22,8 +22,11 @@ export default function WorklogDeleteConfirm({
     startTransitionWrapper(
       () => onWorklogDelete(worklogId),
       () => {
-        onDelete(worklogId);
+        // Close before dropping the row: `onDelete` unmounts this component
+        // along with its <dialog>, and `closeModal` would then look up an
+        // element that no longer exists.
         closeModal(confirmId);
+        onDelete(worklogId);
       },
     )
       .then((ran) => {

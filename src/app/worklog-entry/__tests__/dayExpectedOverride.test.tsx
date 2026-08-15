@@ -40,6 +40,7 @@ let DayExpectedOverride: typeof import('../dayExpectedOverride').default;
 let ToastContext: typeof import('@/components/toastContext').ToastContext;
 let upsert: ActionMock;
 let remove: ActionMock;
+let closeModal: jest.Mock<(id: string) => void>;
 
 beforeAll(async () => {
   DayExpectedOverride = (await import('../dayExpectedOverride')).default;
@@ -47,6 +48,8 @@ beforeAll(async () => {
   const actions = await import('@/actions');
   upsert = actions.onExpectedHoursOverrideUpsert as unknown as ActionMock;
   remove = actions.onExpectedHoursOverrideDelete as unknown as ActionMock;
+  closeModal = (await import('@/components/modal'))
+    .closeModal as unknown as jest.Mock<(id: string) => void>;
 });
 
 const day = '2026-07-26' as Date_ISODay;
@@ -86,6 +89,7 @@ beforeEach(() => {
   upsert.mockReset();
   remove.mockReset();
   setMsg.mockReset();
+  closeModal.mockReset();
 });
 
 describe('DayExpectedOverride', () => {
@@ -152,6 +156,9 @@ describe('DayExpectedOverride', () => {
     const toast = shownToast();
     expect(toast.type).toBe('success');
     expect(toast.getByText('Expected hours updated')).toBeInTheDocument();
+    // The confirm button is type=button, so nothing dismisses the dialog on the
+    // user's behalf — a save that does not close it leaves the sheet stuck open.
+    expect(closeModal).toHaveBeenCalledWith('expected-override-modal');
   });
 
   it('reports a refused save', async () => {
@@ -161,6 +168,7 @@ describe('DayExpectedOverride', () => {
     await userEvent.setup().click(button('Save'));
 
     await waitFor(() => expect(setMsg).toHaveBeenCalled());
+    expect(closeModal).not.toHaveBeenCalled();
     const toast = shownToast();
     expect(toast.type).toBe('error');
     expect(
